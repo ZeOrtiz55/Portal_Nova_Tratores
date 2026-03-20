@@ -173,8 +173,8 @@ select option {
   --ppv-accent: #EA580C;
   --ppv-bg: #FEF5EE;
   --ppv-surface: #FFFAF5;
-  --ppv-border: #FDBA74;
-  --ppv-border-light: rgba(253, 186, 116, 0.4);
+  --ppv-border: #1E293B;
+  --ppv-border-light: #334155;
   --ppv-text: #1E293B;
   --ppv-text-light: #64748B;
 }

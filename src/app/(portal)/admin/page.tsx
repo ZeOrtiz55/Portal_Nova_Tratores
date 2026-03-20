@@ -16,7 +16,9 @@ const MODULOS = [
   { id: 'pos', label: 'Pós-Vendas', color: '#dc2626' },
   { id: 'ppv', label: 'Peças (PPV)', color: '#ef4444' },
   { id: 'propostas', label: 'Propostas', color: '#991b1b' },
+  { id: 'tarefas', label: 'Tarefas', color: '#dc2626' },
   { id: 'atividades', label: 'Atividades', color: '#dc2626' },
+  { id: 'mapa', label: 'Mapa Geral', color: '#b91c1c' },
 ]
 
 const CATEGORIAS = ['Pós Vendas', 'Peças', 'Comercial', 'Financeiro']

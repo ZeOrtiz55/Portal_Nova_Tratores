@@ -441,10 +441,10 @@ function HomeFinanceiroContent() {
               <div style={fieldBoxModal}>
                 <label style={labelMStyle}>VALOR DO REGISTRO</label>
                 <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
-                    <span style={{fontSize:'22px', fontWeight:'700', color:'#64748b'}}>R$</span>
+                    <span style={{fontSize:'22px', fontWeight:'500', color:'#64748b'}}>R$</span>
                     <input
                       type="number"
-                      style={{ ...inputStyleLight, border:'none', padding:0, fontSize:'34px', fontWeight:'800', background:'transparent' }}
+                      style={{ ...inputStyleLight, border:'none', padding:0, fontSize:'34px', fontWeight:'500', background:'transparent' }}
                       defaultValue={tarefaSelecionada.valor_exibicao || tarefaSelecionada.valor}
                       onBlur={e => handleUpdateField(tarefaSelecionada, tarefaSelecionada.gTipo === 'boleto' ? 'valor_servico' : 'valor', e.target.value)}
                     />
@@ -455,7 +455,7 @@ function HomeFinanceiroContent() {
                 <label style={labelMStyle}>DATA DE VENCIMENTO</label>
                 <input
                   type="date"
-                  style={{ ...inputStyleLight, border:'none', padding:0, fontSize:'30px', fontWeight:'800', background:'transparent', color:'#ef4444' }}
+                  style={{ ...inputStyleLight, border:'none', padding:0, fontSize:'30px', fontWeight:'500', background:'transparent', color:'#ef4444' }}
                   defaultValue={tarefaSelecionada.vencimento_boleto || tarefaSelecionada.data_vencimento}
                   onBlur={e => handleUpdateField(tarefaSelecionada, (tarefaSelecionada.gTipo === 'boleto' ? 'vencimento_boleto' : 'data_vencimento'), e.target.value)}
                 />
@@ -612,7 +612,7 @@ function HomeFinanceiroContent() {
                   <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'20px' }}>
                     <div style={{ width:'36px', height:'36px', borderRadius:'50%', background:'#dcfce7', display:'flex', alignItems:'center', justifyContent:'center' }}><FileText size={18} color="#16a34a"/></div>
                     <div>
-                      <div style={{ fontSize:'13px', color:'#16a34a', fontWeight:'700', letterSpacing:'1px', textTransform:'uppercase' }}>Notas Fiscais Recebidas</div>
+                      <div style={{ fontSize:'13px', color:'#16a34a', fontWeight:'500', letterSpacing:'1px', textTransform:'uppercase' }}>Notas Fiscais Recebidas</div>
                       <div style={{ fontSize:'11px', color:'#6b7280' }}>Documentos enviados pelo pos-vendas</div>
                     </div>
                   </div>
@@ -634,7 +634,7 @@ function HomeFinanceiroContent() {
                   <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'20px' }}>
                     <div style={{ width:'36px', height:'36px', borderRadius:'50%', background:'#dbeafe', display:'flex', alignItems:'center', justifyContent:'center' }}><Barcode size={18} color="#3b82f6"/></div>
                     <div>
-                      <div style={{ fontSize:'13px', color:'#3b82f6', fontWeight:'700', letterSpacing:'1px', textTransform:'uppercase' }}>Boletos Gerados</div>
+                      <div style={{ fontSize:'13px', color:'#3b82f6', fontWeight:'500', letterSpacing:'1px', textTransform:'uppercase' }}>Boletos Gerados</div>
                       <div style={{ fontSize:'11px', color:'#6b7280' }}>Anexe os boletos para devolver ao pos-vendas</div>
                     </div>
                   </div>
@@ -662,7 +662,7 @@ function HomeFinanceiroContent() {
                 <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'20px' }}>
                   <div style={{ width:'36px', height:'36px', borderRadius:'50%', background:'#fee2e2', display:'flex', alignItems:'center', justifyContent:'center' }}><FileText size={18} color="#dc2626"/></div>
                   <div>
-                    <div style={{ fontSize:'13px', color:'#dc2626', fontWeight:'700', letterSpacing:'1px', textTransform:'uppercase' }}>Documentos da Requisicao</div>
+                    <div style={{ fontSize:'13px', color:'#dc2626', fontWeight:'500', letterSpacing:'1px', textTransform:'uppercase' }}>Documentos da Requisicao</div>
                     <div style={{ fontSize:'11px', color:'#6b7280' }}>Nota fiscal e anexos para conferencia</div>
                   </div>
                 </div>
@@ -684,7 +684,7 @@ function HomeFinanceiroContent() {
               <div style={{ background:'#f5f3ff', border:'1px solid #c4b5fd', borderRadius:'15px', padding:'30px' }}>
                 <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'20px' }}>
                   <div style={{ width:'36px', height:'36px', borderRadius:'50%', background:'#ede9fe', display:'flex', alignItems:'center', justifyContent:'center' }}><FileText size={18} color="#8b5cf6"/></div>
-                  <div style={{ fontSize:'13px', color:'#8b5cf6', fontWeight:'700', letterSpacing:'1px', textTransform:'uppercase' }}>Documentos RH</div>
+                  <div style={{ fontSize:'13px', color:'#8b5cf6', fontWeight:'500', letterSpacing:'1px', textTransform:'uppercase' }}>Documentos RH</div>
                 </div>
                 <AttachmentTag icon={<FileText size={18}/>} label="Anexo RH" fileUrl={tarefaSelecionada.anexo} onUpload={f => handleUpdateFileDirect(tarefaSelecionada, 'anexo', f)} />
               </div>
@@ -694,7 +694,7 @@ function HomeFinanceiroContent() {
         <div style={{marginTop:'50px', display:'flex', gap:'20px'}}>
             {isBoletoType && tarefaSelecionada.status === 'gerar_boleto' && !isCashOrCardType && (
                 <div style={{ flex: 1, background: '#f0f9ff', padding: '35px', border: '1.5px dashed #0ea5e9', borderRadius: '20px' }}>
-                    <label style={{ ...labelMStyle, color: '#0ea5e9', fontSize: '12px', fontWeight: '800', display: 'block', marginBottom: '20px' }}>PROCESSAMENTO DE BOLETO FINAL</label>
+                    <label style={{ ...labelMStyle, color: '#0ea5e9', fontSize: '12px', fontWeight: '600', display: 'block', marginBottom: '20px' }}>PROCESSAMENTO DE BOLETO FINAL</label>
                     <div style={{ display: 'flex', gap: '20px', alignItems: 'stretch' }}>
                         <input type="file" id="file_boleto_input" onChange={e => setFileBoleto(e.target.files[0])} style={{ display: 'none' }} />
                         <label htmlFor="file_boleto_input" style={{

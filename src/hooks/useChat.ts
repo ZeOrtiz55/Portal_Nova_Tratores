@@ -293,72 +293,84 @@ export function useChat(userId: string | undefined): UseChatReturn {
   const criarChatIndividual = useCallback(async (outroUserId: string): Promise<string | null> => {
     if (!userId) return null
 
-    // Verificar se já existe chat individual entre os dois
-    const { data: myMemberships } = await supabase
-      .from('portal_chat_membros')
-      .select('chat_id')
-      .eq('user_id', userId)
-    const { data: theirMemberships } = await supabase
-      .from('portal_chat_membros')
-      .select('chat_id')
-      .eq('user_id', outroUserId)
+    try {
+      // Verificar se já existe chat individual entre os dois
+      const { data: myMemberships } = await supabase
+        .from('portal_chat_membros')
+        .select('chat_id')
+        .eq('user_id', userId)
+      const { data: theirMemberships } = await supabase
+        .from('portal_chat_membros')
+        .select('chat_id')
+        .eq('user_id', outroUserId)
 
-    const myIds = new Set(myMemberships?.map(m => m.chat_id) || [])
-    const commonIds = (theirMemberships || [])
-      .filter(m => myIds.has(m.chat_id))
-      .map(m => m.chat_id)
+      const myIds = new Set(myMemberships?.map(m => m.chat_id) || [])
+      const commonIds = (theirMemberships || [])
+        .filter(m => myIds.has(m.chat_id))
+        .map(m => m.chat_id)
 
-    if (commonIds.length > 0) {
-      const { data: existing } = await supabase
-        .from('portal_chats')
-        .select('id')
-        .in('id', commonIds)
-        .eq('tipo', 'individual')
-      if (existing?.length) {
-        await carregarChats()
-        return existing[0].id
+      if (commonIds.length > 0) {
+        const { data: existing } = await supabase
+          .from('portal_chats')
+          .select('id')
+          .in('id', commonIds)
+          .eq('tipo', 'individual')
+        if (existing?.length) {
+          await carregarChats()
+          return existing[0].id
+        }
       }
+
+      // Criar novo
+      const { data: chat, error } = await supabase
+        .from('portal_chats')
+        .insert({ tipo: 'individual', criado_por: userId })
+        .select()
+        .single()
+      if (error || !chat) { console.error('Erro ao criar chat:', error); return null }
+
+      const { error: membroError } = await supabase.from('portal_chat_membros').insert([
+        { chat_id: chat.id, user_id: userId, role: 'admin' },
+        { chat_id: chat.id, user_id: outroUserId, role: 'membro' }
+      ])
+      if (membroError) console.error('Erro ao adicionar membros:', membroError)
+
+      await carregarChats()
+      return chat.id
+    } catch (err) {
+      console.error('Erro ao criar chat individual:', err)
+      return null
     }
-
-    // Criar novo
-    const { data: chat } = await supabase
-      .from('portal_chats')
-      .insert({ tipo: 'individual', criado_por: userId })
-      .select()
-      .single()
-    if (!chat) return null
-
-    await supabase.from('portal_chat_membros').insert([
-      { chat_id: chat.id, user_id: userId, role: 'admin' },
-      { chat_id: chat.id, user_id: outroUserId, role: 'membro' }
-    ])
-
-    await carregarChats()
-    return chat.id
   }, [userId, carregarChats])
 
   // ==================== CRIAR GRUPO ====================
   const criarGrupo = useCallback(async (nome: string, memberIds: string[]): Promise<string | null> => {
     if (!userId) return null
 
-    const { data: chat } = await supabase
-      .from('portal_chats')
-      .insert({ tipo: 'grupo', nome, criado_por: userId })
-      .select()
-      .single()
-    if (!chat) return null
+    try {
+      const { data: chat, error } = await supabase
+        .from('portal_chats')
+        .insert({ tipo: 'grupo', nome, criado_por: userId })
+        .select()
+        .single()
+      if (error || !chat) { console.error('Erro ao criar grupo:', error); return null }
 
-    const allMembers = [userId, ...memberIds.filter(id => id !== userId)]
-    await supabase.from('portal_chat_membros').insert(
-      allMembers.map(uid => ({
-        chat_id: chat.id,
-        user_id: uid,
-        role: uid === userId ? 'admin' : 'membro'
-      }))
-    )
+      const allMembers = [userId, ...memberIds.filter(id => id !== userId)]
+      const { error: membroError } = await supabase.from('portal_chat_membros').insert(
+        allMembers.map(uid => ({
+          chat_id: chat.id,
+          user_id: uid,
+          role: uid === userId ? 'admin' : 'membro'
+        }))
+      )
+      if (membroError) console.error('Erro ao adicionar membros:', membroError)
 
-    await carregarChats()
-    return chat.id
+      await carregarChats()
+      return chat.id
+    } catch (err) {
+      console.error('Erro ao criar grupo:', err)
+      return null
+    }
   }, [userId, carregarChats])
 
   // ==================== REALTIME ====================

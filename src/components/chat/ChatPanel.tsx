@@ -78,6 +78,7 @@ export default function ChatPanel({ open, onClose, chat, userId, userProfile, is
   const [gravando, setGravando] = useState(false)
   const [tempoGravacao, setTempoGravacao] = useState(0)
   const [mobileView, setMobileView] = useState<'list' | 'room'>('list')
+  const [criandoChat, setCriandoChat] = useState(false)
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
@@ -201,19 +202,27 @@ export default function ChatPanel({ open, onClose, chat, userId, userProfile, is
   }
 
   const handleNewChat = async () => {
-    if (novoChatTipo === 'individual') {
-      if (selectedUsers.length !== 1) return
-      const id = await chat.criarChatIndividual(selectedUsers[0])
-      if (id) { chat.setChatAtivo(id); setMobileView('room') }
-    } else {
-      if (!grupoNome.trim() || selectedUsers.length < 1) return
-      const id = await chat.criarGrupo(grupoNome.trim(), selectedUsers)
-      if (id) { chat.setChatAtivo(id); setMobileView('room') }
+    if (criandoChat) return
+    setCriandoChat(true)
+    try {
+      if (novoChatTipo === 'individual') {
+        if (selectedUsers.length !== 1) return
+        const id = await chat.criarChatIndividual(selectedUsers[0])
+        if (id) { chat.setChatAtivo(id); setMobileView('room') }
+      } else {
+        if (!grupoNome.trim() || selectedUsers.length < 1) return
+        const id = await chat.criarGrupo(grupoNome.trim(), selectedUsers)
+        if (id) { chat.setChatAtivo(id); setMobileView('room') }
+      }
+      setNovoChat(false)
+      setSelectedUsers([])
+      setGrupoNome('')
+      setUserSearch('')
+    } catch (err) {
+      console.error('Erro ao criar chat:', err)
+    } finally {
+      setCriandoChat(false)
     }
-    setNovoChat(false)
-    setSelectedUsers([])
-    setGrupoNome('')
-    setUserSearch('')
   }
 
   const handleBack = () => {
@@ -1043,22 +1052,24 @@ export default function ChatPanel({ open, onClose, chat, userId, userProfile, is
               <button
                 onClick={handleNewChat}
                 disabled={
+                  criandoChat ||
                   selectedUsers.length === 0 ||
                   (novoChatTipo === 'grupo' && !grupoNome.trim())
                 }
                 style={{
                   padding: '10px 28px', borderRadius: '10px',
-                  background: selectedUsers.length > 0
-                    ? 'linear-gradient(135deg, #dc2626, #b91c1c)'
-                    : '#e5e5e5',
-                  color: selectedUsers.length > 0 ? '#fff' : '#a3a3a3',
+                  background: criandoChat ? '#a3a3a3'
+                    : selectedUsers.length > 0
+                      ? 'linear-gradient(135deg, #dc2626, #b91c1c)'
+                      : '#e5e5e5',
+                  color: (criandoChat || selectedUsers.length > 0) ? '#fff' : '#a3a3a3',
                   border: 'none', fontSize: '13px', fontWeight: '700',
-                  cursor: selectedUsers.length > 0 ? 'pointer' : 'default',
+                  cursor: (criandoChat || selectedUsers.length === 0) ? 'default' : 'pointer',
                   transition: 'all 0.2s',
-                  boxShadow: selectedUsers.length > 0 ? '0 4px 12px rgba(220,38,38,0.3)' : 'none'
+                  boxShadow: (!criandoChat && selectedUsers.length > 0) ? '0 4px 12px rgba(220,38,38,0.3)' : 'none'
                 }}
               >
-                {novoChatTipo === 'individual' ? 'Iniciar conversa' : 'Criar grupo'}
+                {criandoChat ? 'Criando...' : (novoChatTipo === 'individual' ? 'Iniciar conversa' : 'Criar grupo')}
               </button>
             </div>
           </div>

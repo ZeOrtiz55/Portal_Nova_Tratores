@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissoes } from "@/hooks/usePermissoes";
 import SemPermissao from "@/components/SemPermissao";
@@ -21,6 +22,7 @@ import RastreioEncomendas from "@/components/ppv/RastreioEncomendas";
 
 function PPVApp() {
   const { kanbanItems, carregarKanban, atualizarKanbanLocal, toast, hideToast, globalLoading, cacheProduct, showToast, tecnicos } = usePPV();
+  const searchParams = useSearchParams();
 
   // Tabs e filtros
   const [activeTab, setActiveTab] = useState("kanbanTab");
@@ -59,6 +61,17 @@ function PPVApp() {
       carregarKanban(); // reverte em caso de erro
     }
   }, [showToast, carregarKanban, atualizarKanbanLocal]);
+
+  // Abrir PPV via URL (?id=PPV-0001)
+  const urlPPVId = searchParams.get("id");
+  const urlHandledRef = useRef(false);
+  useEffect(() => {
+    if (urlPPVId && !urlHandledRef.current) {
+      urlHandledRef.current = true;
+      setDetailsPPVId(urlPPVId);
+      setDetailsOpen(true);
+    }
+  }, [urlPPVId]);
 
   // Modais
   const [detailsOpen, setDetailsOpen] = useState(false);

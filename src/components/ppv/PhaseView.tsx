@@ -120,9 +120,10 @@ export default function PhaseView({ orders, searchTerm, onCardClick, onStatusCha
     return orders.filter(
       (o) =>
         (!term ||
-          o.cliente.toLowerCase().includes(term) ||
-          o.id.toLowerCase().includes(term) ||
-          (o.tecnico || "").toLowerCase().includes(term)) &&
+          (o.cliente || "").toLowerCase().includes(term) ||
+          (o.id || "").toLowerCase().includes(term) ||
+          (o.tecnico || "").toLowerCase().includes(term) ||
+          (o.observacao || "").toLowerCase().includes(term)) &&
         (!activePhase || normalizarStatus(o.status) === activePhase)
     );
   }, [orders, searchTerm, activePhase]);

@@ -31,8 +31,20 @@ export default function OSCard({ order: o, onClick }: OSCardProps) {
       </div>
       <div style={{ fontSize: 10, color: "var(--text-light)" }}><i className="far fa-calendar-alt" /> Criado: {diasCriado} dias</div>
       <div style={{ fontSize: 10, color: "var(--primary)", marginBottom: 10 }}><i className="fas fa-clock" /> Na fase: {diasFase} dias</div>
-      <div style={{ display: "flex", gap: 8, borderTop: "1px dashed var(--border)", paddingTop: 8 }}>
-        <i className="fas fa-box" style={{ color: o.temPPV ? "#1E3A5F" : "var(--border)" }} />
+      <div style={{ display: "flex", gap: 8, borderTop: "1px dashed var(--border)", paddingTop: 8, alignItems: "center" }}>
+        {o.temPPV ? (
+          <a
+            href={`/ppv?id=${encodeURIComponent(o.ppvId.split(",")[0].trim())}`}
+            onClick={(e) => e.stopPropagation()}
+            title={`Abrir ${o.ppvId}`}
+            style={{ color: "#1E3A5F", display: "flex", alignItems: "center", gap: 3, fontSize: 10, fontWeight: 600, textDecoration: "none" }}
+          >
+            <i className="fas fa-box" />
+            <span>{o.ppvId.split(",")[0].trim()}</span>
+          </a>
+        ) : (
+          <i className="fas fa-box" style={{ color: "var(--border)" }} />
+        )}
         <i className="fas fa-shopping-cart" style={{ color: o.temReq ? "#1E3A5F" : "var(--border)" }} />
         <i className="fas fa-file-alt" style={{ color: o.temRel ? "#1E3A5F" : "var(--border)" }} />
       </div>

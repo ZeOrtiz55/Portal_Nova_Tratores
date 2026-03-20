@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/pos/supabase";
-import { TBL_OS, TBL_LOGS_PPO, TBL_METRICAS, VALOR_HORA, VALOR_KM, TBL_ITENS, TBL_REQ_ATT, FASES_CONTADOR_PARADO } from "@/lib/pos/constants";
+import { TBL_OS, TBL_LOGS_PPO, TBL_METRICAS, VALOR_HORA, VALOR_KM, TBL_ITENS, TBL_REQ_ATT, TBL_PEDIDOS, FASES_CONTADOR_PARADO } from "@/lib/pos/constants";
 import { formatarDataBR, safeGet } from "@/lib/pos/utils";
 import { sincronizarStatusPPV } from "@/lib/pos/sync-ppv";
 import type { KanbanCard } from "@/lib/pos/types";
@@ -136,6 +136,7 @@ async function getOrdensParaKanban(): Promise<KanbanCard[]> {
       valor: parseFloat(String(safeGet(row, "Valor_Total") || 0)).toFixed(2).replace(".", ","),
       status: (safeGet(row, "Status") as string) || "Orçamento",
       temPPV: !!safeGet(row, "ID_PPV"),
+      ppvId: String(safeGet(row, "ID_PPV") || ""),
       temReq: !!safeGet(row, "Id_Req"),
       temRel: !!safeGet(row, "ID_Relatorio_Final"),
       servSolicitado: (safeGet(row, "Serv_Solicitado") as string) || "-",
@@ -222,10 +223,10 @@ async function registrarLog(osId: string, acao: string, statusPara: string | nul
 }
 
 async function gerarPPVId(): Promise<string> {
-  const { data } = await supabase.from(TBL_ITENS).select("Id_PPV").order("Id_PPV", { ascending: false }).limit(100);
+  const { data } = await supabase.from(TBL_PEDIDOS).select("id_pedido").order("id_pedido", { ascending: false }).limit(50);
   let maxNum = 0;
   (data || []).forEach((row) => {
-    const match = String(row.Id_PPV || "").match(/^PPV-(\d+)$/);
+    const match = String(row.id_pedido || "").match(/^PPV-(\d+)$/);
     if (match) {
       const n = parseInt(match[1], 10);
       if (n > maxNum) maxNum = n;
@@ -248,6 +249,29 @@ export async function POST(req: NextRequest) {
   if (dados.gerarPPV) {
     ppvGerado = await gerarPPVId();
     ppvFinal = ppvFinal ? `${ppvFinal},${ppvGerado}` : ppvGerado;
+
+    // Criar registro na tabela pedidos para o PPV existir de fato
+    const dataHoje = new Date();
+    const diaF = String(dataHoje.getDate()).padStart(2, "0");
+    const mesF = String(dataHoje.getMonth() + 1).padStart(2, "0");
+    const anoF = dataHoje.getFullYear();
+    const horaF = String(dataHoje.getHours()).padStart(2, "0");
+    const minF = String(dataHoje.getMinutes()).padStart(2, "0");
+    const dataFormatada = `${diaF}/${mesF}/${anoF} ${horaF}:${minF}`;
+
+    await supabase.from(TBL_PEDIDOS).insert({
+      id_pedido: ppvGerado,
+      Tipo_Pedido: "Pedido",
+      cliente: dados.nomeCliente || "",
+      tecnico: dados.tecnicoResponsavel || "",
+      status: "Aguardando",
+      valor_total: 0,
+      observacao: `Gerado automaticamente pela OS ${newId} (${dados.revisao || "Revisão"})`,
+      Motivo_Saida_Pedido: "Saida Tecnico (Com OS)",
+      email_usuario: "sistema@ppv.local",
+      Id_Os: newId,
+      data: dataFormatada,
+    });
   }
 
   const c = await calcularTotais({ qtdHoras: parseFloat(dados.qtdHoras || 0), qtdKm: parseFloat(dados.qtdKm || 0), ppv: ppvFinal, descontoValor: parseFloat(dados.descontoValor || 0) });

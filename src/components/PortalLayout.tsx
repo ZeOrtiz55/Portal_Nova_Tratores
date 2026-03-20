@@ -7,7 +7,7 @@ import { useNotificacoes } from '@/hooks/useNotificacoes'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LogOut, Settings, ClipboardList, Wrench, FileText,
-  DollarSign, Shield, Menu, X, User as UserIcon,
+  DollarSign, Package, Menu, X, User as UserIcon,
   LayoutDashboard, Bell, ChevronRight, Activity, Lock, MessageCircle,
   CheckCheck, Trash2, ExternalLink
 } from 'lucide-react'
@@ -68,7 +68,7 @@ const navItems: NavItem[] = [
     id: 'ppv',
     name: 'Peças (Pedido de Venda)',
     href: '/ppv',
-    icon: <Shield size={18} />,
+    icon: <Package size={18} />,
     tag: 'PEÇAS',
     gradient: 'linear-gradient(135deg, #ef4444, #b91c1c)'
   },
@@ -309,13 +309,13 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       {/* ===== TOP BAR (maior) ===== */}
       <header style={{
         position: 'sticky', top: 0, zIndex: 50,
-        padding: '0 32px', height: '72px',
+        padding: '0 32px', height: '84px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         background: '#ffffff',
         borderBottom: '1px solid #f0f0f0',
         boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
       }}>
-        {/* Left: menu + logo maior */}
+        {/* Left: menu + logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -327,47 +327,49 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             onMouseEnter={(e) => { e.currentTarget.style.background = '#f5f5f5' }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'none' }}
           >
-            {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
+            {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
           <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
             <img
               src="/Logo_Nova.png"
               alt="Nova Tratores"
-              style={{ height: '44px' }}
+              style={{ height: '50px' }}
             />
           </Link>
         </div>
 
         {/* Right: chat + sino + user */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
 
-          {/* Chat button */}
+          {/* Chat button — fundo vermelho */}
           <button
             onClick={() => setChatOpen(true)}
             style={{
               position: 'relative',
-              background: chatData.totalNaoLidas > 0 ? '#fef2f2' : 'none',
+              background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
               border: 'none',
-              color: chatData.totalNaoLidas > 0 ? '#dc2626' : '#a3a3a3',
-              cursor: 'pointer', padding: '10px',
-              borderRadius: '10px', transition: 'all 0.2s'
+              color: '#fff',
+              cursor: 'pointer', padding: '12px 22px',
+              borderRadius: '12px', transition: 'all 0.2s',
+              display: 'flex', alignItems: 'center', gap: '9px',
+              fontSize: '14px', fontWeight: '600',
+              boxShadow: '0 4px 12px rgba(220,38,38,0.25)'
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = chatData.totalNaoLidas > 0 ? '#fee2e2' : '#f5f5f5' }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = chatData.totalNaoLidas > 0 ? '#fef2f2' : 'none' }}
+            onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 6px 18px rgba(220,38,38,0.35)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 4px 12px rgba(220,38,38,0.25)' }}
             title="Mensagens"
           >
             <MessageCircle size={20} />
+            <span>Chat</span>
             {chatData.totalNaoLidas > 0 && (
-              <div className="notif-badge-pulse" style={{
-                position: 'absolute', top: '2px', right: '0px',
-                minWidth: '18px', height: '18px', borderRadius: '9px',
-                background: '#dc2626', color: '#fff', fontSize: '10px',
+              <span style={{
+                minWidth: '22px', height: '22px', borderRadius: '11px',
+                background: '#fff', color: '#dc2626', fontSize: '12px',
                 fontWeight: '700', display: 'flex', alignItems: 'center',
-                justifyContent: 'center', padding: '0 5px',
-                border: '2px solid #fff', boxShadow: '0 2px 6px rgba(220,38,38,0.4)'
+                justifyContent: 'center', padding: '0 6px',
               }}>
                 {chatData.totalNaoLidas > 99 ? '99+' : chatData.totalNaoLidas}
-              </div>
+              </span>
             )}
           </button>
 
@@ -377,24 +379,25 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               onClick={() => setBellOpen(!bellOpen)}
               style={{
                 position: 'relative',
-                background: bellOpen ? '#fef2f2' : (totalBell > 0 ? '#fef2f2' : 'none'),
+                background: 'linear-gradient(135deg, #ef4444, #dc2626)',
                 border: 'none',
-                color: totalBell > 0 ? '#dc2626' : '#a3a3a3',
-                cursor: 'pointer', padding: '10px',
-                borderRadius: '10px', transition: 'all 0.2s'
+                color: '#fff',
+                cursor: 'pointer', padding: '12px',
+                borderRadius: '12px', transition: 'all 0.2s',
+                boxShadow: '0 4px 12px rgba(220,38,38,0.2)'
               }}
-              onMouseEnter={(e) => { if (!bellOpen) e.currentTarget.style.background = totalBell > 0 ? '#fee2e2' : '#f5f5f5' }}
-              onMouseLeave={(e) => { if (!bellOpen) e.currentTarget.style.background = totalBell > 0 ? '#fef2f2' : 'none' }}
+              onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 6px 18px rgba(220,38,38,0.3)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 4px 12px rgba(220,38,38,0.2)' }}
             >
-              <Bell size={20} className={totalBell > 0 ? 'bell-ring' : ''} />
+              <Bell size={22} className={totalBell > 0 ? 'bell-ring' : ''} />
               {totalBell > 0 && (
                 <div className="notif-badge-pulse" style={{
-                  position: 'absolute', top: '2px', right: '0px',
-                  minWidth: '18px', height: '18px', borderRadius: '9px',
-                  background: '#dc2626', color: '#fff', fontSize: '10px',
+                  position: 'absolute', top: '-2px', right: '-4px',
+                  minWidth: '20px', height: '20px', borderRadius: '10px',
+                  background: '#fff', color: '#dc2626', fontSize: '11px',
                   fontWeight: '700', display: 'flex', alignItems: 'center',
                   justifyContent: 'center', padding: '0 5px',
-                  border: '2px solid #fff', boxShadow: '0 2px 6px rgba(220,38,38,0.4)'
+                  border: '2px solid #dc2626', boxShadow: '0 2px 6px rgba(220,38,38,0.4)'
                 }}>
                   {totalBell > 99 ? '99+' : totalBell}
                 </div>
@@ -531,18 +534,16 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             )}
           </div>
 
-          {/* Separador */}
-          <div style={{ width: '1px', height: '32px', background: '#f0f0f0', margin: '0 4px' }} />
-
-          {/* ===== USER (maior, com nome completo e setor) ===== */}
+          {/* User — fundo vermelho */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: '12px',
-            padding: '6px 16px 6px 6px', borderRadius: '14px',
-            background: '#f5f5f5', cursor: 'pointer'
+            padding: '8px 18px 8px 8px', borderRadius: '14px',
+            background: 'linear-gradient(135deg, #b91c1c, #991b1b)',
+            boxShadow: '0 4px 12px rgba(153,27,27,0.2)'
           }}>
             <div style={{
               width: '42px', height: '42px', borderRadius: '12px', overflow: 'hidden',
-              background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
+              background: 'rgba(255,255,255,0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0
             }}>
@@ -553,10 +554,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               )}
             </div>
             <div>
-              <p style={{ fontSize: '13.5px', fontWeight: '700', color: '#1a1a1a', lineHeight: '1.2', margin: 0 }}>
+              <p style={{ fontSize: '13px', fontWeight: '600', color: '#ffffff', lineHeight: '1.2', margin: 0 }}>
                 {userProfile?.nome || 'Usuário'}
               </p>
-              <p style={{ fontSize: '11px', color: '#a3a3a3', fontWeight: '500', margin: 0, marginTop: '1px' }}>
+              <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', fontWeight: '400', margin: 0, marginTop: '2px' }}>
                 {userProfile?.funcao || 'Colaborador'}
               </p>
             </div>
@@ -566,7 +567,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
       {/* ===== SIDEBAR ===== */}
       <div style={{
-        position: 'fixed', top: '72px', left: 0, bottom: 0,
+        position: 'fixed', top: '84px', left: 0, bottom: 0,
         width: sidebarOpen ? '260px' : '0px', overflow: 'hidden',
         transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         zIndex: 40, background: '#ffffff',
@@ -713,7 +714,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         <div
           onClick={() => setSidebarOpen(false)}
           style={{
-            position: 'fixed', inset: 0, top: '72px',
+            position: 'fixed', inset: 0, top: '84px',
             background: 'rgba(0,0,0,0.2)', zIndex: 35,
             transition: 'opacity 0.3s'
           }}
@@ -724,7 +725,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       <main style={{
         marginLeft: sidebarOpen ? '260px' : '0px',
         transition: 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        minHeight: 'calc(100vh - 72px)'
+        minHeight: 'calc(100vh - 84px)'
       }}>
         {children}
       </main>

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { ImapFlow } from "imapflow";
 
+// Cache em memória para evitar refetch IMAP a cada request
+let emailCache: { emails: EmailRevisao[]; timestamp: number } | null = null;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
 interface EmailAttachment {
   filename: string;
   contentType: string;
@@ -98,7 +102,19 @@ function extractAttachmentsFromStructure(node: any): EmailAttachment[] {
   return attachments;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const forceRefresh = searchParams.get("refresh") === "1";
+
+  // Retornar cache se ainda válido (a menos que refresh forçado)
+  if (!forceRefresh && emailCache && Date.now() - emailCache.timestamp < CACHE_TTL) {
+    return NextResponse.json({
+      total: emailCache.emails.length,
+      emails: emailCache.emails,
+      cached: true,
+    });
+  }
+
   const user = process.env.GMAIL_USER;
   const pass = process.env.GMAIL_APP_PASSWORD;
 
@@ -120,33 +136,104 @@ export async function GET() {
 
     await client.connect();
 
-    const lock = await client.getMailboxLock("[Gmail]/E-mails enviados");
+    // Tentar pasta de enviados — nome varia por idioma da conta
+    let lock;
+    const pastasEnviados = [
+      "[Gmail]/Sent Mail",
+      "[Gmail]/E-mails enviados",
+      "[Gmail]/Enviados",
+      "INBOX.Sent",
+      "Sent",
+    ];
+
+    let pastaUsada = "";
+    for (const pasta of pastasEnviados) {
+      try {
+        lock = await client.getMailboxLock(pasta);
+        pastaUsada = pasta;
+        break;
+      } catch {
+        // tenta a próxima
+      }
+    }
+
+    if (!lock) {
+      // Listar pastas disponíveis para debug
+      const list = await client.list();
+      const nomes = list.map((l: any) => l.path).join(", ");
+      await client.logout();
+      return NextResponse.json(
+        { error: `Nenhuma pasta de enviados encontrada. Pastas disponíveis: ${nomes}` },
+        { status: 500 }
+      );
+    }
+
+    console.log(`[revisoes/emails] Usando pasta: ${pastaUsada}`);
     const emails: EmailRevisao[] = [];
 
     try {
-      const messages = client.fetch("1:*", {
-        envelope: true,
-        bodyStructure: true,
-        uid: true,
-      });
+      // Tentar SEARCH primeiro; se retornar vazio, fazer fetch de todos e filtrar
+      let uids: number[] = [];
+      try {
+        const searchResult = await client.search(
+          { subject: "cheque de revis" },
+          { uid: true }
+        );
+        if (searchResult && Array.isArray(searchResult)) {
+          uids = searchResult;
+        }
+      } catch {
+        console.log("[revisoes/emails] SEARCH falhou, fazendo fetch completo");
+      }
 
       const textParts: Map<number, string> = new Map();
 
-      for await (const msg of messages) {
-        const subject = msg.envelope?.subject || "";
+      if (uids.length > 0) {
+        // SEARCH encontrou resultados — buscar só esses
+        const uidRange = uids.join(",");
+        const messages = client.fetch(uidRange, {
+          envelope: true,
+          bodyStructure: true,
+          uid: true,
+        });
 
-        if (/cheque de revis/i.test(subject)) {
+        for await (const msg of messages) {
+          const subject = msg.envelope?.subject || "";
           const parsed = parseSubject(subject);
           const attachments = msg.bodyStructure
             ? extractAttachmentsFromStructure(msg.bodyStructure)
             : [];
+          const textPart = msg.bodyStructure ? findTextPart(msg.bodyStructure) : null;
+          if (textPart) textParts.set(msg.uid, textPart);
 
-          const textPart = msg.bodyStructure
-            ? findTextPart(msg.bodyStructure)
-            : null;
-          if (textPart) {
-            textParts.set(msg.uid, textPart);
-          }
+          emails.push({
+            subject,
+            date: msg.envelope?.date?.toISOString() || "",
+            uid: msg.uid,
+            attachments,
+            body: "",
+            ...parsed,
+          });
+        }
+      } else {
+        // SEARCH vazio — fallback: buscar todos e filtrar por subject
+        console.log("[revisoes/emails] SEARCH retornou 0, fazendo fetch completo com filtro client-side");
+        const messages = client.fetch("1:*", {
+          envelope: true,
+          bodyStructure: true,
+          uid: true,
+        });
+
+        for await (const msg of messages) {
+          const subject = msg.envelope?.subject || "";
+          if (!/cheque de revis/i.test(subject)) continue;
+
+          const parsed = parseSubject(subject);
+          const attachments = msg.bodyStructure
+            ? extractAttachmentsFromStructure(msg.bodyStructure)
+            : [];
+          const textPart = msg.bodyStructure ? findTextPart(msg.bodyStructure) : null;
+          if (textPart) textParts.set(msg.uid, textPart);
 
           emails.push({
             subject,
@@ -159,6 +246,7 @@ export async function GET() {
         }
       }
 
+      // Baixar corpo dos emails (limitado a 2KB cada)
       for (const email of emails) {
         const partNumber = textParts.get(email.uid);
         if (!partNumber) continue;
@@ -189,6 +277,9 @@ export async function GET() {
     }
 
     await client.logout();
+
+    // Salvar no cache
+    emailCache = { emails, timestamp: Date.now() };
 
     return NextResponse.json({
       total: emails.length,

@@ -36,6 +36,7 @@ export interface KanbanCard {
   valor: string;
   status: string;
   temPPV: boolean;
+  ppvId: string;
   temReq: boolean;
   temRel: boolean;
   servSolicitado: string;

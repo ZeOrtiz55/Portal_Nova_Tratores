@@ -7,7 +7,8 @@ import { useAuditLog } from '@/hooks/useAuditLog'
 import {
   Settings, ClipboardList, Wrench, FileText,
   DollarSign, Activity, Clock, ChevronRight, Search,
-  BarChart3, Users, Shield
+  BarChart3, Users, Package, ClipboardCheck, AlertTriangle,
+  CheckCircle2, Map
 } from 'lucide-react'
 
 interface SystemCard {
@@ -19,6 +20,7 @@ interface SystemCard {
   gradient: string
   href: string
   tag: string
+  external?: boolean
 }
 
 const systems: SystemCard[] = [
@@ -66,7 +68,7 @@ const systems: SystemCard[] = [
     id: 'ppv',
     name: 'Peças (Pedido de Venda)',
     description: 'Pedidos de venda de peças, rastreamento e gestão',
-    icon: <Shield size={28} />,
+    icon: <Package size={28} />,
     color: '#dc2626',
     gradient: 'linear-gradient(135deg, #ef4444, #b91c1c)',
     href: '/ppv',
@@ -81,6 +83,27 @@ const systems: SystemCard[] = [
     gradient: 'linear-gradient(135deg, #991b1b, #7f1d1d)',
     href: '/propostas',
     tag: 'VENDAS'
+  },
+  {
+    id: 'tarefas',
+    name: 'Tarefas',
+    description: 'Gestão de tarefas entre usuários com integração Vikunja',
+    icon: <ClipboardCheck size={28} />,
+    color: '#dc2626',
+    gradient: 'linear-gradient(135deg, #dc2626, #b91c1c)',
+    href: '/tarefas',
+    tag: 'TAREFAS'
+  },
+  {
+    id: 'mapa-geral',
+    name: 'Mapa Geral',
+    description: 'Visualização geográfica de clientes, máquinas e operações',
+    icon: <Map size={28} />,
+    color: '#dc2626',
+    gradient: 'linear-gradient(135deg, #b91c1c, #991b1b)',
+    href: 'https://mapa-geral-production.up.railway.app/',
+    tag: 'MAPA',
+    external: true
   }
 ]
 
@@ -99,6 +122,8 @@ const systemToModulo: Record<string, string> = {
   'pos': 'pos',
   'ppv': 'ppv',
   'proposta-comercial': 'propostas',
+  'tarefas': 'tarefas',
+  'mapa-geral': 'mapa',
 }
 
 export default function DashboardPage() {
@@ -109,6 +134,8 @@ export default function DashboardPage() {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
   const [recentLogs, setRecentLogs] = useState<LogEntry[]>([])
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [minhasTarefas, setMinhasTarefas] = useState<any[]>([])
+  const [tarefasLoading, setTarefasLoading] = useState(true)
 
   // Relógio a cada 30s em vez de 1s — reduz 30x re-renders
   useEffect(() => {
@@ -130,6 +157,38 @@ export default function DashboardPage() {
     loadLogs()
   }, [userProfile])
 
+  // Carregar tarefas do Vikunja
+  useEffect(() => {
+    if (!userProfile) return
+    const loadTarefas = async () => {
+      try {
+        // Buscar vikunja users para achar o ID
+        const usersRes = await fetch('/api/tarefas/users')
+        const vUsers = await usersRes.json()
+        if (!Array.isArray(vUsers)) { setTarefasLoading(false); return }
+        const nome = userProfile.nome?.toLowerCase() || ''
+        const match = vUsers.find((u: any) =>
+          u.username.toLowerCase() === nome ||
+          u.username.toLowerCase().includes(nome.split(' ')[0]?.toLowerCase()) ||
+          nome.includes(u.username.toLowerCase())
+        )
+        if (!match) { setTarefasLoading(false); return }
+        const res = await fetch(`/api/tarefas?filter=minhas&vikunjaUserId=${match.id}`)
+        const data = await res.json()
+        // Mostrar só pendentes/atrasadas, máximo 5
+        const pendentes = (Array.isArray(data) ? data : [])
+          .filter((t: any) => t.computed_status !== 'concluida')
+          .slice(0, 5)
+        setMinhasTarefas(pendentes)
+      } catch (err) {
+        console.error('Erro ao carregar tarefas:', err)
+      } finally {
+        setTarefasLoading(false)
+      }
+    }
+    loadTarefas()
+  }, [userProfile])
+
   const logAccess = async (system: SystemCard) => {
     if (!userProfile) return
     await supabase.from('portal_logs').insert([{
@@ -143,7 +202,11 @@ export default function DashboardPage() {
   const openSystem = (system: SystemCard) => {
     logAccess(system)
     auditLog({ sistema: system.id.replace('sistema-', ''), acao: 'acesso', entidade_label: system.name })
-    router.push(system.href)
+    if (system.external) {
+      window.open(system.href, '_blank')
+    } else {
+      router.push(system.href)
+    }
   }
 
   const allowedSystems = useMemo(() => systems.filter(s => {
@@ -276,7 +339,7 @@ export default function DashboardPage() {
             width: '64px', height: '64px', borderRadius: '16px', margin: '0 auto 20px',
             background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
-            <Shield size={28} color="#dc2626" />
+            <Package size={28} color="#dc2626" />
           </div>
           <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#1a1a1a', marginBottom: '8px' }}>
             Aguardando liberação
@@ -365,14 +428,14 @@ export default function DashboardPage() {
                     width: '6px', height: '6px', borderRadius: '50%',
                     background: '#22c55e'
                   }} />
-                  Integrado
+                  {system.external ? 'Externo' : 'Integrado'}
                 </span>
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: '6px',
                   color: hoveredCard === system.id ? '#dc2626' : '#d4d4d4',
                   fontSize: '12px', fontWeight: '600', transition: 'all 0.3s'
                 }}>
-                  Acessar
+                  {system.external ? 'Abrir' : 'Acessar'}
                   <ChevronRight size={14} style={{
                     transition: 'transform 0.3s',
                     transform: hoveredCard === system.id ? 'translateX(4px)' : 'translateX(0)'
@@ -382,6 +445,152 @@ export default function DashboardPage() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Minhas Tarefas */}
+      <div style={{ marginTop: '48px' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          marginBottom: '20px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '4px', height: '24px', borderRadius: '2px',
+              background: 'linear-gradient(180deg, #dc2626, #b91c1c)'
+            }} />
+            <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#1a1a1a' }}>
+              Minhas Tarefas
+            </h3>
+            {minhasTarefas.length > 0 && (
+              <span style={{
+                fontSize: '11px', fontWeight: '700', color: '#fff',
+                background: '#dc2626', padding: '2px 10px', borderRadius: '10px'
+              }}>
+                {minhasTarefas.length}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => router.push('/tarefas')}
+            style={{
+              background: 'none', border: 'none', color: '#dc2626',
+              fontSize: '13px', fontWeight: '600', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: '4px'
+            }}
+          >
+            Ver todas <ChevronRight size={16} />
+          </button>
+        </div>
+
+        {tarefasLoading ? (
+          <div style={{
+            padding: '40px', textAlign: 'center', borderRadius: '16px',
+            background: '#fff', border: '1px solid #f0f0f0'
+          }}>
+            <p style={{ color: '#a3a3a3', fontSize: '13px' }}>Carregando tarefas...</p>
+          </div>
+        ) : minhasTarefas.length === 0 ? (
+          <div style={{
+            padding: '40px', textAlign: 'center', borderRadius: '16px',
+            background: '#fff', border: '1px solid #f0f0f0',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+          }}>
+            <ClipboardCheck size={36} color="#e5e5e5" style={{ margin: '0 auto 12px', display: 'block' }} />
+            <p style={{ color: '#a3a3a3', fontSize: '14px', margin: 0 }}>Nenhuma tarefa pendente</p>
+          </div>
+        ) : (
+          <div style={{
+            borderRadius: '16px', overflow: 'hidden',
+            background: '#fff', border: '1px solid #f0f0f0',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+          }}>
+            {minhasTarefas.map((t: any, i: number) => {
+              const isAtrasada = t.computed_status === 'atrasada'
+              const hasDue = t.due_date && !t.due_date.startsWith('0001')
+              const priorityColors: Record<number, string> = { 0: '#a3a3a3', 1: '#3b82f6', 2: '#f59e0b', 3: '#f97316', 4: '#ef4444', 5: '#dc2626' }
+              const priorityLabels: Record<number, string> = { 0: '', 1: 'Baixa', 2: 'Normal', 3: 'Alta', 4: 'Urgente', 5: 'Crítica' }
+              const dueDate = hasDue ? new Date(t.due_date) : null
+              const now = new Date()
+              const diffDays = dueDate ? Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null
+
+              return (
+                <div
+                  key={t.id}
+                  onClick={() => router.push('/tarefas')}
+                  style={{
+                    padding: '16px 24px',
+                    display: 'flex', alignItems: 'center', gap: '16px',
+                    borderBottom: i < minhasTarefas.length - 1 ? '1px solid #f5f5f5' : 'none',
+                    borderLeft: `3px solid ${isAtrasada ? '#ef4444' : '#f59e0b'}`,
+                    cursor: 'pointer', transition: 'background 0.15s',
+                    background: isAtrasada ? '#fffbfb' : 'transparent'
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#fafafa' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = isAtrasada ? '#fffbfb' : 'transparent' }}
+                >
+                  {/* Ícone status */}
+                  <div style={{
+                    width: '36px', height: '36px', borderRadius: '10px',
+                    background: isAtrasada ? '#fef2f2' : '#fffbeb',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    {isAtrasada
+                      ? <AlertTriangle size={18} color="#ef4444" />
+                      : <Clock size={18} color="#f59e0b" />
+                    }
+                  </div>
+
+                  {/* Conteúdo */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{
+                      fontSize: '14px', fontWeight: '500', color: '#1a1a1a',
+                      margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                    }}>
+                      {t.title}
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                      {t.created_by && (
+                        <span style={{ fontSize: '12px', color: '#a3a3a3' }}>
+                          de {t.created_by.username}
+                        </span>
+                      )}
+                      {t.priority > 0 && (
+                        <span style={{
+                          fontSize: '10px', fontWeight: '600',
+                          color: priorityColors[t.priority] || '#a3a3a3',
+                          textTransform: 'uppercase'
+                        }}>
+                          {priorityLabels[t.priority]}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Data */}
+                  {hasDue && (
+                    <div style={{
+                      textAlign: 'right', flexShrink: 0
+                    }}>
+                      <p style={{
+                        fontSize: '12px', fontWeight: '600', margin: 0,
+                        color: isAtrasada ? '#ef4444' : diffDays !== null && diffDays <= 1 ? '#f59e0b' : '#737373'
+                      }}>
+                        {dueDate!.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                      </p>
+                      <p style={{
+                        fontSize: '10px', color: isAtrasada ? '#ef4444' : '#a3a3a3',
+                        margin: '2px 0 0 0', fontWeight: isAtrasada ? '600' : '400'
+                      }}>
+                        {isAtrasada ? `${Math.abs(diffDays!)} dia(s) atrás` : diffDays === 0 ? 'Hoje' : diffDays === 1 ? 'Amanhã' : `${diffDays} dias`}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Recent Activity */}

@@ -47,18 +47,18 @@ export default function FinanceiroNav({ children }) {
 
   return (
     <div style={{
-      position: 'sticky', top: '72px', zIndex: 30,
+      position: 'sticky', top: '84px', zIndex: 30,
       background: '#fff', borderBottom: '1px solid #f0f0f0',
       boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
       padding: '0 24px',
     }}>
       <div style={{
         display: 'flex', alignItems: 'center',
-        height: '48px', gap: '6px',
+        height: '56px', gap: '8px',
       }}>
         {/* Nav tabs — tudo junto, sem título separado */}
         <nav style={{
-          display: 'flex', alignItems: 'center', gap: '2px',
+          display: 'flex', alignItems: 'center', gap: '4px',
           flex: 1, overflowX: 'auto',
         }}>
           {links.map(link => {
@@ -66,15 +66,15 @@ export default function FinanceiroNav({ children }) {
             const Icon = ICONS[link.icon]
             return (
               <Link key={link.href} href={link.href} style={{
-                display: 'flex', alignItems: 'center', gap: '5px',
-                padding: '6px 12px', borderRadius: '7px',
-                fontSize: '12px', fontWeight: isActive ? '700' : '500',
+                display: 'flex', alignItems: 'center', gap: '7px',
+                padding: '9px 18px', borderRadius: '8px',
+                fontSize: '14px', fontWeight: isActive ? '600' : '500',
                 color: isActive ? '#dc2626' : '#737373',
                 background: isActive ? '#fef2f2' : 'transparent',
                 textDecoration: 'none', transition: 'all 0.15s',
                 whiteSpace: 'nowrap',
               }}>
-                <Icon size={14} strokeWidth={isActive ? 2.5 : 2} />
+                <Icon size={17} strokeWidth={isActive ? 2.5 : 2} />
                 {link.label}
               </Link>
             )

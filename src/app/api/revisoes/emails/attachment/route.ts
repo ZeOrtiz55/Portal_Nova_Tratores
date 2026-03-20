@@ -65,7 +65,25 @@ export async function GET(request: NextRequest) {
     });
 
     await client.connect();
-    const lock = await client.getMailboxLock("[Gmail]/E-mails enviados");
+
+    const pastasEnviados = [
+      "[Gmail]/Sent Mail",
+      "[Gmail]/E-mails enviados",
+      "[Gmail]/Enviados",
+      "INBOX.Sent",
+      "Sent",
+    ];
+    let lock;
+    for (const pasta of pastasEnviados) {
+      try {
+        lock = await client.getMailboxLock(pasta);
+        break;
+      } catch {}
+    }
+    if (!lock) {
+      await client.logout();
+      return NextResponse.json({ error: "Pasta de enviados não encontrada." }, { status: 500 });
+    }
 
     try {
       const { content } = await client.download(uid, part, { uid: true });

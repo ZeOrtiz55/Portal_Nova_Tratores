@@ -90,10 +90,10 @@ function DashboardAgrupadoInner() {
     setDestinatarios(loadDestinatarios());
   }, []);
 
-  const fetchEmails = async () => {
+  const fetchEmails = async (forceRefresh = false) => {
     setLoadingEmails(true);
     try {
-      const res = await fetch("/api/revisoes/emails");
+      const res = await fetch(`/api/revisoes/emails${forceRefresh ? "?refresh=1" : ""}`);
       if (!res.ok) throw new Error("Erro ao buscar emails");
       const data = await res.json();
       setEmails(prev => {
@@ -113,22 +113,24 @@ function DashboardAgrupadoInner() {
     }
   };
 
-  // Fetch emails + tratores em paralelo
+  // Carregar tratores do Supabase (rápido) e emails do Gmail (lento) separadamente
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchTratores = async () => {
       setLoading(true);
-      const [, tratorRes] = await Promise.all([
-        fetchEmails(),
-        supabase.from("tratores").select("*").order("Cliente", { ascending: true }),
-      ]);
-      if (tratorRes.error) {
+      const { data, error } = await supabase
+        .from("tratores")
+        .select("*")
+        .order("Cliente", { ascending: true });
+      if (error) {
         setErro("Falha ao carregar dados. Verifique sua conexão.");
-      } else if (tratorRes.data) {
-        setTratores(tratorRes.data);
+      } else if (data) {
+        setTratores(data);
       }
       setLoading(false);
     };
-    fetchData();
+    fetchTratores();
+    // Emails carregam em background — não bloqueiam a tela
+    fetchEmails();
   }, []);
 
   // Mapa de emails por sufixo de chassis (últimos 4 dígitos) para evitar O(emails×tratores) a cada render
@@ -136,7 +138,8 @@ function DashboardAgrupadoInner() {
     const map = new Map<string, EmailRevisao[]>();
     for (const e of emails) {
       if (!e.chassisFinal) continue;
-      const key = e.chassisFinal;
+      // Normalizar para últimos 4 dígitos para bater com chassis.slice(-4)
+      const key = e.chassisFinal.slice(-4);
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(e);
     }
@@ -248,6 +251,27 @@ function DashboardAgrupadoInner() {
     setSalvandoTrator(false);
   };
 
+  const notificarAdminsFalha = async (titulo: string, descricao: string) => {
+    try {
+      const { data: admins } = await supabase
+        .from("portal_permissoes")
+        .select("user_id")
+        .eq("is_admin", true);
+      if (!admins || admins.length === 0) return;
+      await supabase.from("portal_notificacoes").insert(
+        admins.map((a: { user_id: string }) => ({
+          user_id: a.user_id,
+          tipo: "revisao",
+          titulo,
+          descricao,
+          link: "/revisoes",
+        }))
+      );
+    } catch {
+      // Falha silenciosa — não travar o fluxo por causa de notificação
+    }
+  };
+
   const enviarEmail = async () => {
     if (!selecionado) return;
     if (!revisaoEnvio) { setMsgEnvio("Selecione a revisão."); return; }
@@ -262,6 +286,7 @@ function DashboardAgrupadoInner() {
 
     const emailsDest = Array.from(destinatariosSelecionados);
 
+    let emailEnviado = false;
     try {
       for (let i = 0; i < files.length; i++) {
         const formData = new FormData();
@@ -275,8 +300,25 @@ function DashboardAgrupadoInner() {
 
         const res = await fetch("/api/revisoes", { method: "POST", body: formData });
         if (!res.ok) throw new Error("Erro no envio");
+        emailEnviado = true;
       }
-      const hoje = new Date().toISOString().split("T")[0];
+    } catch {
+      if (!emailEnviado) {
+        setMsgEnvio("Falha ao enviar email. Tente novamente.");
+        // Notificar admins sobre a falha
+        notificarAdminsFalha(
+          `Falha ao enviar cheque de revisão ${revisaoEnvio}`,
+          `Trator ${selecionado.Modelo} - Chassis ${selecionado.Chassis} (${selecionado.Cliente}). O email não foi enviado.`
+        );
+        setEnviando(false);
+        return;
+      }
+      // Email enviado mas houve erro parcial — continua para salvar no banco
+    }
+
+    // Salvar revisão no banco SEMPRE que pelo menos um email foi enviado
+    try {
+      const hoje = new Date().toLocaleDateString("pt-BR");
       const { error: dbError } = await supabase
         .from("tratores")
         .update({
@@ -287,6 +329,10 @@ function DashboardAgrupadoInner() {
 
       if (dbError) {
         setMsgEnvio("Email enviado, mas erro ao atualizar revisão: " + dbError.message);
+        notificarAdminsFalha(
+          `Erro ao salvar revisão ${revisaoEnvio} no banco`,
+          `Trator ${selecionado.Modelo} - Chassis ${selecionado.Chassis} (${selecionado.Cliente}). Email foi enviado mas o banco não atualizou: ${dbError.message}`
+        );
       } else {
         const updated = {
           ...selecionado,
@@ -298,30 +344,33 @@ function DashboardAgrupadoInner() {
         setMsgEnvio("Email enviado e revisão atualizada!");
         auditLog({ sistema: 'revisoes', acao: 'enviar_email', entidade: 'trator', entidade_id: selecionado.ID, entidade_label: `${selecionado.Modelo} - ${selecionado.Chassis}`, detalhes: { revisao: revisaoEnvio, horimetro: horimetroEnvio.trim(), destinatarios: Array.from(destinatariosSelecionados) } });
       }
-
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      setHorimetroEnvio("");
-
-      const horasEnvio = revisaoEnvio.replace("h", "");
-      const chassisFinal = selecionado.Chassis.slice(-4);
-      const emailOtimista: EmailRevisao = {
-        subject: `CHEQUE DE REVISÃO - ${horasEnvio} HORAS - ${selecionado.Modelo} ${chassisFinal}`,
-        date: new Date().toISOString(),
-        uid: Date.now(),
-        horas: horasEnvio,
-        modelo: selecionado.Modelo,
-        chassisFinal,
-        attachments: [],
-        body: "",
-      };
-      setEmails(prev => [...prev, emailOtimista]);
-
-      setTimeout(() => fetchEmails(), 5000);
     } catch {
-      setMsgEnvio("Falha ao enviar email. Tente novamente.");
-    } finally {
-      setEnviando(false);
+      setMsgEnvio("Email enviado, mas erro ao salvar revisão no banco.");
+      notificarAdminsFalha(
+        `Erro ao salvar revisão ${revisaoEnvio} no banco`,
+        `Trator ${selecionado.Modelo} - Chassis ${selecionado.Chassis} (${selecionado.Cliente}). Email foi enviado mas ocorreu erro ao salvar no banco.`
+      );
     }
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    setHorimetroEnvio("");
+
+    const horasEnvio = revisaoEnvio.replace("h", "");
+    const chassisFinal = selecionado.Chassis.slice(-4);
+    const emailOtimista: EmailRevisao = {
+      subject: `CHEQUE DE REVISÃO - ${horasEnvio} HORAS - ${selecionado.Modelo} ${chassisFinal}`,
+      date: new Date().toISOString(),
+      uid: Date.now(),
+      horas: horasEnvio,
+      modelo: selecionado.Modelo,
+      chassisFinal,
+      attachments: [],
+      body: "",
+    };
+    setEmails(prev => [...prev, emailOtimista]);
+
+    setTimeout(() => fetchEmails(true), 5000);
+    setEnviando(false);
   };
 
   const formatFileSize = (bytes: number) => {
