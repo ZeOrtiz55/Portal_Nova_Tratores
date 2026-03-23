@@ -1,0 +1,1042 @@
+Id_Ordem,Os_Cliente,Cnpj_Cliente,Endereco_Cliente,Os_Tecnico,Data,Serv_Solicitado,Causa,Serv_Realizado,Qtd_HR,Valor_HR,Qtd_KM,Valor_KM,Valor_Total,Codigo_Servico,Status,ID_PPV,Id_Req,Projeto,ID_Relatorio_Final,Ordem_Omie,Motivo_Cancelamento,Os_Tecnico2,Revisao,Tipo_Servico,Desconto,Desconto_Hora,Desconto_KM,Previsao_Execucao,Previsao_Faturamento,id_omie
+OS-0001,JOSE ADILSO DE LIMA,07.974.185/0006-99,FAZENDA SÃO CARLOS,DANILO DE SOUZA,2026-01-14,Revisão de 50 Horas,,,2,193,82,2.8,615.6,,Cancelada,,,6075E CAB MDI07513HS0006118,,,"Bugou ",,"Revisão de 50 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Hidráulico.",Revisão,,0,0,,,
+OS-0002,MARIA BEATRIZ NAVARRO RIBEIRO COSTACURTA,24.048.313/0001-88,FAZENDA SANTA RITA - GLEBA B,NICOLAS DARIO,2026-01-14,Revisão de 50 Horas,,"Modelo: 6075
+Chassis: MDI07513LS0006165
+Horimetro:120
+
+Serviço Realizado: Técnico realizou a revisão de 50 Horas do trator Mahindra, finalizando o serviço, fez a inspeção e o checklist visando encontrar problemas que alterem a funcionalidade ou desempenho do trator, mas não encontrou, constatando que estava funcionando perfeitamente.",1,193,82,2.8,1699.6,,Concluída,PPV-0002,,6075E CAB MDI07513LS0006165,,4506,,,"Revisão de 50 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Hidráulico.",Revisão,193,0,0,,,
+OS-0003,MARIA BEATRIZ NAVARRO RIBEIRO COSTACURTA,24.048.313/0001-88,FAZENDA SANTA RITA - GLEBA B,PAULO MOTTA,2026-01-14,Revisão de 50 Horas e vazamento na Bomba.,,"Modelo: 6075 CAB
+Chassis: MDI07513HS0006054
+Horimetro: 60
+
+Serviço Realizado: Técnico realizou a revisão de 50 Horas do trator Mahindra. E para o vazamento, fez o afastamento e cola da junta no encaixe. 
+Finalizando o serviço, fez a inspeção e o checklist visando encontrar problemas que alterem a funcionalidade ou desempenho do trator, mas não encontrou, constatando que estava funcionando perfeitamente.",1,193,74,2.8,1897.1999999999998,,Concluída,PPV-0003,,6075E CAB MDI07513HS0006054,,4507,,,"Revisão de 50 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Hidráulico.",Revisão,193,0,0,,,
+OS-0004,FELIZARDO &amp; FELIZARDO SERVIÇOS DE MÃO DE OBRA LTDA,04.367.420/0001-61,RUA PAULO FERNANDO VIEIRA GOMES,LUIZ FERNANDO,2026-01-14,Furo no filtro de Sucção,,"Tecnico realiz a troca do filtro de sucção e colocu 10 litros de oleo hidraulico
+Feio na oficina",2,193,0,2.8,1316,,Concluída,PPV-0004,,6075 MBNYHBKYVKNB00131,,4490,,,,Manutenção,0,0,0,,,
+OS-0005,CELSO CAMARGO GUAZZO E OUTRA,10.749.837/0001-91,"RODOVIA RAPOSO TAVARES, KM 299",JOSE ANTONIO DE OLIVEIRA,2026-01-14,Vazamento de oleo cubo dianteiro no lado esquerdo,,Técnico tirou o cubo dianteiro do lado esquerdo para trocar o rolamento e retentor,2,193,49,2.8,803.2,,Concluída,PPV-0011,,JIVO 2025 MBN1KGCBFKGG00056,,4492,,,,Manutenção,0,0,0,,,
+OS-0006,JULIO CESAR PEREIRA SALES,084.649.838-32,"FAZENDA PINHAL 1 , S/N",JOSE ANTONIO DE OLIVEIRA,2026-01-15,"Tirar  a bomba injetora para verificar o que pode estar acontecendo ",,,0,193,0,2.8,0,,Executada,,,,,000000000004732,,,,Manutenção,0,0,0,,,
+OS-0007,CLAUDINEI APARECIDO DA COSTA,08.420.500/0004-37,"RODOVIA SP 289 - PIRAJU A MANDURI, KM 41",JOSE ANTONIO DE OLIVEIRA,2026-01-15,"Modelo: 86-110
+Chassis: NP7T4KC6EPPMA05046
+Horimetro:1961,8
+ Solicitação do Cliente: Verificar o comando hidraulico que está fumaciando 
+
+Serviço Realizado:Tecnico desmontou a carenagem lateral do trator para realizar a trroca do cabo do comando Hidraulico. Terminando o serviço, verificou se estava tudo correto e montou novamente. ",,,7,193,36,2.8,2624.0064,,Concluída,PPV-0005,,86110 NP7T4KC6EPPMA05046,,4518,,,,Manutenção,0,0,0,,,
+OS-0008,SANDRA AP. MARQUES DE LAZZARI E BENEDITO DE LAZZARI,39.548.562/0001-00,"SITIO SAO LUCAS, S/N - BRUMADO - OLEO (SP)/SP",LUIZ FERNANDO,2026-01-15,REALIZAR TROCA DO FILTRO COMBUSTÍVEL,,,0,193,0,2.8,146,,Cancelada,,,,,,Aberto sem querer,,,Manutenção,0,0,0,,,
+OS-0009,MARIA BEATRIZ NAVARRO RIBEIRO COSTACURTA,24.048.313/0001-88,FAZENDA SANTA RITA - GLEBA B,NICOLAS DARIO,2026-01-15,Revisão de 50 Horas,,,2,193,0,2.8,1826,,Concluída,PPV-0007,,,,4519,,,"Revisão de 50 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Hidráulico.",Revisão,0,0,0,,,
+OS-0010,JOSE ADILSO DE LIMA,07.974.185/0006-99,FAZENDA SÃO CARLOS,FERNANDO LEONEL,2026-01-16,"Solicitação do Cliente: Cabo do Joystick travando.
+Porta do Mahindra 6075 E travando",,"Modelo: Marispan M85
+Chassis: 00028014
+
+Técnico realizou a troca dos 2 cabos do Joystick e 1 terminal esférico.
+Técnico utilizou um cabo do tamanho de 1,5 M. Mas para o trator é necessario um de 2M. Estamos aguardando o novo chegar para realizar a troca.
+
+Para a porta o técnico constatou que necessitava de uma limpeza, então ele desmontou o trinco da porta para fazer a limpeza lubricação.",3,193,82,2.8,2007.7640000000001,,Concluída,PPV-0008,,6075E CAB MDI07512HP0003914,,4494,,JOSE ANTONIO DE OLIVEIRA,,Manutenção,0,0,0,,,
+OS-0011,MOACIR ROSSETTI,08.524.824/0006-87,FAZENDA FORTALEZA,GABRIEL MORAES,2026-01-17,Revisão de 2400 Horas e Troca do banco.,,,6.5,193,108,2.8,6069.319667,,Concluída,PPV-0009,,6075 MDI07502LN0001737,,4425,,NICOLAS DARIO,"Revisão de 2400 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Adição de aditivo no Radiador, Troca de Filtro do Hidráulico, Troca de Filtro de Ar,",Revisão,0,0,0,,,
+OS-0012,JOSE ADILSO DE LIMA,07.974.185/0006-99,FAZENDA SÃO CARLOS,DANILO DE SOUZA,2026-01-17,Revisão de 50 Horas,,"Modelo : 6075
+Chassis:  MDI07513HS0006118
+Horimetro: 68,9
+
+Técnico realizou a revisão de 50 Horas, após isso, fez o checklist e inspeção, visando encontrar problema que alterem a funcionalidade ou desempenho do trator, mas não encontrou, constatando que esta funcionando perfeitamente.",2,193,82,2.8,1669.6,,Concluída,PPV-0010,,6075E CAB MDI07513HS0006118,,4477,,,"Revisão de 50 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Hidráulico.",Revisão,386,0,0,,,
+OS-0013,JOSE ADILSO DE LIMA,07.974.185/0006-99,FAZENDA SÃO CARLOS,JOSE ANTONIO DE OLIVEIRA,2026-01-19,VAZAMENTO DE DIESEL,,,0,193,0,2.8,0,,Cancelada,,0db6e25b,,,,Seviço nao foi realizado,,,Manutenção,0,0,0,,,
+OS-0014,ANTONIO JOSE RIBEIRO,08.300.317/0001-55,SITIO CORREDEIRA I,DANILO DE SOUZA,2026-01-19,REALIZAR REVISÃO DE 300H,,,3,193,0,2.8,579,,Cancelada,,,,,,"Fez a revisão errada, sem previsão para reabrir a ordem",,,Manutenção,0,0,0,,,
+OS-0015,ANTONIO RUIZ FRAGOSO,835.354.388-53,RUA ROBERTO ROLIM DE MOURA,DANILO DE SOUZA,2026-01-19,"Solicitação do Cliente: Revisão de 2100Horas.
+Modelo: 6075
+Chassis: MBNYHBKYVMNM00602
+Horimetro: 2188",,"Serviço Realizado: Técnico realizou a revisão de 2100 Horas e finalizando o serviço, fez o checklist e inspeção visual, para procurar problemas que alterem a funcionalidade ou desempenho do trator, mas não encontrou, constatando que esta funcionando perfeitamente.",2,193,90,2.8,1793,,Concluída,PPV-0013,,6075 MBNYHBKYVMNM00602,,4511,,,"Revisão de 2100 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0016,MARIA BEATRIZ NAVARRO RIBEIRO COSTACURTA,24.048.313/0001-88,FAZENDA SANTA RITA - GLEBA B,JOSE ANTONIO DE OLIVEIRA,2026-01-19,"Modelo: 6075E CAB
+Chassis:MDI07513PS0006206
+Horimetro: 68
+
+Seviço Solicitado: Trator esta acendendo a luz de pressão de óleo motor
+Diagnóstico do Técnico: Sensor de Pressão do óleo motor está com defeito.
+
+Serviço realizado: Técnico mediu a presão da bomba de óleo e trocou o sensor de pressão, finalizando o serviço, verficou que estava tudo normal.",,,1,193,80,2.8,532.05,,Concluída,PPV-0012,,6075E CAB MDI07513PS0006206,,4517,,,,Manutenção,0,0,0,,,
+OS-0017,PEDRO ANDRE FERNANDES E OUTRO,18.781.446/0001-66,FAZENDA SAO FRANCISCO,NICOLAS DARIO,2026-01-19,Demonstração atomizador K.O 2000,,"Modelo: K.O AT 2000
+Chassis: B054525
+
+
+Solicitação Cliente: Demonstração do Pulverizador
+
+Serviço realizado: Técnico realizouo a demonstração do atomizador para os funcionarios da fazenda. A máquina foi trazida pela fabrica e teve um tecnico tambem participou da demonstração
+",2,193,80,2.8,610,,Concluída,,,,,4504,,,,Manutenção,0,0,0,,,
+OS-0018,ANTONIO NICOLAU FERREIRA NETO E OUTRO,12.441.990/0001-82,FAZENDA SANTA MARIA,DANILO DE SOUZA,2026-01-19,"Modelo: JIVO
+Chassis: MBN1KGCBFSGK01811
+Horimetro:62,5
+
+Serviço Solicitado:REVISÃO DE 50H
+Serviço Realizado: Técnico realizou a revisão de 50 Horas e finalizando o serviço, fez a inspeção visando encontrar problemas que alterem a funcionalidade ou desempenho do trator, mas não encontrou, constatando que estava funcionando perfeitamente",,,1,193,40,2.8,112,,Concluída,,,JIVO 2025 MBN1KGCBFSGK01811,,00,,,"Revisão de 50 horas 2025 - Troca de Óleo do Motor, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Hidráulico.",Revisão,193,0,0,,,
+OS-0019,RODOLPHO PANZENBOECK DELLAPE BAPTISTA,165.827.008-80,RUA DAS BEGONIAS,PAULO MOTTA,2026-01-21,Revisão de 300 Horas 6075,,,3,193,0,2.8,2414,,Cancelada,PPV-0015,,,,,Nao foi realizado e sem previsão de retorno,,"Revisão de 300 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0020,LUIZ FRANCISCO CRUZ,07.927.624/0013-31,FAZENDA SANTO ANTONIO DO LUCATO,JOSE ANTONIO DE OLIVEIRA,2026-01-21,"Revisão de 900H ",,,17,193,614,2.8,5000.2,,Cancelada,"PPV-0016, PPV-0017",,,,,"Abrir direto no omie por conta dos produtos dando erro no ppv
+",,,Manutenção,0,0,0,,,
+OS-0021,ROBERTO HELCER,07.955.071/0001-97,FAZENDA SANTA MARIA DO PARAGUAI,NICOLAS DARIO,2026-01-21,Conferencia na plantadeira Khun,,,1,193,0,2.8,193,,Concluída,,,,,4533,,,,Manutenção,0,0,0,,,
+OS-0022,MARIA BEATRIZ NAVARRO RIBEIRO COSTACURTA,24.048.313/0001-88,FAZENDA SANTA RITA - GLEBA B,DANILO DE SOUZA,2026-01-21,"Modelo: 6075 E CAB
+Chassis:MDI07512TR0004634
+Horimetro: 1771,3
+
+Solicitação do Cliente: Revisão de 1800 Horas 
+Serviço realizado: Técnico realizou a revisão de 1800 Horas e finalizando o serviço, fez uma inspeção visual para encontrar problemas que alterem a funcionalidade ou desempenho do trator, mas não encontrou, constatando que esta funcionando perfeitamente.",,,2,193,0,2.8,2221,,Concluída,PPV-0018,,6075E CAB MDI07512TR0004634,,4524,,,"Revisão de 1800 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0023,ANTONIO NICOLAU FERREIRA NETO E OUTRO,12.441.990/0001-82,FAZENDA SANTA MARIA,DANILO DE SOUZA,2026-01-21,"Revisão de 2100 Horas ",,,3,193,0,2.8,579,,Concluída,,,6075E CAB MDI07512HR0004628,,00,,,"Revisão de 2100 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0024,MARIA BEATRIZ NAVARRO RIBEIRO COSTACURTA,24.048.313/0001-88,FAZENDA SANTA RITA - GLEBA B,DANILO DE SOUZA,2026-01-21,"Modelo: 6075 E CAB 
+Chassis: MDI07512HR0004628
+Horimetro: 2060,4
+
+Serviço Solicitado: Revisão de 2100 Horas
+Serviço Realizado: Técnico realizou a Revisão de 2100 Horas e finalizando o serviço, fez a inspeção visual, para procurar problemas que alterem a funcionalidade ou desempenho do trator, mas não encontrou, constatando que estava funcionando perfeitamente.",,,3,193,90,2.8,2981,,Concluída,PPV-0019,,6075E CAB MDI07512HR0004628,,4526,,,"Revisão de 2100 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0025,NOVA TRATORES MAQUINAS AGRICOLAS LTDA,31.463.139/0001-03,AV SÃO SEBASTIÃO,FERNANDO LEONEL,2026-01-22,Pré Revisão no antigo trator do Juca,,,0,193,0,2.8,2470,,Concluída,REM-0001,,9500S MDI09501AM0001446,,4465,,,,Manutenção,0,0,0,,,
+OS-0026,OLINTO RODRIGUES DE ARRUDA E OUTRO ( FAZ BOM RETIRO ),15.441.078/0009-76,RODOVIA SP 261 S/N ACESSO BAIRRO MACUCO GRANJA BOM RETIRO,PAULO MOTTA,2026-01-22,"4530 ACENDENDO LUZ DE ÓLEO 
+4530 NÃO ESTÁ FUNCIONANDO TOMADA DE FORÇA",,,0,193,0,2.8,90,,Concluída,PPV-0020,,,,,,,,Manutenção,0,0,0,,,
+OS-0027,CLAIR SANDRO DOGNANI,08.063.830/0013-03,FAZENDA BOA VISTA,DANILO DE SOUZA,2026-01-23,"Modelo: 6075E CAB MDI07513KS0005347
+Chassis: 6075E CAB MDI07513KS0005347
+Horimetro: 1238,5
+
+Solicitação do cliente: Revisão de 1200 Horas
+Serviço Realizado: Técnico Realizou a revisão de 1200 Horas e finalizando o srviço, fez o checklist e inspeção, visando encontrar problemas que alterem o desempenho ou funcionalidade do trator, mas não encontrou, constatando que estava funcionando perfeitamente.",,,6.5,193,30,2.8,2728.55,,Concluída,PPV-0022,,6075E CAB MDI07513KS0005347,,4530,,,"Revisão de 1200 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Adição de aditivo no Radiador, Troca de Filtro do Hidráulico, Troca de Filtro de Ar,",Revisão,0,0,0,,,
+OS-0028,RODOLPHO PANZENBOECK DELLAPE BAPTISTA,165.827.008-80,RUA DAS BEGONIAS,PAULO MOTTA,2026-01-23,"Modelo: T-ARCHON 550 AZUL LL8ATTHW9S0A10007
+Chassis: T-ARCHON 550 AZUL LL8ATTHW9S0A10007
+Horimetro: 
+
+Solicitação do cliente: 
+Serviço Realizado: ",,,0,193,0,2.8,820.2184,,Cancelada,PPV-0023,,T-ARCHON 550 AZUL LL8ATTHW9S0A10007,,,Nao foi realizado e sem previsão de retorno,,,Revisão,0,0,0,,,
+OS-0029,PIRAJU GABINETE PREFEITO,46.223.699/0001-50,PRACA ATALIBA LEONEL,FERNANDO LEONEL,2026-01-23,"Modelo: TL 75
+Chassis: 23499
+Horimetro: 3423
+
+Solicitação do cliente: Manutenção Corretiva.
+Serviço Realizado: Técnico realizou a troca das coifas de vedação; Retentor das alavancas do câmbio.
+Fez ajustes das alavancas e a troca do cabo stomatc; Troca dos retentores da TDF; Troca do fluido de freio; Troca de 2 parafusos da roda traseira; Troca do filtro hidraulico e o de oleo motor.",,,10,193,0,2.8,1930,,Concluída,,,,,4537,,,,Manutenção,0,0,0,,,
+OS-0030,ADRIANO CORCOVIA,08.351.690/0003-05,FAZENDA SAO JOSE,PAULO MOTTA,2026-01-23,"Modelo: 6075E PLAT. MDI07508JP0003555
+Chassis: 6075E PLAT. MDI07508JP0003555
+Horimetro: 605
+
+Solicitação do cliente: Revisão de 600 Horas
+Serviço Realizado:Técnico realizou a revisão de 600 Horas e finalizando o serviço, fez o checklist e inspeção, visando encontrar problemas que alterem a funcionalidade ou desempenho do tratorm, mas não encontrou, constatando que estava funcionando perfeitamente.",,,2,193,120,2.8,2467,,Concluída,PPV-0024,,6075E PLAT. MDI07508JP0003555,,0,,,"Revisão de 600 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0031,DAIAN COSME DE ALMEIDA,399.615.178-06,SITIO CABREUVA,JOSE ANTONIO DE OLIVEIRA,2026-01-26,"Modelo: 86-110
+Chassis: 86110  NP7T4KC6EPMA05340
+Horimetro: 82,7
+
+Solicitação do cliente: Trocar cabo do Reversor
+Serviço Realizado: Técnico realizou a troca do cabo do reversor.",,,1,193,0,2.8,943,,Concluída,REM-0002,,86110  NP7T4KC6EPMA05340,,00,,,,Manutenção,0,0,0,,,
+OS-0032,THEODORUS WILLIBRORDUS SWART,08.001.578/0003-36,FAZENDA ALTO DO RINCAO,JOSE ANTONIO DE OLIVEIRA,2026-01-26,"Modelo: 86-110
+Chassis: 5333
+Horimetro: 2946,0
+
+Solicitação do cliente: Vazamento no cubo dianteiro; Trator não está engatando a segunda marcha e trocar coxin da cabine
+
+Serviço Realizado: Técnico desmontou o cubo dianteiro do lado esquerdo para realizar a troca do retentor, rolamentos e bucha do cubo, após isso, fez a regulagem da alavanca do cambo. ",,,6,193,400,2.8,2278,,Concluída,,,,,00,,,,Manutenção,0,0,0,,,
+OS-0033,JORGE JUSTUS NITZAN,07.952.272/0001-30,"ESTRADA MUNICIPAL AVARE ITATINGA,KM-7 FAZENDA ALBERTO CRUZ",NICOLAS DARIO,2026-01-26,"Modelo: John Deere 4630
+Chassis: 3858
+Horimetro: --
+
+Solicitação do cliente: Orçamento retirada de vazamento no bloco do comando hidraulico das barras e tampa do tanque de produto 2000 Litros.
+
+
+Serviço Realizado: ",,,8,193,150,2.8,1964,,Cancelada,,,,,,Orçamento precisava ser feito em planilha,,,Manutenção,0,0,0,,,
+OS-0034,ROSAN ANTONIO AIELLO,09.045.316/0001-74,CHÁCARA CHACARA PRIMAVERA,PAULO MOTTA,2026-01-27,"Modelo: 86-110
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Trator falhando
+Serviço Realizado: ",,,0,193,0,2.8,1083,,Concluída,PPV-0025,,,,43,,,,Manutenção,0,0,0,,,
+OS-0035,NOVA TRATORES MAQUINAS AGRICOLAS LTDA,31.463.139/0001-03,AV SÃO SEBASTIÃO,DANILO DE SOUZA,2026-01-27,"Modelo: 6075
+Chassis: 0323
+Horimetro:50
+
+Solicitação do cliente: Revisão de 50 Horas
+
+
+Obs: Mão de obra cortesia da fábrica",,,1,193,82,2.8,1669.6,,Orçamento enviado para o cliente e aguardando,PPV-0026,,,,,,,"Revisão de 50 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Hidráulico.",Revisão,193,0,0,,,
+OS-0036,DANIEL DIANAS RIBEIRO E OUTRO,12.788.302/0001-55,FAZENDA TAQUARA BRANCA,DANILO DE SOUZA,2026-01-27,"Modelo: 6075E CAB MDI07513CS0005750
+Chassis: 6075E CAB MDI07513CS0005750
+Horimetro: 574,2
+
+Solicitação do cliente: Vazamento na tomada de força
+Serviço Realizado: Foi retirado o óleo da transmissão para realizar a troca do retentor do eixo da tomada de força",,,2.5,193,0,2.8,567.5,,Concluída,PPV-0027,,6075E CAB MDI07513CS0005750,,4551,,,,Manutenção,0,0,0,,,
+OS-0037,JOANNES ADRIANUS STELTENPOOL,12.982.281/0001-04,RODOVIA RAPOSO TAVARES KM 256,DANILO DE SOUZA,2026-01-27,"Modelo: 6075
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Pedra acertou o vidro onde ve o nivel de oleo hidraulico
+Serviço Realizado: ",,,2,193,0,2.8,516,,Cancelada,PPV-0028,,,,,Cliente vai comprar a peça balcão para ele mesmo trocar,,,Manutenção,0,0,0,,,
+OS-0038,SERGIO MOTTA MELLO,07.962.294/0001-81,FAZENDA SAO PAULO DOS PALMARES,JOSE ANTONIO DE OLIVEIRA,2026-01-28,"Modelo: 6075 BR MDI07510CS0005275
+Chassis: 6075 BR MDI07510CS0005275
+Horimetro: 15,1
+
+Solicitação do cliente: Trator esta perdendo força
+Serviço Realizado: ",,,1.5,193,25,2.8,824.5,,Concluída,PPV-0029,f0500360,6075 BR MDI07510CS0005275,,4540,,,,Manutenção,0,0,0,,,
+OS-0039,SANDRA AP. MARQUES DE LAZZARI E BENEDITO DE LAZZARI,39.548.562/0001-00,SITIO SAO LUCAS,DANILO DE SOUZA,2026-01-28,"Modelo: JIVO
+Chassis: JIVO 2025 MBN1KGCBFSGC02094
+Horimetro: 12,8
+
+Solicitação do cliente: Trator esta pegando Ar 
+Serviço Realizado: Foi identificado que a peneira do tanque estava obstruida por sujeira, foi desmontado o encanamento do pescador do tanque de combustível para fazer a limpeza da peneira do pescador",,,1,193,62,2.8,366.6,,Concluída,PPV-0030,,JIVO 2025 MBN1KGCBFSGC02094,,00,,,,Manutenção,0,0,0,,,
+OS-0040,MARCIO LUIZ BERGAMO FAVARO E OUTROS,08.977.003/0001-91,SITIO ALVORADA,DANILO DE SOUZA,2026-01-28,"Modelo: 6075 E
+Chassis: 6075E CAB MDI07508PN0002755
+Horimetro: 1883
+
+Solicitação do cliente:  Trocar Boia do tanque
+Serviço Realizado: Técnico Realizou a troca da boia do combustivel, finalizando o serviço, constatou que o trator funcionando normalmente",,,1.5,193,0,2.8,559.6392000000001,,Concluída,PPV-0031,,6075E CAB MDI07508PN0002755,,4572,,,,Manutenção,0,0,0,,,
+OS-0041,MARCIO LUIZ BERGAMO FAVARO E OUTROS,08.977.003/0001-91,SITIO ALVORADA,DANILO DE SOUZA,2026-01-28,"Modelo: 6075
+Chassis: 6075 CAB MBNYHBKYVMNH01082
+Horimetro: 4191,9
+
+Solicitação do cliente: Trocar porta do lado esquerdo
+Serviço Realizado: Técico realizou a troca da porta de vidro do lado esquerdo junto ao amortecedor de porta. Finalizando o serviço, ele fez o checklist e inspeção visando encontrar porblemas que alterem a funcionalidade ou desempenho do trator mas não encontrou, constatando que estava tudo em perfeitas condições.",,,1,193,40,2.8,305,,Concluída,,,6075 CAB MBNYHBKYVMNH01082,,4573,,,,Manutenção,0,0,0,,,
+OS-0042,PIRAJU GABINETE PREFEITO,46.223.699/0001-50,Praça Ataliba Leonel,DANILO DE SOUZA,2026-01-30,"Modelo: TL 5 80 HCCZTL80HNCJ41257
+Chassis: TL 5 80 HCCZTL80HNCJ41257
+Horimetro: 2176,9
+
+Solicitação do cliente: Troca do acelerador de Pé 
+Serviço Realizado: Técnico Realizou a troca do cabo do acelarador de pé. Finalizando o serviço, fez a troca dos parafusos decaila de transmissão da roçadeira. ",,,2,193,0,2.8,386,,Concluída,,,TL 5 80 HCCZTL80HNCJ41257,,0,,,,Manutenção,0,0,0,,,
+OS-0043,CELSO CAMARGO GUAZZO E OUTRA,10.749.837/0001-91,"RODOVIA RAPOSO TAVARES, KM 299",PAULO MOTTA,2026-01-30,"Modelo: 6060 MBNYHBDBFLNJ00220
+Chassis: 6060 MBNYHBDBFLNJ00220
+Horimetro: 
+
+Solicitação do cliente: 
+Serviço Realizado: vazamento de óleo filtro",,,0,193,0,2.8,0,,Cancelada,,,6060 MBNYHBDBFLNJ00220,,,"SEVIÇO NAO FOI REALIZADO
+SEM PREVISÃO DE RETORNO",,,Manutenção,0,0,0,,,
+OS-0044,OLINTO RODRIGUES DE ARRUDA E OUTRO,08.484.467/0001-66,FAZENDA SÃO DOMINGOS,JOSE ANTONIO DE OLIVEIRA,2026-01-31,"Modelo: 4530
+Chassis: MZURAMMJ0530
+Horimetro: 
+
+Solicitação do cliente: Troca  do cabo de reversor
+Serviço Realizado: ",,,1,193,0,2.8,193,,Cancelada,,,MZURAMMJ0530,,,Serviço sem previsão para ser realizado,,,Manutenção,0,0,0,,,
+OS-0045,ADRIANO CORCOVIA,08.351.690/0003-05,FAZENDA SAO JOSE,PAULO MOTTA,2026-01-31,"Modelo: 6075
+Chassis: 6075E MDI07516JR0004589
+Horimetro: 1938,8
+
+Solicitação do cliente: Revisão de 1800
+Serviço Realizado: Técnico realizou a revi~sao de 1800 Horas e finalizando o serviço, fez o checklis t inspeção visual visando encontrar problemas que alterem a funcionalidade ou desempenho do trator, mas não encontrou nada.",,,1.5,193,91,2.8,2139.3,,Concluída,PPV-0033,,6075E MDI07516JR0004589,,4570,,,"Revisão de 1800 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0046,HOTEL RESORT OLINTO,10.296.070/0001-92,RUA DO CARACOL,DANILO DE SOUZA,2026-01-31,"Modelo: 5050
+Chassis: 5050 MBN1KGCBFRGK00335
+Horimetro: 834.7
+
+Solicitação do cliente: Revisão de 900horas
+Serviço Realizado: Técnico realizou a revisão de 900 Horas e após isso , fez o checklist e inspeção, visando encontrar problemas que alterem a funcionalidade ou desempenho do trator, mas nao encontrou nada.",,,2,193,0,2.8,1789,,Concluída,PPV-0034,,5050 MBN1KGCBFRGK00335,,4590,,,"Revisão de 900 horas 5050 - Troca de Óleo do Motor, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Hidráulico, Troca de Óleo do Cambio, Adição de aditivo no Radiador, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,386,0,0,,,
+OS-0047,JOAO GABRIEL MATIELLI MANCINE,370.422.538-09,SITIO SÃO JOSÉ,JOSE ANTONIO DE OLIVEIRA,2026-01-31,"Modelo: 6075
+Chassis:MDI07502JM0001344
+Horimetro: 2604,3
+
+Solicitação do cliente: Desmontar a tampa do Hidraulico para destravar o eixo do bloqueio
+Serviço Realizado: Técnico tirou o banco do asssoalho, para ter acesso a tampa hidraulica e abri-lá. Após isso destravou o eixo do bloqueio e trocou o pino elástico. Finalizando o serviço, ele montou tudo novamente e fez o checklist e inspeção visando encontrar roblemas que alteram o desempenho ou funcionalidade do trator, mas não encontrou",,,7,193,200,2.8,2016,,Concluída,PPV-0044,,6075 - MDI07502JM0001344,,,,,,Manutenção,0,0,0,,,
+OS-0048,GERALDO DONIZETE ANTONIO E OUTRO,29.594.248/0001-00,ESTANCIA SAO BENEDITO II,GABRIEL MORAES,2026-02-02,"Modelo: JIVO 2025 MBN1KGCBFSGK01812
+Chassis: JIVO 2025 MBN1KGCBFSGK01812
+Horimetro: 
+
+Solicitação do cliente: Revisão de 50 Horas
+Serviço Realizado: Técnico realizou a revisao de 50 Horas do trator e finalizando o serviço, fez o checklist e inspeção visual, visando encontrar problemas que alterem a funcionalidade ou desempenho do trator, mas não encontrou, constatando que estava funcionando perfeitamente",,,1,193,300,2.8,1704.3,,Concluída,PPV-0036,,JIVO 2025 MBN1KGCBFSGK01812,,4565,,,"Revisão de 50 horas 2025 - Troca de Óleo do Motor, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Hidráulico.",Revisão,89.7,0,0,,,
+OS-0049,PIRAJU GABINETE PREFEITO,46.223.699/0001-50,Praça Ataliba Leonel,FERNANDO LEONEL,2026-02-02,"Modelo: Roçadeira Kamaq
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Trocar a faca e o retentor
+Serviço Realizado: ",,,0,193,0,2.8,0,,Concluída,,,,,00,,,,Manutenção,0,0,0,,,
+OS-0050,DANIEL DIANAS RIBEIRO E OUTRO,12.788.302/0002-36,FAZENDA SANTA ELIZA,JOSE ANTONIO DE OLIVEIRA,2026-02-02,"Modelo: 6075E CAB MDI07513CS0005750
+Chassis: 6075E CAB MDI07513CS0005750
+Horimetro: 597
+
+Solicitação do cliente: REvisão de 600 H
+Serviço Realizado: Técnico realizou a revisão de 600 Horas e finalizando o serviço fez o checklist e inspeção visual, visando encontrar problemas que alterem a funcionalidade ou desempenho do trator mas nao encontrou, constatando que estava funcionando perfeitamente.",,,2,193,101,2.8,1942.45,,Concluída,PPV-0037,,6075E CAB MDI07513CS0005750,,4578,,,,Revisão,0,0,0,,,
+OS-0051,DANIEL DIANAS RIBEIRO E OUTRO,12.788.302/0002-36,FAZENDA SANTA ELIZA,JOSE ANTONIO DE OLIVEIRA,2026-02-02,"Modelo: 6075E MDI07508VN0002728
+Chassis: 6075E MDI07508VN0002728
+Horimetro: 2750
+
+Solicitação do cliente: Revisão de 2700
+Serviço Realizado: Técnico realizou a revisão de 2700 Horas e após isso, fez o checklist e inspeção visual, visando encontrar problemas que alteram a funcionalidade ou desempenho do trator, mas ão encontrou, contatando que estava funcionando perfeitamente;",,,1.5,193,0,2.8,1404.5,,Concluída,PPV-0038,,6075E MDI07508VN0002728,,4577,,,"Revisão de 2700 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0052,VINICIUS AUGUSTO MAZETTO ROMANO DA SILVA,300.302.758-14,RUA APOSTOLO BEGAMO,JOSE ANTONIO DE OLIVEIRA,2026-02-03,"Modelo: 6075
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Revisão de 50 Horas
+Serviço Realizado: ",,,1,193,0,2.8,2260,,Concluída,PPV-0039,,,,00,,,"Revisão de 50 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Hidráulico.",Revisão,193,0,0,,,
+OS-0053,NOVA TRATORES MAQUINAS AGRICOLAS LTDA,31.463.139/0001-03,AV SÃO SEBASTIÃO,GABRIEL MORAES,2026-02-03,"Modelo: M250
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Revisão de 20 Horas para o Luiz
+Serviço Realizado: ",,,1,193,0,2.8,690.9485999999999,,Concluída,PPV-0040,,,,4576,,,,Manutenção,0,0,0,,,
+OS-0054,DANIEL DIANAS RIBEIRO E OUTRO,12.788.302/0001-55,FAZENDA TAQUARA BRANCA,DANILO DE SOUZA,2026-02-03,"Modelo: 6075E CAB MDI07513CS0005750
+Chassis: 6075E CAB MDI07513CS0005750
+Horimetro: 
+
+Solicitação do cliente:  Tirar vazamento da caixinha de tração
+Serviço Realizado: ",,,0,193,0,2.8,182.9,,Concluída,REM-0003,,6075E CAB MDI07513CS0005750,,00,,,,Manutenção,0,0,0,,,
+OS-0055,ANGELO COSSOMATO NETO,422.652.108-03,RUA JUSTO MARQUES,FERNANDO LEONEL,2026-02-04,"Modelo: 2025
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Tirar conjunto do trator do Cliente para colocar em outro (Ainda não informado).
+Serviço Realizado: Técnico fez a retirada de um conjunto frontal Marispan L15 do trator Mahindra 2025 (0789) e realizou a instalação em outro Mahindra 2025 (2093)",,,0,193,0,2.8,0,,Concluída,,,,,4591,,,,Manutenção,0,0,0,,,
+OS-0056,PEDRO LUIZ MARZURA,51.560.280/0001-23,SIT SAO JUDAS TADEU - GLEBA B,NICOLAS DARIO,2026-02-04,"Modelo: TERRIS GT 500
+Chassis: Técnico não informou
+
+
+Solicitação do cliente: Montagem e Entrega Tecnica do GPS 
+Serviço Realizado: Foi realizado a montagem do gps no trator NH 75 Cabinado e realizado a entrega tecnica",,,2,193,30,2.8,470,,Concluída,,,,,4583,,,,Manutenção,0,0,0,,,
+OS-0057,ANGELO COSSOMATO NETO,21.599.447/0002-80,SITIO CARACOL,FERNANDO LEONEL,2026-02-04,"Modelo: JIVO 2025 MBN1KGCBFPGL00789
+Chassis: JIVO 2025 MBN1KGCBFPGL00789
+Horimetro: 615
+
+Solicitação do cliente: Revisão de 600 Horas
+Serviço Realizado: Técnico relizou a revisão de 600 Horas, e finalizando, fez o chacklist e inspeção visando encontrar problemas que alterem a funcionalidade ou desempenho do trator, mas não encontrou nada. E depois, fez a troca do escamento a pedido do cliente.",,,3,193,0,2.8,1436,,Concluída,PPV-0041,,JIVO 2025 MBN1KGCBFPGL00789,,4532,,,"Revisão de 600 horas 2025 - Troca de Óleo do Motor, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0058,JOSE VALDIR DA SILVA,08.088.617/0001-12,SITIO SÃO LUCAS,DANILO DE SOUZA,2026-02-04,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Trocar o cabo de embreagem
+Serviço Realizado: ",,,0,193,0,2.8,447.1365,,Concluída,PPV-0042,,,,4584,,,,Manutenção,0,0,0,,,
+OS-0059,ANTONIO JOSE RIBEIRO,08.300.317/0001-55,SITIO CORREDEIRA I,JOSE ANTONIO DE OLIVEIRA,2026-02-04,"Modelo: 6075
+Chassis: 6075E MDI07507TP0003929
+Horimetro: 1399,1
+
+Solicitação do cliente: Revisão de 1200 Horas
+Serviço Realizado: Técnico realizou a revisão de 1200 Horas, a regulagem de valvula e finalizando o serviço, fez o checklist e inspeção visual, visando encontrar problemas que alterem a funcionalidade ou desempenho do trator, mas não encontrou.",,,0,193,0,2.8,3520.05,,Concluída,PPV-0043,,6075E MDI07507TP0003929,,4593,,GABRIEL MORAES,"Revisão de 1200 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Adição de aditivo no Radiador, Troca de Filtro do Hidráulico, Troca de Filtro de Ar,",Revisão,0,0,0,,,
+OS-0060,NOVA TRATORES MAQUINAS AGRICOLAS LTDA,31.463.139/0001-03,AV SÃO SEBASTIÃO,LUIZ FERNANDO,2026-02-05,"Modelo: FROTA-FORD-1578E-EVG1467
+Chassis: FROTA-FORD-1578E-EVG1467
+Horimetro: 
+
+Solicitação do cliente: manutenção caminhão
+Serviço Realizado: ",,,0,193,0,2.8,0,,Concluída,,,FROTA-FORD-1578E-EVG1467,,4589,,,,Manutenção,0,0,0,,,
+OS-0061,JOAO BATISTA DE OLIVEIRA ROCHA,08.674.071/0001-81,SITIO SAO JOAO,GABRIEL MORAES,2026-02-05,"Modelo: 5050 MBNUZA2WFPZK00278
+Chassis: 5050 MBNUZA2WFPZK00278
+Horimetro: 1234.0
+
+Solicitação do cliente: 
+Serviço Realizado: ",,,6,193,0,2.8,3209,,Concluída,PPV-0045,,5050 MBNUZA2WFPZK00278,,00,,,"Revisão de 1200 horas 5050 - Troca de Óleo do Motor, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar, Troca de Correia do Motor.",Revisão,0,0,0,,,
+OS-0062,GILMAR PAZINI DE OLIVEIRA,08.291.938/0001-10,SITIO BLUE YELLOW,GABRIEL MORAES,2026-02-05,"Modelo: 6075 CBU
+Chassis: MBNYHBKYVRNF03417
+Horimetro: 57,4
+
+Solicitação do cliente: Revisão de 50 Horas
+Serviço Realizado: Técnico realizou a revisão de 50 Horas e finalizando o serviço, fez o checklist e inspeção visando encontrar problemas que alterem a funcionalidade ou desmpenho do trator, mas não encontrou.",,,1,193,0,2.8,1440,,Concluída,PPV-0046,,6075 CBU MBNYHBKYVRNF03417,,4615,,,"Revisão de 50 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Hidráulico.",Revisão,193,0,0,,,
+OS-0063,JORGE JUSTUS NITZAN,07.952.272/0001-30,"ESTRADA MUNICIPAL AVARE ITATINGA,KM-7 FAZENDA ALBERTO CRUZ",DANILO DE SOUZA,2026-02-05,"Modelo: JIVO 2025 01478
+Chassis: JIVO 2025 01478
+Horimetro: 
+
+Solicitação do cliente: revisão de 300H
+Serviço Realizado: ",,,2,193,0,2.8,1793,,Cancelada,PPV-0047,,JIVO 2025 01478,,,Cliente nao quis fazer a revisão,,"Revisão de 300 horas 2025 - Troca de Óleo do Motor, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0064,EDMAR JOSE BERNARDES,08.501.754/0002-18,FAZENDA SAO JOSE,DANILO DE SOUZA,2026-02-05,"Modelo: JIVO 2025 MBN1KGCBFSGA01964
+Chassis: MBN1KGCBFSGA01964
+Horimetro: 223,5
+
+Solicitação do cliente: Problema na bucha, falta de lubrificação e pegou fogo
+Serviço Realizado: AO CHEGAR NO LOCAL TÉCNICO PERCEBEU QUE HAVIA SUJEIRA NA BUCHA, FOI REALIZADA A DESMONTAGEM DO CARDAN E PESOS PARA RETIRAR A BUCHA E FAZER A LIMPEZA DA MESMA",,,2,193,210,2.8,1220,,Concluída,PPV-0048,,JIVO 2025 MBN1KGCBFSGA01964,,4596,,,,Manutenção,0,0,0,,,
+OS-0065,VINICIUS AUGUSTO MAZETTO ROMANO DA SILVA,300.302.758-14,RUA APOSTOLO BEGAMO,,2026-02-06,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Troca do Filtro combustivel que esta vazando
+Serviço Realizado:  ",,,0,193,0,2.8,0,,Concluída,,,,,00,,,,Manutenção,0,0,0,,,
+OS-0066,LUCIA HELENA RIOS SEABRA,055.336.688-29,FAZENDA BOA VISTA,DANILO DE SOUZA,2026-02-06,"Modelo: 9500S CAB MDI09501ER0004276
+Chassis: MDI09501ER0004276
+Horimetro: 1180
+
+Solicitação do cliente: Revisão de 1200 Horas
+Serviço Realizado: Técnico realizou a revisão de 1200 Horas, após isso, fez o checklist e inspeção, para procurar problemas que alterem a funiconalidade ou desempenho do trator, mas não encontrou.",,,6,193,40,2.8,3515,,Concluída," PPV-0051",,9500S CAB MDI09501ER0004276,,4628,,,,Revisão,0,0,0,,,
+OS-0067,SANDRA AP. MARQUES DE LAZZARI E BENEDITO DE LAZZARI,39.548.562/0001-00,SITIO SAO LUCAS,JOSE ANTONIO DE OLIVEIRA,2026-02-06,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: TRATOR PERDENDO FORÇA, LIMPEZA TANQUE DE COMBUSTÍVEL
+Serviço Realizado: ",,,0,193,0,2.8,146,,Concluída,PPV-0052,,,,4642,,Pedro Motta,,Manutenção,0,0,0,,,
+OS-0068,PIRAJU GABINETE PREFEITO,46.223.699/0001-50,Praça Ataliba Leonel,JOSE ANTONIO DE OLIVEIRA,2026-02-09,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Revisão no Tl
+Serviço Realizado: ",,,0,193,0,2.8,0,,Concluída,,,,,4619,,,,Revisão,0,0,0,,,
+OS-0069,FLORA MARIA GOMES DOS SANTOS E OUTROS,47.839.756/0001-92,ESTANCIA SANTA LUZIA,JOSE ANTONIO DE OLIVEIRA,2026-02-09,"Modelo: 6075
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente:  Fazer a embreagem do trator
+Serviço Realizado: ",,,0,193,0,2.8,0,,Concluída,,,,,0,,,,Manutenção,0,0,0,,,
+OS-0070,NEIDE APARECIDA CASADEI VEIGA,263.755.808-38,CHACARA BARREIRINHO,DANILO DE SOUZA,2026-02-09,"Modelo: 6075BR 
+Chassis:MBNYHBKYVNNB01510
+Horimetro: 2760
+
+Solicitação do cliente: Revisão de 2700 Horas
+Serviço Realizado: Técnico realizou a revisão de 2700 Horas, após isso, fez o checklist e inspeção, visando encontrar problemas que alterem a funcionalidade ou desempenho do trator, mas não encontrou nada.",,,2,193,160,2.8,2429,,Concluída,PPV-0055,,6075BR MBNYHBKYVNNB01510,,4622,,,"Revisão de 2700 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0071,LUIZ ALBERTO TEBET,07.948.976/0002-10,FAZENDA PRIMAVERA,GABRIEL MORAES,2026-02-10,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Troca da porta do TL 
+Serviço Realizado: ",,,2,193,0,2.8,386,,Concluída,,,,,00,,,,Manutenção,0,0,0,,,
+OS-0072,ANGELO DELALIBERA TERUEL,162.427.698-91,"RUA JOSE GUARACY GUARIDO, 30",DANILO DE SOUZA,2026-02-10,"Modelo: 6075 
+Chassis:MBNYHBKYULNE00290
+Horimetro: 430
+
+Solicitação do cliente: Revisão de 300 Horas
+Serviço Realizado: Técnico realizou a revisão de 300 horas e finalizando o serviço, fez o checklist e inspeção, visando encontrar problemas que alterem a funcionalidade ou desempenho do trator, mas nao encontrou",,,6,193,0,2.8,4683,,Concluída,PPV-0059,,6075 - MBNYHBKYULNE00290,,4687,,,"Revisão de 1200 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Adição de aditivo no Radiador, Troca de Filtro do Hidráulico, Troca de Filtro de Ar,",Revisão,0,0,0,,,
+OS-0073,JOSE TARCISO FAULIN ( fazenda pocinho I ),08.044.577/0005-30,FAZENDA POCINHO I ( ROD. PIRAJU A MANDURI KM 6 ),NICOLAS DARIO,2026-02-11,"Modelo: ACCURA 12000
+Chassis: KBRA1075C70A00008
+
+
+Solicitação do cliente: Parte eletrica estava danificada
+Serviço Realizado: Técnico verificou que a ventoinha do equipamento nao estava funcionando, então ele o trouxe para a loja e realizou alguns testes, trocou o relê que liga a ventoinha e 1 fusivel tambem. Após isso, técnico fez testes e verificou que o equipamento volto a funcionar perfeitamente. ",,,0,193,0,2.8,0,,Concluída,,,ACCURA 12000 KBRA1075C70A00008,,4613,,,,Manutenção,0,0,0,,,
+OS-0074,OLINTO RODRIGUES DE ARRUDA E OUTRO ( FAZ BOM RETIRO ),15.441.078/0009-76,RODOVIA SP 261 S/N ACESSO BAIRRO MACUCO GRANJA BOM RETIRO,JOSE ANTONIO DE OLIVEIRA,2026-02-11,"Modelo: 8000
+Chassis: 00533
+Horimetro: 10.690
+
+Solicitação do cliente: Revisão de 10000
+Serviço Realizado: Técnico realizou a revisão no trator, trocando o óleo motor, o filtro diesel de ar interno, externo, o filtro hidraulico, óleo de transmissão. Finalizando o serviço, técnico fez a regulagem da embreagem, e o checklist para verificar se tinha algo atrapalhando o desempenho e funcionalidade do trator mas nao encontrou.",,,3,193,0,2.8,3649,,Concluída,PPV-0060,,,,,,,"Revisão de 900 horas 8000 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0075,MENSORI CONSERVAÇÂO INTELIGENTE DE INFRAESTRUTURA,53.058.207/0001-83,Av. Dois Córregos,,2026-02-11,"Modelo: 6075
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: 
+Serviço Realizado: ",,,6,193,0,2.8,4683,,Concluída,PPV-0061,,,,00,,,"Revisão de 900 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0076,NOVA TRATORES MAQUINAS AGRICOLAS LTDA,31.463.139/0001-03,AV SÃO SEBASTIÃO,FERNANDO LEONEL,2026-02-11,"Modelo:
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Revisão Pré Entrega do Quadriciclo
+Serviço Realizado:  ",,,0,193,0,2.8,525.67,,Concluída,REM-0004,,,,4608,,,,Manutenção,0,0,0,,,
+OS-0077,PIRAJU GABINETE PREFEITO,46.223.699/0001-50,Praça Ataliba Leonel,FERNANDO LEONEL,2026-02-11,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Troca do Retentor da Roçadeira Kamaq
+Serviço Realizado: ",,,0,193,0,2.8,45,,Concluída,PPV-0062,,,,00,,,,Manutenção,0,0,0,,,
+OS-0078,MIGUEL MARIO FAVARO,058.417.658-92,FAZENDA QUATIGUA,NICOLAS DARIO,2026-02-11,"Modelo: PULVERIZADOR KUHN PORTOR 800
+Chassis: Técnico nao informou
+
+
+Solicitação do cliente: Pulverizador não esta aplicando o produto e nem marcando a vazao na tela
+Serviço Realizado: Técnico realizou testes no sensor e foi visto que não estã marcando os pulsos, após isso, fez a troca do sensor e o equipamento voltou a funcionar normalmente",,,1,193,0,2.8,193,,Concluída,,,,,4618,,,,Manutenção,0,0,0,,,
+OS-0079,FLORA MARIA GOMES DOS SANTOS E OUTROS,47.839.756/0001-92,ESTANCIA SANTA LUZIA,JOSE ANTONIO DE OLIVEIRA,2026-02-11,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Vazamento no cubo dianteiro (Tem requisição)
+Serviço Realizado: ",,,0,193,0,2.8,0,,Concluída,PPV-0054,,,,00,,,,Manutenção,0,0,0,,,
+OS-0080,ASSOCIACAO DE MORADORES ALDEIA,03.824.338/0001-56,RODOVIA GASTAO DAL FARRA,DANILO DE SOUZA,2026-02-12,"Modelo: 6075L CBU P
+Chassis: MBNYHBKH7RNJ00139
+Horimetro: 43,7
+
+Solicitação do cliente: 
+Serviço Realizado: ",,,2,193,296,2.8,1498.8,,Concluída,PPV-0063,,6075L CBU P MBNYHBKH7RNJ00139,,0,,,"Revisão de 50 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Hidráulico.",Revisão,386,0,0,,,
+OS-0081,SERGIO ALBERTO GARCONI,055.568.208-05,SÍTIO SÃO JOSÉ - EST. ÓLEO A RIO PARDO KM 6 - BARRA GRANDE,DANILO DE SOUZA,2026-02-13,"Modelo: 6065 - MDI06502KM0001524
+Chassis: 6065 - MDI06502KM0001524
+Horimetro: 2100
+
+Solicitação do cliente: Revisão e 2100 Horas
+Serviço Realizado: Técnico realizou a revisão de 2100 Horas, e finalizando ela, fez o checklist e inspeção, visando encontrar problemas que alterem a funcionalidade ou desempenho do trator, mas não encontrou nada.",,,3,193,0,2.8,4762.0905999999995,,Concluída,PPV-0065,,6065 - MDI06502KM0001524,,4629,,,"Revisão de 2100 horas 6065 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0082,NOVA TRATORES MAQUINAS AGRICOLAS LTDA,31.463.139/0001-03,AV SÃO SEBASTIÃO,FERNANDO LEONEL,2026-02-13,"Modelo: 7095 PLAT MDI09510JS0005494
+Chassis: 7095 PLAT MDI09510JS0005494
+Horimetro: 
+
+Solicitação do cliente: Desmontar o trator para tirar foto para o banco.
+Serviço Realizado: ",,,0,193,0,2.8,0,,Concluída,,,7095 PLAT MDI09510JS0005494,,4626,,,,Manutenção,0,0,0,,,
+OS-0083,ROSAN ANTONIO AIELLO,09.045.316/0001-74,CHÁCARA CHACARA PRIMAVERA,JOSE ANTONIO DE OLIVEIRA,2026-02-16,"Modelo: 86110
+Chassis:NP7T4KC6EPNA10310
+Horimetro: 2223,1
+
+Solicitação do cliente: Trocar o cabo de reversor
+Serviço Realizado: Técnico tirou a chapa de fixação do cabo, para conseguir realizar a troca do cabo do reversor. ",,,1,193,0,2.8,943,,Concluída,PPV-0066,,86110 NP7T4KC6EPNA10310,,4627,,,,Manutenção,0,0,0,,,
+OS-0084,,,,Pedro Motta,2026-02-16,"Modelo: VENTURA M250
+Chassis: 10146
+Horimetro: 
+
+Solicitação do cliente: CVT Patinando
+Serviço Realizado: ",,,0,193,0,2.8,0,,Cancelada,,,VENTURA M250 L 10146,,,sem cliente,,,Manutenção,0,0,0,,,
+OS-0085,GUSTAVO SANCHES ZANFORLIN,303.657.818-86,Alameda pinot,Pedro Motta,2026-02-16,"Modelo: VENTURA M250 
+Chassis:10146
+Horimetro: 
+
+Solicitação do cliente: CVT Patinando
+Serviço Realizado: ",,,0,193,0,2.8,105,,Concluída,PPV-0067,,VENTURA M250 L 10146,,00,,,,Manutenção,0,0,0,,,
+OS-0086,VALMIR FERNANDES RIBEIRO,08.232.538/0002-14,FAZENDA RIBEIRÃO BONITO,FERNANDO LEONEL,2026-02-16,"Modelo: 7095 PLAT 
+Chassis: MDI09510JS0005494
+Horimetro: 64
+
+Solicitação do cliente: Revisão de 50 Horas
+Serviço Realizado: ",,,1,193,0,2.8,1090,,Concluída,PPV-0068,,7095 PLAT MDI09510JS0005494,,0,,,,Revisão,193,0,0,,,
+OS-0087,FELIZARDO &amp; FELIZARDO SERVIÇOS DE MÃO DE OBRA LTDA,04.367.420/0001-61,RUA PAULO FERNANDO VIEIRA GOMES,FERNANDO LEONEL,2026-02-18,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Troca do retentor do retentor, flange, luva, cruzeta e óleo da cruzeta
+Serviço Realizado: ",,,1,193,0,2.8,193,,Concluída,,,,,0,,,,Manutenção,0,0,0,,,
+OS-0088,GUSTAVO SANCHES ZANFORLIN,303.657.818-86,Alameda pinot,PAULO MOTTA,2026-02-18,"Modelo: VENTURA M250 L 10146
+Chassis: VENTURA M250 L 10146
+Horimetro: 
+
+Solicitação do cliente: Manutenção transmissão
+Serviço Realizado: ",,,4,193,0,2.8,579,,Cancelada,,,VENTURA M250 L 10146,,,Mudada para a 145,,,Manutenção,0,193,0,,,
+OS-0089,PAULO GARCIA RIBEIRO,049.546.838-07,SITIO CORREDEIRA,DANILO DE SOUZA,2026-02-18,"Modelo: 9500S MDI09524CP0003335
+Chassis: 9500S MDI09524CP0003335
+Horimetro: 1200
+
+Solicitação do cliente: Revisão de 1200
+Serviço Realizado: ",,,6,193,0,2.8,2683,,Cancelada,PPV-0069,,9500S MDI09524CP0003335,,,"Cliente nao quis realizar o serviço, sem previsão",,"Revisão de 1200 horas 9500 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Adição de aditivo no Radiador, Troca de Filtro do Hidráulico, Troca de Filtro de Ar,",Revisão,0,0,0,,,
+OS-0090,PAULO GARCIA RIBEIRO,049.546.838-07,SITIO CORREDEIRA,DANILO DE SOUZA,2026-02-18,"Modelo: 9500S MDI09524LP0002867
+Chassis: 9500S MDI09524LP0002867
+Horimetro: 1200
+
+Solicitação do cliente: Revisão de 1200 e troca do retentor
+Serviço Realizado: Técnico Realizou a revisão completa, trocando todos os óleo, filtros e fazendo a regulagem de valvula. Após isso, ele desmontou o cubo dianteiro para trocar os retentores da viga, de ambos os lados.",,,10,193,60,2.8,6418,,Executada,PPV-0070,,9500S MDI09524LP0002867,,2479504711,,,"Revisão de 1200 horas 9500 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Adição de aditivo no Radiador, Troca de Filtro do Hidráulico, Troca de Filtro de Ar,",Revisão,0,0,0,,,
+OS-0091,AFONSO BEATO CHRIST,07.915.825/0002-66,SITIO SANTO ANTONIO,GABRIEL MORAES,2026-02-19,"Modelo: Pulverizador Kuhn
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Troca do pistão
+Serviço Realizado: ",,,0,193,0,2.8,0,,Concluída,,,,,4651,,,,Manutenção,0,0,0,,,
+OS-0092,NOVA TRATORES MAQUINAS AGRICOLAS LTDA,31.463.139/0001-03,AV SÃO SEBASTIÃO,DANILO DE SOUZA,2026-02-19,"Modelo: 6075L FERNANDO
+Chassis: MBNYHBKH75NL00273
+Horimetro: 
+
+Solicitação do cliente: 
+Serviço Realizado: 
+
+
+",,,0,193,180,2.8,1854,,Concluída,PPV-0072,,,,65,,,"Revisão de 50 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Hidráulico.",Revisão,0,0,0,,,
+OS-0093,EDMAR JOSE BERNARDES,08.501.754/0002-18,FAZENDA SAO JOSE,DANILO DE SOUZA,2026-02-19,"Modelo: JIVO 2025 MBN1KGCBFSGA01964
+Chassis:  MBN1KGCBFSGA01964
+Horimetro: 259,5
+
+Solicitação do cliente: Fazer retrabalho na bucha da tração dianteira
+Serviço Realizado: Desmontado peso e mancaiis da viga para fazer retrabalho na bucha",,,4,193,0,2.8,772,,Concluída,,,JIVO 2025 MBN1KGCBFSGA01964,,4656,,,,Manutenção,0,0,0,,,
+OS-0094,ASSOCIACAO DE MORADORES ALDEIA,03.824.338/0001-56,RODOVIA GASTAO DAL FARRA,GABRIEL MORAES,2026-02-20,"Modelo: 6075
+Chassis: MBNYHBKH7RNJ00139
+Horimetro: 50.7
+
+Solicitação do cliente: Vazamento de combustivel
+Serviço Realizado: REALIZADO TROCA DO FILTRO DE COMBUSTÍVEL E FEITO O TESTE, FICOU TUDO OK, SEM VAZAMENTO DE ÓLEO",,,1,193,292,2.8,1630.6,,Concluída,PPV-0073,,,,4657,,,,Manutenção,0,0,0,,,
+OS-0095,ADRIANO CORCOVIA,08.351.690/0003-05,FAZENDA SAO JOSE,JOSE ANTONIO DE OLIVEIRA,2026-02-21,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: TRATOR PERDENDO FORÇA
+Serviço Realizado: ",,,0,193,0,2.8,980,,Concluída,PPV-0074,,,,0,,,,Manutenção,0,0,0,,,
+OS-0096,PAULO GARCIA RIBEIRO,049.546.838-07,SITIO CORREDEIRA,Pedro Motta,2026-02-21,"Modelo: 
+Chassis: 
+Horimetro: 1530.9
+
+Solicitação do cliente: TROCAR CEBOLINHA VAZAMENTO NA MESMA
+Serviço Realizado: ",,"TRATOR ESTAVA COM VAZAMENTO DE ÓLEO NA TRANSMISSÃO DA BUCHA DA PLATAFORMA, FOI PERCEBIDO QUE O VAZAMENTO VINHA DO SENSOR DE ÓLEO DA TRANSMISSÃO, FOI REALIZADO A TROCA DO SENSOR DE ÓLEO DA TRANSMISSÃO",1,193,120,2.8,659,,Concluída,PPV-0075,PPV-0075,9500S MDI09524LP0002867,,4664,,,,Manutenção,0,0,0,,,
+OS-0097,CLAIR SANDRO DOGNANI,08.063.830/0005-01,FAZENDA VARGEM LIMPA,PAULO MOTTA,2026-02-21,"Modelo: 6075E CAB MDI07513KS0005347
+Chassis: 6075E CAB MDI07513KS0005347
+Horimetro: 
+
+Problema no painel rotação
+
+Solicitação do cliente: PROBLEMA NA ROTAÇÃO DO PAINEL DO TRATOR
+Serviço Realizado: ",,,0,193,0,2.8,299.007933,,Concluída,,,6075E CAB MDI07513KS0005347,,4671,,,,Manutenção,0,0,0,,,
+OS-0098,CARLOS ROGERIO FERNANDEZ,08.975.327/0013-24,"ESTRADA DO BAIRRO BOA VISTA, FAZENDA BARRA",NICOLAS DARIO,2026-02-23,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: troca do chicote do motor MWM
+Serviço Realizado: ",,,0,193,0,2.8,0,,Cancelada,,,,,,Garantia,,,Manutenção,0,0,0,,,
+OS-0099,DANIEL DIANAS RIBEIRO E OUTROS,08.023.589/0002-36,FAZENDA ESTANCIA PASSARGADA,DANILO DE SOUZA,2026-02-23,"Modelo: 6075E CAB
+Chassis: MDI07512JP0003789
+Horimetro: 3097.1
+
+Solicitação do cliente: Revisão de 3100 horas
+Serviço Realizado: Técnico realizou a revisão e finalizando o serviço fez o checklist e inspeção, visando encontrar problemas que alterem a funcionalidade ou desempenho, mas não achou nada.",,,2,193,0,2.8,1501,,Concluída,PPV-0077,,6075E CAB MDI07512JP0003789,,4680,,,"Revisão de 3000 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0100,ANTONIO RENATO GIANSANTE E OUTRO ( opção rural ),10.946.139/0003-48,RODOVIA SP 255 TAQUARITUBA A CEL MACEDO 06 KM,GABRIEL MORAES,2026-02-23,"Modelo: 6060 
+Chassis: MBNYHBDBFPNE00824
+Horimetro: 3444.3
+
+Solicitação do cliente: 
+Serviço Realizado: ",,,2,193,0,2.8,3296,,Concluída,PPV-0078,,6060 MBNYHBDBFPNE00824,,0,,,"Revisão de 900 horas 6060 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0101,DANIEL DIANAS RIBEIRO E OUTRO,12.788.302/0001-55,FAZENDA TAQUARA BRANCA,DANILO DE SOUZA,2026-02-24,"Modelo: 6075E CAB MDI07512PP0003787
+Chassis: 6075E CAB MDI07512PP0003787
+Horimetro: 3178,5
+
+Solicitação do cliente: Revisão de 3100 Horas
+Serviço Realizado: ",,,3,193,0,2.8,1694,,Concluída,PPV-0079,,6075E CAB MDI07512PP0003787,,4681,,,,Manutenção,0,0,0,,,
+OS-0102,PEDRO ALCANTARA RIBEIRO NETO E OUTRO,08.106.975/0001-00,FAZ SAO SEBASTIAO    RURAL,DANILO DE SOUZA,2026-02-24,"Modelo: 6075E CAB 
+Chassis: MDI07513HS0006054
+Horimetro:283,6
+
+Solicitação do cliente: Revisão de 300 Horas
+Serviço Realizado: Técnico realizou a revisão de 300 Horas e finalizando o serviço, fez ochecklist e inspeção, visando encontrar problemas que alterem a funcionalidade ou desempenho do trator, mas não encontrou.",,,2,193,0,2.8,2221,,Concluída,PPV-0081,,6075E CAB MDI07513HS0006054,,4685,,,"Revisão de 300 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0103,ANA SILLA DE PAULA BERNARDES,08.231.384/0001-65,"VIA GERALDO M DE SOUZA, SP287 SENTIDO PIRAJU/MANDURI, KM41",JOSE ANTONIO DE OLIVEIRA,2026-02-25,"Modelo: retroescavadeira
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Tirar o tanque de combustivel para fazer limpeza
+Serviço Realizado: ",,,0,193,0,2.8,0,,Concluída,,,STRONGER 3200 HD KMBA1082J70B00009,,4672,,,,Manutenção,0,0,0,,,
+OS-0104,GUILHERME TROVA,474.000.258-21,CHACARA SANTA ISAURA,GABRIEL MORAES,2026-02-25,"Modelo: 9500S MDI09524CN0002490
+Chassis: 9500S MDI09524CN0002490
+Horimetro: 1558
+
+Solicitação do cliente: Revisão de 1500 Horas
+Serviço Realizado: Técnico fez a revisão de 1500 horas e finalizando o serviço, notou que o tanque do cliente estava contaminado com sujeira por conta do combustivel. Então ele removeu o tanque para fazer uma limpeza nele e na bomba alimentadora.",,,6,193,0,2.8,2883,,Concluída,PPV-0082,,9500S MDI09524CN0002490,,4686,,,,Revisão,0,0,0,,,
+OS-0105,PIRAJU GABINETE PREFEITO,46.223.699/0001-50,Praça Ataliba Leonel,Pedro Motta,2026-02-25,"Modelo: TL
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Trocar o óleo do Hidraulico que está com agua
+Serviço Realizado: ",,,0,193,0,2.8,1850,,Concluída,PPV-0083,,,,4670,,,,Manutenção,0,0,0,,,
+OS-0106,VINICIUS AUGUSTO MAZETTO ROMANO DA SILVA,300.302.758-14,RUA APOSTOLO BEGAMO,DANILO DE SOUZA,2026-02-26,"Modelo: 6075 BR MDI07510TR0004356
+Chassis: 6075 BR MDI07510TR0004356
+Horimetro: 78,1
+
+Solicitação do cliente: Engate Rapido da ensiladeira
+Serviço Realizado: realizado troca da vcr e completado com óleo",,,0,193,0,2.8,885,,Concluída,PPV-0084,,6075 BR MDI07510TR0004356,,4677,,,,Manutenção,0,0,0,,,
+OS-0107,JORGE JUSTUS NITZAN,07.952.272/0001-30,"ESTRADA MUNICIPAL AVARE ITATINGA,KM-7 FAZENDA ALBERTO CRUZ",NICOLAS DARIO,2026-02-26,"Modelo: JIVO 2025 01478
+Chassis: JIVO 2025 01478
+Horimetro: 302
+
+Solicitação do cliente: Revisão de 300
+Serviço Realizado: Técnico realizou a revisão de 300 Horas, e apos isso realizou o checklist e inspeção, visando encontrar problemas que alterem a funcionalidade ou desempenho do trator, mas não encontrou.",,,3,193,0,2.8,1335,,Concluída,PPV-0085,,JIVO 2025 01478,,4683,,,"Revisão de 300 horas 2025 - Troca de Óleo do Motor, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0108,JORGE JUSTUS NITZAN,07.952.272/0001-30,"ESTRADA MUNICIPAL AVARE ITATINGA,KM-7 FAZENDA ALBERTO CRUZ",NICOLAS DARIO,2026-02-26,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Instalação de taxa variavel adubadeira.
+Serviço Realizado: ",,,0,193,0,2.8,0,,Cancelada,,,,,,,,,Manutenção,0,0,0,,,
+OS-0109,JOANNES ADRIANUS STELTENPOOL,12.982.281/0001-04,RODOVIA RAPOSO TAVARES KM 256,GABRIEL MORAES,2026-02-26,"Modelo: 6075E CAB 
+Chassis: MDI07513PS0005346
+Horimetro: 378
+
+Solicitação do cliente: 
+Serviço Realizado: ",,,3,193,0,2.8,2414.01,,Concluída,PPV-0086,,6075E CAB MDI07513PS0005346,,0,,,"Revisão de 300 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,-0.01,0,0,,,
+OS-0110,CLAIR SANDRO DOGNANI,08.063.830/0005-01,FAZENDA VARGEM LIMPA,PAULO MOTTA,2026-02-27,"Modelo: 5050 MBNUZA2W7RZJ00162
+Chassis: 5050 MBNUZA2W7RZJ00162
+Horimetro: 
+
+Solicitação do cliente: Troca da Bateria
+Serviço Realizado: ",,,0,193,0,2.8,0,,Executada,,,5050 MBNUZA2W7RZJ00162,,,,,,Manutenção,0,0,0,,,
+OS-0111,JOSE CARLOS RIBEIRO E OUTROS,08.005.678/0001-79,FAZENDA LAGEADO,GABRIEL MORAES,2026-02-27,"Modelo: 6075
+Chassis: 6075E MDI07508AN0002679
+Horimetro: 
+
+Solicitação do cliente: Revisão troca de oleos e filtros.
+Serviço Realizado: ",,,0,193,0,2.8,1685,,Concluída,PPV-0087,,6075E MDI07508AN0002679,,54,,,,Manutenção,0,0,0,,,
+OS-0112,ALTAIR MULLER CORREA,08.005.566/0005-41,SITIO PRIMAVERA,JOSE ANTONIO DE OLIVEIRA,2026-03-02,"Modelo: 9500S
+Chassis: CAB MDI09501KM0001909
+Horimetro: 1819,3
+
+Solicitação do cliente: Vazamento de óleop no retentor da ponta de eixo.
+Serviço Realizado: Após verificação, técnico notou que o rolamento da carcaça estava quebrado, então ele desmontou a carcaça da ponta de eixo traseira e fez a troca, finalizando o serviço, fez testes e o trator ficou normal.",,,8.5,193,111,2.8,12001.0662,,Concluída,PPV-0112,,9500S CAB MDI09501KM0001909,,000000000004755,,Pedro Motta,,Manutenção,0,0,0,2026-03-13,2026-03-14,4755
+OS-0113,NOVA TRATORES MAQUINAS AGRICOLAS LTDA,31.463.139/0001-03,AV SÃO SEBASTIÃO,,2026-03-03,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Troca do conjunto agitador accura 1200, para o cliente Vanderlei aparecido Guizini
+Serviço Realizado: ",,,0,193,0,2.8,0,,Cancelada,,,,,,,,,Manutenção,0,0,0,,,
+OS-0114,ROSAN ANTONIO AIELLO,09.045.316/0001-74,CHÁCARA CHACARA PRIMAVERA,JOSE ANTONIO DE OLIVEIRA,2026-03-03,"Modelo: 86-110
+Chassis: NP7T4KC6EPNA10310
+Horimetro: 2238
+
+Solicitação do cliente: Verificar a embreagem e tomada de força
+Serviço Realizado: ",,,0,193,0,2.8,0,,Aguardando ordem Técnico,,,86110 NP7T4KC6EPNA10310,,,,PAULO MOTTA,,Manutenção,0,0,0,2026-03-16,2026-03-23,
+OS-0115,JEFERSON FAULIM (FAZENDA GRAMONT DO OESTE),08.444.128/0005-80,FAZENDA GRAMONT DO OESTE,GABRIEL MORAES,2026-03-03,"Modelo: 9500
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Troca do filtro de combustivel que furou
+Serviço Realizado: ",,,0,193,0,2.8,0,,Cancelada,PPV-0089,,,,,,,,Manutenção,0,0,0,,,
+OS-0116,LUIZ CARLOS CALDERAN,075.095.578-36,SITIO SÃO JOSE DA BOA VISTA,DANILO DE SOUZA,2026-03-03,"Modelo: 9500
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Vazamento de óleo hidraulico.
+Serviço Realizado: ",,,0,193,0,2.8,130,,Concluída,PPV-0088,,,,00,,,,Manutenção,0,0,0,,,
+OS-0117,PREFEITURA PIRAJU,,,FERNANDO LEONEL,2026-03-03,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: REALIZAR TROCA DE CABO ACELERADOR DE PÉ, EMBREAGEM E ROLAMENTO
+Serviço Realizado: ",,,0,193,0,2.8,0,,Concluída,,,,,0,,,,Manutenção,0,0,0,,,
+OS-0118,GUILHERME TROVA,474.000.258-21,CHACARA SANTA ISAURA,DANILO DE SOUZA,2026-03-03,"Modelo: 9500S MDI09524CN0002490
+Chassis: 9500S MDI09524CN0002490
+Horimetro: 
+
+Solicitação do cliente: Troca dos retentores da viga dianteira
+Serviço Realizado: ",,,3,193,0,2.8,579,,Concluída,,,9500S MDI09524CN0002490,,00,,,,Manutenção,0,0,0,,,
+OS-0119,JOSE PASCOAL BORTOTTI E ESPOSA,19.357.640/0001-81,CHACARA CENTENARIO,DANILO DE SOUZA,2026-03-03,"Modelo: JIVO 2025 
+Chassis: MBN1KGCBFLGM00164
+Horimetro: 
+
+Solicitação do cliente: 
+Serviço Realizado: ",,,6,193,0,2.8,3104,,Cancelada,PPV-0090,,JIVO 2025 MBN1KGCBFLGM00164,,,,,"Revisão de 1200 horas 2025 - Troca de Óleo do Motor, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar, Troca de Correia do Motor.",Revisão,0,0,0,,,
+OS-0120,FERNANDO CESAR CRIVELLI,18.478.478/0003-59,SITIO SANTA LUZIA,FERNANDO LEONEL,2026-03-03,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Montagemd o COnjunto Frontal
+Serviço Realizado: ",,,6,193,0,2.8,1158,,Concluída,,,,,,,,,Manutenção,0,0,0,,,
+OS-0121,EDMAR JOSE BERNARDES,08.501.754/0002-18,FAZENDA SAO JOSE,DANILO DE SOUZA,2026-03-03,"Modelo: JIVO 2025 MBN1KGCBFSGA01964
+Chassis: JIVO 2025 MBN1KGCBFSGA01964
+Horimetro: 300
+
+Solicitação do cliente: Revisão de 300 Horas
+Serviço Realizado: ",,,3,193,0,2.8,1044,,Concluída,PPV-0091,,JIVO 2025 MBN1KGCBFSGA01964,,000000000004731,,,"Revisão de 300 horas 2025 - Troca de Óleo do Motor, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0122,JOSE CARLOS FERNANDES,07.916.196/0006-12,FAZENDA DONAIRES,JOSE ANTONIO DE OLIVEIRA,2026-03-03,"Modelo: JIVO 2025 - MBIKGXFNGL00089
+Chassis: JIVO 2025 - MBIKGXFNGL00089
+Horimetro: 1638
+
+Solicitação do cliente: Vazamento da roda dianteira
+Serviço Realizado: ",,,3,193,0,2.8,1249,,Cancelada,PPV-0092,,JIVO 2025 - MBIKGXFNGL00089,,,,,,Manutenção,0,0,0,,,
+OS-0123,ROSAN ANTONIO AIELLO,09.045.316/0001-74,CHÁCARA CHACARA PRIMAVERA,DANILO DE SOUZA,2026-03-04,"Modelo: 6075 BR MDI07510HS0005279
+Chassis: 6075 BR MDI07510HS0005279
+Horimetro: 
+
+Solicitação do cliente: Revisão de 300 Horas
+Serviço Realizado:  ",,,3,193,90,2.8,2746,,Cancelada,PPV-0093,,6075 BR MDI07510HS0005279,,,,,"Revisão de 300 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0124,NOVA TRATORES MAQUINAS AGRICOLAS LTDA,31.463.139/0001-03,AV SÃO SEBASTIÃO,NICOLAS DARIO,2026-03-04,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Montagem e Entrega Técnico do Pilo Raquel Bapstela
+Serviço Realizado: ",,,0,193,0,2.8,0,,Cancelada,,,,,,,,,Manutenção,0,0,0,,,
+OS-0125,JOSE ADILSO DE LIMA,07.974.185/0006-99,FAZENDA SÃO CARLOS,GABRIEL MORAES,2026-03-04,"Modelo: 6075E CAB MDI07513HS0006118
+Chassis: 6075E CAB MDI07513HS0006118
+Horimetro: 300
+
+Solicitação do cliente: Revisão 300 Horas
+Serviço Realizado: ",,,3,193,0,2.8,2574,,Executada,PPV-0094,,6075E CAB MDI07513HS0006118,,000000000004730,,,"Revisão de 300 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0126,JOSE ADILSON DE LIMA,07.974.185/0001-84,FAZENDA SÃO FRANCISCO ASSIS,ARTHUR,2026-03-04,"Modelo: 6075E CAB MDI07513HS0006118
+Chassis: 6075E CAB MDI07513HS0006118
+Horimetro: 300
+
+Solicitação do cliente: Revisão de 300
+Serviço Realizado: ",,,3,193,0,2.8,579,,Cancelada,,,6075E CAB MDI07513HS0006118,,,Aberta por engano,,"Revisão de 300 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0127,ROSAN ANTONIO AIELLO,09.045.316/0001-74,CHÁCARA CHACARA PRIMAVERA,LUIZ FERNANDO,2026-03-04,"Modelo: 6075 BR MDI07510HS0005279
+Chassis: 6075 BR MDI07510HS0005279
+Horimetro: ?
+
+Solicitação do cliente: Vazamento de combustivel no filtro
+Serviço Realizado: Estava com sensor de combustível quebrado e foi trocado o filtro de combustível
+",,,2,193,92,2.8,643.5999999999999,,Concluída,"95, PPV-0095",,6075 BR MDI07510HS0005279,,4714,,,,Manutenção,0,0,0,,,
+OS-0128,MARCO ANTONIO DA CUNHA,708.742.718-00,SITIO SANTANA PARAGUAI,JOSE ANTONIO DE OLIVEIRA,2026-03-05,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Terminal de Direção Quebrou
+Serviço Realizado: ",,,2,193,60,2.8,554,,Concluída,PPV-0096,,,,222,,,,Manutenção,0,0,0,,,
+OS-0129,SANDRA AP. MARQUES DE LAZZARI E BENEDITO DE LAZZARI,39.548.562/0001-00,SITIO SAO LUCAS,GABRIEL MORAES,2026-03-05,"Modelo: JIVO 2025 MBN1KGCBFSGC02094
+Chassis: JIVO 2025 MBN1KGCBFSGC02094
+Horimetro: 50
+
+Solicitação do cliente: Revisão de 50 Horas
+Serviço Realizado: ",,,0,193,84,2.8,920.2,,Cancelada,PPV-0097,,JIVO 2025 MBN1KGCBFSGC02094,,000000000004733,,,"Revisão de 50 horas 2025 - Troca de Óleo do Motor, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Hidráulico.",Revisão,0,0,0,,,
+OS-0130,FLORA MARIA GOMES DOS SANTOS E OUTROS,47.839.756/0001-92,ESTANCIA SANTA LUZIA,JOSE ANTONIO DE OLIVEIRA,2026-03-05,"Modelo: 6075 MBNYHBKYVNNG02063
+Chassis: 6075 MBNYHBKYVNNG02063
+Horimetro: 2665
+
+Solicitação do cliente: Revisão 2400
+Serviço Realizado: ",,,6,193,0,2.8,4763,,Cancelada,PPV-0098,,6075 MBNYHBKYVNNG02063,,,Cliente nao quis fazer,,"Revisão de 2400 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Adição de aditivo no Radiador, Troca de Filtro do Hidráulico, Troca de Filtro de Ar,",Revisão,0,0,0,,,
+OS-0131,FLORA MARIA GOMES DOS SANTOS E OUTROS,47.839.756/0001-92,ESTANCIA SANTA LUZIA,JOSE ANTONIO DE OLIVEIRA,2026-03-05,"Modelo: 6075BR MDI07502AN0002161
+Chassis: 6075BR MDI07502AN0002161
+Horimetro: 3635
+
+Solicitação do cliente: Revisão de 3600 Horas, equivalente a de 900
+Serviço Realizado: ",,,3,193,100,2.8,3089,,Cancelada,PPV-0099,,6075BR MDI07502AN0002161,,,Cliente nao quis fazer,,"Revisão de 900 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0132,OLINTO RODRIGUES DE ARRUDA E OUTRO ( FAZ BOM RETIRO ),15.441.078/0009-76,RODOVIA SP 261 S/N ACESSO BAIRRO MACUCO GRANJA BOM RETIRO,PAULO MOTTA,2026-03-05,"Modelo: 8000
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Troca do filtro Hidraulico
+Serviço Realizado: ",,,2,193,0,2.8,926,,Aguardando ordem Técnico,PPV-0100,,,,,,,,Manutenção,0,0,0,,,
+OS-0133,OLINTO RODRIGUES DE ARRUDA E OUTROS ( N.S.BOA ESPERANÇA),08.484.467/0004-09,"RODOV SP280 CASTELO BRANCO, KM 271 FAZ.N.S.BOA ESPERANÇA",PAULO MOTTA,2026-03-06,"Modelo: 8000
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: DIREÇÃO DO TRATOR PESADA
+Serviço Realizado: ",,,0,193,0,2.8,0,,Aguardando ordem Técnico,,,,,,,FERNANDO LEONEL,,Manutenção,0,0,0,,,
+OS-0134,JAIR DE CAMPOS BICUDO,32.855.107/0003-70,SITIO SANTO  ANTONIO DO DOURADINHO,DANILO DE SOUZA,2026-03-06,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: TRATOR NÃO DA PARTIDA
+Serviço Realizado: ",,,0,193,0,2.8,0,,Cancelada,,,,,,,,,Manutenção,0,0,0,,,
+OS-0135,CLAUDINEI APARECIDO DA COSTA,08.420.500/0004-37,"RODOVIA SP 289 - PIRAJU A MANDURI, KM 41",JOSE ANTONIO DE OLIVEIRA,2026-03-07,"Modelo: 86-110
+Chassis: NP7T4KC6EPPMA05046
+Horimetro: 2040
+
+Solicitação do cliente: Fazendo barulho no motor
+Serviço Realizado: Técnico verificou e constatou que o barulho não era no motor, mas sim no compressor de ar. Após isso, tiou o compressor de ar e mandou para um terceiro trocar a peça necessária, finalizando o serviço, montou tudo novamente e constatou que o barulho parou.",,,2,193,60,2.8,554,,Concluída,,,86110 NP7T4KC6EPPMA05046,,000000000004745,,,,Manutenção,0,0,0,2026-03-13,2026-03-14,4745
+OS-0136,GUSTAVO SANCHES ZANFORLIN,303.657.818-86,Alameda pinot,Pedro Motta,2026-03-07,"Modelo: M250
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: MANUTENÇÃO M250, MONTAGEM
+Serviço Realizado: ",,,0,193,0,2.8,40,,Cancelada,PPV-0101,,,,,já tem aberto,,,Manutenção,0,0,0,,,
+OS-0137,JAIR DE CAMPOS BICUDO,32.855.107/0003-70,SITIO SANTO  ANTONIO DO DOURADINHO,DANILO DE SOUZA,2026-03-09,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Regulagem de freio e esticou o cabo.
+Serviço Realizado: ",,,0,193,0,2.8,0,,Cancelada,,,,,000000000004736,,,,Manutenção,0,0,0,,,
+OS-0138,BRUNO HIDEKI IOSHIDA ARIKITA,13.928.960/0001-68,SITIO NOSSA SENHORA APARECIDA,NICOLAS DARIO,2026-03-09,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Troca da placa de encosto da capa de eixo dianteira do Stronger
+Serviço Realizado: ",,,2,193,0,2.8,386,,Cancelada,,,,,,,,,Manutenção,0,0,0,,,
+OS-0139,JOSE CARLOS FERNANDES,07.916.196/0006-12,FAZENDA DONAIRES,NICOLAS DARIO,2026-03-09,"Modelo: STRONGER 3200 HD 
+Chassis: KMBA1082J70B00009
+Horimetro: 618
+
+Solicitação do cliente: Troca da ponteira da barra esquerda.
+Serviço Realizado: Foi realizado a troca da ponteira, trocado 3 portas do ramal e 6 placas de encosto",,,3,193,194,2.8,1122.1999999999998,,Concluída,,,STRONGER 3200 HD KMBA1082J70B00009,,000000000004679,,,,Manutenção,0,0,0,,,
+OS-0140,ROSAN ANTONIO AIELLO,09.045.316/0001-74,CHÁCARA CHACARA PRIMAVERA,GABRIEL MORAES,2026-03-09,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Tirar o vazamento do conjunto Frontal
+Serviço Realizado: ",,,2,193,0,2.8,386,,Cancelada,PPV-0102,,,,000000000004735,,FERNANDO LEONEL,,Manutenção,0,0,0,,,
+OS-0141,ANTONIO RUIZ FRAGOSO,835.354.388-53,RUA ROBERTO ROLIM DE MOURA,JOSE ANTONIO DE OLIVEIRA,2026-03-09,"Modelo: 6075 MBNYHBKYVMNM00602
+Chassis: 6075 MBNYHBKYVMNM00602
+Horimetro: 
+
+Solicitação do cliente: Trator Perdendo Força
+Serviço Realizado: ",,,2,193,0,2.8,386,,Cancelada,PPV-0103,,6075 MBNYHBKYVMNM00602,,,,,,Manutenção,0,0,0,,,
+OS-0142,MARIA BEATRIZ NAVARRO RIBEIRO COSTACURTA,230.994.998-11,FAZENDA SANTA ELISA I,DANILO DE SOUZA,2026-03-09,"Modelo: 6075E CAB MDI07513PS0006206
+Chassis: 6075E CAB MDI07513PS0006206
+Horimetro: 307
+
+Solicitação do cliente: Revisão de 300 Horas
+Serviço Realizado: ",,,3,193,0,2.8,579,,Cancelada,PPV-0104,,6075E CAB MDI07513PS0006206,,,,,"Revisão de 300 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,,,
+OS-0143,NOVA TRATORES MAQUINAS AGRICOLAS LTDA,31.463.139/0001-03,AV SÃO SEBASTIÃO,DANILO DE SOUZA,2026-03-11,"Modelo: 5050
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Troca do cabo do Freio de Mão
+Serviço Realizado: ",,,0,193,0,2.8,222.9617,,Cancelada,PPV-0105,,,,,,,,Manutenção,0,0,0,,,
+OS-0144,FELIZARDO &amp; FELIZARDO SERVIÇOS DE MÃO DE OBRA LTDA,04.367.420/0001-61,RUA PAULO FERNANDO VIEIRA GOMES,FERNANDO LEONEL,2026-03-11,"Modelo: Roçadeira Kamaq
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Troca do Retentor da Tomada de Força
+Serviço Realizado: ",,,0,193,0,2.8,0,,Cancelada,PPV-0106,,,,,,,,Manutenção,0,0,0,,,
+OS-0145,GUSTAVO SANCHES ZANFORLIN,303.657.818-86,Alameda pinot,Pedro Motta,2026-03-11,"Modelo: M570
+Chassis: M570L SAND LL8RET4W1R0A00004
+Horimetro: 
+
+Solicitação do cliente: Revisão de 100 Horas E Barulho no Escapamento
+Serviço Realizado: Técnico realizou o reaperto do escapamento e trocou as porcas da saida do escapamento do motor após isso, realizou a revisão, trocando o óleo motor, filtro do motor, filtro combustivel e filtro de ar.",,,2.5,193,0,2.8,1030.60915,,Concluída,PPV-0107,,M570L SAND LL8RET4W1R0A00004,,000000000004767,,,,Manutenção,0,0,0,2026-03-18,2026-03-23,4767
+OS-0146,MARIA BEATRIZ NAVARRO RIBEIRO COSTACURTA,230.994.998-11,FAZENDA SANTA ELISA I,DANILO DE SOUZA,2026-03-11,"Modelo: 6075E CAB 
+Chassis: MDI07513PS0006206
+Horimetro: 317.4
+
+Solicitação do cliente: VAZAMENTO JUNTA DO CABEÇOTE
+Serviço Realizado: FOI OBSERVADO QUE A JUNTA DO CABEÇOTE ESTAVA DANIFICADA, FOI DESMONTADO A TAMPA DA VÁLVULA PARA SUBSTITUIR A JUNTA POR UM SILICONE, SANANDO O PROBLEMA",,,2,193,90,2.8,638,,Concluída,,,6075E CAB MDI07513PS0006206,,2479753317,,Pedro Motta,,Manutenção,0,0,0,2026-03-12,2026-04-02,
+OS-0147,FELIZARDO &amp; FELIZARDO SERVIÇOS DE MÃO DE OBRA LTDA,04.367.420/0001-61,RUA PAULO FERNANDO VIEIRA GOMES,FERNANDO LEONEL,2026-03-11,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Troca da trincha
+Serviço Realizado: ",,,0,193,0,2.8,0,,Cancelada,PPV-0108,,,,,,,,Manutenção,0,0,0,,,
+OS-0148,LUIZ ANTONIO BASILE SOBRINHO E OUTRO,08.399.265/0001-16,SITIO PINGO D AGUA,PAULO MOTTA,2026-03-12,"Modelo: 6075E CAB
+Chassis: MDI07513ES0005794
+Horimetro: Não informado
+
+Solicitação do cliente: Mangueira de admissão furada
+Serviço Realizado: O capo estava pegando na mangueira causando o furo, foi realizado a troca da mangueira e regulado o capo",,,1,193,20,2.8,469,,Concluída,PPV-0109,,6075E CAB MDI07513ES0005794,,000000000004758,,,,Manutenção,0,0,0,2026-03-12,2026-03-13,4758
+OS-0149,NOVA TRATORES MAQUINAS AGRICOLAS LTDA,31.463.139/0001-03,AV SÃO SEBASTIÃO,GABRIEL MORAES,2026-03-12,"Modelo: Quadri Sukuki
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Manutenção
+Serviço Realizado: ",,,1,193,0,2.8,193,,Aguardando ordem Técnico,,,,,,,,,Manutenção,0,0,0,2026-03-12,2026-03-13,
+OS-0150,JOSE VALDIR DA SILVA,076.385.718-19,SITIO SÃO LUCAS,DANILO DE SOUZA,2026-03-12,"Modelo: 6075E CAB MDI07512JP0003548
+Chassis: MDI07512JP0003548
+Horimetro: 2680.1
+
+Solicitação do cliente: Trocar suporte da alavanca de tração
+Diagnostico: Suporte com desgaste no eixo e na base da esfera
+
+Serviço Realizado: Tirar pneu para trocar suporte da alavanca da tração e trocar a esferea e mola para manter pressão na alavanca da tração. ",,,2,193,90,2.8,638,,Concluída,,,6075E CAB MDI07512JP0003548,,000000000004740,,,,Manutenção,0,0,0,2026-03-12,2026-03-13,4740
+OS-0151,PAULO GIOVANI DE ALMEIDA,08.506.813/0007-55,SITIO SANTA HELENA - ESTRADA VICINAL FARTURA AO BAIRRO BARRA,DANILO DE SOUZA,2026-03-12,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: VAZAMENTO SELO
+Serviço Realizado: ",,,1,193,0,2.8,193,,Concluída,PPV-0111,,,,000000000004741,,,,Manutenção,0,0,0,2026-03-13,2026-04-16,4741
+OS-0152,RICARDO SWART (FAZENDA SANTA ISABEL),07.988.408/0001-62,FAZENDA - SANTA ISABEL,NICOLAS DARIO,2026-03-13,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Conferir GPS
+Serviço Realizado: ",,,1,193,0,2.8,193,,Aguardando ordem Técnico,,,,,,,,,Manutenção,0,0,0,2026-03-13,2026-03-16,
+OS-0153,MARIANA FIGUEIREDO BERGAMO SALVADOR,08.224.377/0001-36,FAZENDA SANTA MARIA,NICOLAS DARIO,2026-03-13,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Conferir accura 1600
+Serviço Realizado: ",,,1,193,0,2.8,193,,Execução aguardando peças (em transporte),,,,,,,,,Manutenção,0,0,0,2026-03-13,2026-03-16,
+OS-0154,FELIZARDO &amp; FELIZARDO SERVIÇOS DE MÃO DE OBRA LTDA,04.367.420/0001-61,RUA PAULO FERNANDO VIEIRA GOMES,FERNANDO LEONEL,2026-03-13,"Modelo: PINBALENSE
+Chassis: SEM PLAQUETA
+
+
+Solicitação do cliente: Caixa de transmissão quebrada.
+Serviço Realizado: Técnico desmontou a trincha para realizar a troca da caixa de transmissão completa. Finalizando o serviço, completou com 2 litros de óleo 80W90.",,,5,193,0,2.8,965,,Concluída,PPV-0113,,,,000000000004739,,,,Manutenção,0,0,0,2026-03-12,2026-03-13,
+OS-0155,JOSE VALDIR DA SILVA,08.088.617/0001-12,SITIO SÃO LUCAS,DANILO DE SOUZA,2026-03-13,"Modelo: 6075E
+Chassis: CAB MDI07512JP0003548
+Horimetro: 2610
+
+Solicitação do cliente: Freio Travado
+Serviço Realizado: Técnico realizou a troca dos cabos de freio esquerdo e direito, após isso, fez a inspeção e testes, e constatou que estava funcionando perfeitamente.",,,1.5,193,0,2.8,1479.5,,Concluída,PPV-0114,,6075E CAB MDI07512JP0003548,,000000000004766,,,,Manutenção,0,0,0,2026-03-23,2026-03-24,4766
+OS-0156,PIRAJU GABINETE PREFEITO,46.223.699/0001-50,Praça Ataliba Leonel,FERNANDO LEONEL,2026-03-13,"Modelo: Roçadeira
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Verificação de Conserto 
+Serviço Realizado: ",,,1,193,0,2.8,193,,Aguardando ordem Técnico,,,,,,,,,Manutenção,0,0,0,2026-03-13,2026-03-16,
+OS-0157,GUILHERME TROVA,474.000.258-21,CHACARA SANTA ISAURA,DANILO DE SOUZA,2026-03-13,"Modelo: 9500S
+Chassis: MDI09524CN0002490
+Horimetro: 2500
+
+Solicitação do cliente: Troca do Cabo Acelerador de Pé
+Serviço Realizado: Técnico retirou o cabo antigo, e realizou a troca para um novo. Finalizando o serviço, fez testes e constatou que o trator estava funcionando perfeitamente. ",,,1,193,26,2.8,265.8,,Concluída,,,9500S MDI09524CN0002490,,2480075146,,,,Manutenção,0,0,0,2026-03-13,2026-03-16,4743
+OS-0158,CARLOS FERNANDO BASILE,08.352.182/0001-71,SITIO SANTO ANTONIO,DANILO DE SOUZA,2026-03-13,"Modelo: 6075E CAB
+Chassis: MDI07513ES0005794
+Horimetro: 563.4
+
+Solicitação do cliente: ACELERADOR DE MÃO NÃO FUNCIONA
+Serviço Realizado: FOI IDENTIFICADO O CABO DO MESMO COM DEFEITO, FOI NECESSÁRIO DESMONTAR PAINEL PARA REALIZAR A TROCA DO CABO",,,2,193,60,2.8,554,,Concluída,,,6075E CAB MDI07513ES0005794,,000000000004746,,,,Manutenção,0,0,0,2026-03-14,2026-03-16,4746
+OS-0159,JAIR DE CAMPOS BICUDO,32.855.107/0003-70,SITIO SANTO  ANTONIO DO DOURADINHO,GABRIEL MORAES,2026-03-14,"Modelo: 9500S
+Chassis: MDI09524UM0001792
+Horimetro: 2018
+
+Solicitação do cliente: Trator não está dando partida
+Serviço Realizado: Após o técnico realizar a inspeção, notou que o aterramento do trator estava solto,após recolocar tudo corretamente, realizou testes e o trator funcionou normalmente",,,2,193,30,2.8,470,,Concluída,,,9500S MDI09524UM0001792,,000000000004754,,,,Manutenção,0,0,0,2026-03-14,2026-03-16,4754
+OS-0160,LUCIA HELENA RIOS SEABRA,055.336.688-29,FAZENDA BOA VISTA,PAULO MOTTA,2026-03-14,"Modelo: 9500S
+Chassis: CAB MDI09501ER0004276
+Horimetro: 1342.2
+
+Solicitação do cliente: Reparo no Ar Condicionado
+Serviço Realizado:Estava com vazamento no pressostato, técnico fez a troca do pressostato óleo do compressor e recarregou o fluido refrigerante.",,,1,193,0,2.8,193,,Concluída,,,9500S CAB MDI09501ER0004276,,000000000004742,,,,Manutenção,0,0,0,2026-03-14,2026-03-16,4742
+OS-0161,MARIA INES VIEIRA ANTUNES,259.236.638-56,SITIO SÃO JOSÉ,GABRIEL MORAES,2026-03-14,"Modelo: 7095 CAB
+Chassis: MDI09520LS0005371
+Horimetro: 251,3
+
+Solicitação do cliente: Revisão de 300h, 7095 CAB
+Serviço Realizado: ",,,3,193,0,2.8,2281.6644,,Execução,PPV-0115,,7095 CAB MDI09520LS0005371,,,,,"Revisão de 300 horas 9500 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,2026-03-23,2026-03-24,
+OS-0162,NOVA TRATORES MAQUINAS AGRICOLAS LTDA,31.463.139/0001-03,AV SÃO SEBASTIÃO,GABRIEL MORAES,2026-03-14,"Modelo: TACTIC
+Chassis: 4001 CAMO 99KSDSZ8ATM100257
+Horimetro:45
+
+Solicitação do cliente: Quadriciclo esquentando 
+Serviço Realizado: Técnico retirou os radiadores, limpou a sujeira e retirou a ventoinha para fazer a lmpeza. Após isso, fez a solda no escapamento que tinha tricado, finalizando o serviço, fez testes e constatou que estava tudo funcionando perfeitamente.",,,2.5,193,0,2.8,482.5,,Concluída,,,TACTIC 4001 CAMO 99KSDSZ8ATM100257,,000000000004744,,,,Manutenção,0,0,0,2026-03-14,2026-03-16,4744
+OS-0163,MARIA BEATRIZ NAVARRO RIBEIRO COSTACURTA,230.994.998-11,FAZENDA SANTA ELISA I,DANILO DE SOUZA,2026-03-16,"Modelo: 6075E
+Chassis: CAB MDI07513PS0006206
+Horimetro: 331.4
+
+Solicitação do cliente: PEDAL DE EMBREAGEM DURO E ACELERADOR DE MÃO NÃO FUNCIONA
+Serviço Realizado: FOI IDENTIFICADO QUE O CABO DA EMBREAGEM ESTAVA DANIFICADO E O CABO DO ACELERADOR DE MÃO DESENCAIXADO DO SUPORTE, FOI REALIZADO A DESMONTAGEM PAINEL PARA TROCAR O CABO DE EMBREAGEM E ENCAIXAR CABO DO ACELERADOR DE MÃO",,,1.5,193,120,2.8,625.5,,Concluída,,,6075E CAB MDI07513PS0006206,,000000000004747,,,,Manutenção,0,0,0,2026-03-16,2026-03-16,4747
+OS-0164,FELIZARDO &amp; FELIZARDO SERVIÇOS DE MÃO DE OBRA LTDA,04.367.420/0001-61,RUA PAULO FERNANDO VIEIRA GOMES,FERNANDO LEONEL,2026-03-16,"Modelo: KAMAQ KD132
+Chassis: SEM PLAQUETA
+
+
+Solicitação do cliente: Vazamento no retentor
+Serviço Realizado: Técncio realizou a troca do retentor da tomada de força da caixa de transmissão da roçadeira.",,,1,193,0,2.8,223,,Concluída,PPV-0117,,,,000000000004748,,,,Manutenção,0,0,0,2026-03-16,2026-03-17,4748
+OS-0165,JOSE ADILSON DE LIMA,07.974.185/0001-84,FAZENDA SÃO FRANCISCO ASSIS,GABRIEL MORAES,2026-03-16,"Modelo: 6075E CAB
+Chassis: MDI07512HP0003914
+Horimetro: 2115.5
+
+Solicitação do cliente: REVISÃO DE 2100H
+Serviço Realizado: Técnico realizou a revisão de 2100 horas e finalizando o serviço fez o checklist e inspeção, visando encontrar problemas que alterem a funcionalidade ou desempenho mas não encontrou.",,,1.5,193,76,2.8,2732.3,,Concluída,PPV-0118,,6075E CAB MDI07512HP0003914,,000000000004763,,,"Revisão de 2100 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,2026-03-19,2026-03-23,4763
+OS-0166,HAMILTON CESAR BORTOTTI,08.796.720/0002-06,SÍTIO SAO PEDRO,GABRIEL MORAES,2026-03-16,"Modelo: HNAGRO GRAN14T002
+Chassis: 84322100
+
+
+Solicitação do cliente: Reaperto dos discos da Grade
+Serviço Realizado: Foi realizado o reaperto dos eixos dos discos",,,1.5,193,32,2.8,379.1,,Concluída,,,,,000000000004752,,PEDRO MOTTA,,Manutenção,0,0,0,2026-03-16,2026-03-16,4752
+OS-0167,NOVA TRATORES MAQUINAS AGRICOLAS LTDA,31.463.139/0001-03,AV SÃO SEBASTIÃO,DANILO DE SOUZA,2026-03-17,"Modelo: 9500
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Trator pegando ar no sistema hidraulico, do João Francisco (Não achei no sistema)
+Serviço Realizado: ",,,1,193,0,2.8,883,,Cancelada,,,,,,Criado com o nome errado,,,Manutenção,0,0,0,2026-03-17,2026-03-18,
+OS-0168,JOAO FRANCISCO DIAS DA SILVA,08.391.741/0001-52,SITIO PONTE ALTA,DANILO DE SOUZA,2026-03-17,"Modelo: 9500
+Chassis: CAB MDI09501EN00022117
+Horimetro: 2717
+
+Solicitação do cliente: Trator não esta funcionando o hidraulico nem o comando hidraulico
+Serviço Realizado: Após a verificação, técnico desmontou os cabos e destravou a astes de comando, trocou o filtro hidraulico. Finalizando o serviço, fez testes com o trator, e constatou que funcionou perfeitamente.",,,1.5,193,160,2.8,1427.5,,Concluída,PPV-0119,,9500S CAB MDI09501EN00022117,,000000000004757,,,,Manutenção,0,0,0,2026-03-17,2026-03-18,4757
+OS-0169,EDMAR JOSE BERNARDES,08.501.754/0002-18,FAZENDA SAO JOSE,DANILO DE SOUZA,2026-03-17,"Modelo: VICON SRT 1.0 
+Chassis: 101138068
+
+Solicitação do cliente: Vazamento de óleo de retentor danificado
+Serviço Realizado: Foi realizado a desmontagem da tampa e engrenagens para realizar a troca do retentor",,,3,193,210,2.8,1167,,Concluída,,,VICON SRT 1.0 101138068,,000000000004759,,,,Manutenção,0,0,0,2026-03-17,2026-03-18,4759
+OS-0170,ALTAIR MULLER CORREA,08.005.566/0014-32,SITIO CARACOL,JOSE ANTONIO DE OLIVEIRA,2026-03-17,"Modelo: 9500S
+Chassis: CAB MDI09501KM0001909
+Horimetro: 1819
+
+Solicitação do cliente: Vazamento de óleo no retentor da ponta de eixo, a ponta de eixo esta danificada
+Serviço Realizado: ",,,1,193,0,2.8,193,,Aguardando ordem Técnico,,,9500S CAB MDI09501KM0001909,,,,,,Manutenção,0,0,0,2026-03-17,2026-03-19,
+OS-0171,ADEMIR DE GOIS,114.390.298-06,ESTRADA MUNICIPAL BAIRRO JACUBA,DANILO DE SOUZA,2026-03-17,"Modelo: 6060
+Chassis: MBNYHBDBFNNJ00672
+Horimetro: 3000
+
+Solicitação do cliente: Revisão de 3000 Horas
+Serviço Realizado: Técnico realizou a revisão de 3000 horas e finalizadno o serviço, fez o checklist e inspeção visual, visando encontrar problemas que alterem a capacidade ou desempenho do trator, mas não encontrou.",,,1,193,70,2.8,2322.3365,,Concluída,PPV-0120,,6060 MBNYHBDBFNNJ00672,,000000000004762,,,"Revisão de 3000 horas 6060 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar.",Revisão,0,0,0,2026-03-18,2026-03-19,4762
+OS-0172,MOACIR ROSSETTI,08.524.824/0006-87,FAZENDA FORTALEZA,NICOLAS DARIO,2026-03-18,"Modelo: PORTER
+Chassis: 800 KBRA1018V30D00122
+
+Solicitação do cliente: Regulagem do Pulverizador
+Serviço Realizado: Técnico realizou a regulagem e calibração do retorno da máquina de pulverização, foi colocada para 100 L por HEC e 200 L por HEC.",,,2,193,48,2.8,520.4,,Concluída,,,PORTER 800 KBRA1018V30D00122,,000000000004761,,LUIZ FERNANDO,,Manutenção,0,0,0,2026-03-18,2026-03-19,4761
+OS-0173,FLORA MARIA GOMES DOS SANTOS,43.103.511/0001-41,ESTANCIA SANTA LUZIA,JOSE ANTONIO DE OLIVEIRA,2026-03-18,"Modelo: 6075
+Chassis: MBNYHBKYVNNG02063
+Horimetro: 
+
+Solicitação do cliente: Troca do Retentor em garantia
+Serviço Realizado: ",,,1,193,0,2.8,193,,Aguardando ordem Técnico,PPV-0121,,6075 MBNYHBKYVNNG02063,,,,,,Manutenção,0,0,0,2026-03-19,2026-03-20,
+OS-0174,LUIZ ALBERTO TEBET,07.948.976/0002-10,FAZENDA PRIMAVERA,GABRIEL MORAES,2026-03-19,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Tl com vazamento
+Serviço Realizado: ",,,1,193,0,2.8,193,,Aguardando ordem Técnico,,,,,,,PAULO MOTTA,,Manutenção,0,0,0,2026-03-19,2026-03-20,
+OS-0175,PIRAJU GABINETE PREFEITO,46.223.699/0001-50,Praça Ataliba Leonel,DANILO DE SOUZA,2026-03-19,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Tração não está funcionando
+Serviço Realizado: ",,,1,193,0,2.8,193,,Aguardando ordem Técnico,PPV-0123,,,,,,,,Manutenção,0,0,0,2026-03-19,2026-03-20,
+OS-0176,NOVA TRATORES MAQUINAS AGRICOLAS LTDA,31.463.139/0001-03,AV SÃO SEBASTIÃO,GABRIEL MORAES,2026-03-19,"Modelo: Strada
+Chassis: AQJ3H59
+Horimetro: Técnico não informou
+
+Solicitação do cliente: Câmbio quebrou.
+Serviço Realizado: Técnico realizou a desmontagem do conjunto do câmbio do veículo. Foi trocado a embreagem, o rolamento da embreagem, coifas da homocineticas. Finalizando o serviço, montou o cambio novamente e completou com óleo",,,8,193,0,2.8,1544,,Concluída,,,Strada-FXM4G90,,000000000004760,,,,Manutenção,0,0,0,2026-03-18,2026-03-19,4760
+OS-0177,MANOEL UGUCCIONI,187.620.859-72,CHACARA PRINCESA DOS CAMPOS,NICOLAS DARIO,2026-03-19,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Troca da roda da Roçadeira
+Serviço Realizado: ",,,1,193,0,2.8,193,,Aguardando ordem Técnico,,,,,,,,,Manutenção,0,0,0,2026-03-19,2026-03-20,
+OS-0178,RICARDO SWART (FAZENDA SANTA ISABEL),07.988.408/0001-62,FAZENDA - SANTA ISABEL,NICOLAS DARIO,2026-03-19,"Modelo: 
+Chassis: 
+Horimetro: 
+
+Solicitação do cliente: Troca da Mola da embreagem da Adubadeira
+Serviço Realizado: ",,,1,193,0,2.8,193,,Aguardando ordem Técnico,,,,,,,,,Manutenção,0,0,0,2026-03-19,2026-03-20,
+OS-0179,MARIA BEATRIZ NAVARRO RIBEIRO COSTACURTA,230.994.998-11,FAZENDA SANTA ELISA I,DANILO DE SOUZA,2026-03-19,"Modelo: 6075E
+Chassis: CAB MDI07513LS0006165
+Horimetro: 
+
+Solicitação do cliente: Revisão de 300 Horas
+Serviço Realizado: ",,,3,193,0,2.8,2494,,Cancelada,,,6075E CAB MDI07513LS0006165,,,"Cliente errado ",,"Revisão de 300 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,2026-03-20,2026-03-23,
+OS-0180,PEDRO ALCANTARA RIBEIRO NETO E OUTRO,08.106.975/0001-00,FAZ SAO SEBASTIAO    RURAL,DANILO DE SOUZA,2026-03-19,"Modelo: 6075E
+Chassis: CAB MDI07513LS0006165
+Horimetro: 300
+
+Solicitação do cliente: Revisão de 300 Horas
+Serviço Realizado: ",,,3,193,0,2.8,579,,Aguardando ordem Técnico,PPV-0122,,6075E CAB MDI07513LS0006165,,,,,"Revisão de 300 horas 6075 - Troca de Óleo do Motor, Troca de Óleo da Transmissão e do Hidráulico, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Óleo do Cambio, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,2026-03-20,2026-03-23,
+OS-0181,MENSORI CONSERVAÇÂO INTELIGENTE DE INFRAESTRUTURA,53.058.207/0001-83,Av. Dois Córregos,JOSE ANTONIO DE OLIVEIRA,2026-03-19,"Modelo: 86-110
+Chassis: 6949
+Horimetro: 1196
+
+Solicitação do cliente: Trator com problema na TDF
+Serviço Realizado: Após a verificação, técnico constatou que o trator estava com entrada de ar no sistema hidraulico, pois duas abraçadeiras estavam soltas, então ele fez o reaperto delas, e completou o óleo hidraulico.",,,3,193,570,2.8,12715.4089,,Concluída,PPV-0124,,,,000000000004765,,PEDRO MOTTA,,Manutenção,0,0,0,2026-03-20,2026-03-23,4765
+OS-0182,PAULO GIOVANI DE ALMEIDA,08.506.813/0007-55,SITIO SANTA HELENA - ESTRADA VICINAL FARTURA AO BAIRRO BARRA,DANILO DE SOUZA,2026-03-19,"Modelo: JIVO
+Chassis: 2025 01643
+Horimetro: 
+
+Solicitação do cliente: Revisão de 300 Horas
+Serviço Realizado: ",,,3,193,0,2.8,579,,Aguardando ordem Técnico,PPV-0125,,JIVO 2025 01643,,,,,,Manutenção,0,0,0,2026-03-20,2026-03-23,
+OS-0183,PAULO GIOVANI DE ALMEIDA,08.506.813/0007-55,SITIO SANTA HELENA - ESTRADA VICINAL FARTURA AO BAIRRO BARRA,DANILO DE SOUZA,2026-03-19,"Modelo: JIVO
+Chassis: 2025 MBN1KGCBFRGJ01767
+Horimetro: 
+
+Solicitação do cliente: Revisão de 300 Horas
+Serviço Realizado: ",,,3,193,0,2.8,579,,Aguardando ordem Técnico,PPV-0126,,JIVO 2025 MBN1KGCBFRGJ01767,,,,,"Revisão de 300 horas 2025 - Troca de Óleo do Motor, Troca de Filtro do Motor, Troca de Filtro do Combustível, Troca de Filtro do Hidráulico, Troca de Filtro de Ar, Troca de Filtro de Ar.",Revisão,0,0,0,2026-03-20,2026-03-23,
