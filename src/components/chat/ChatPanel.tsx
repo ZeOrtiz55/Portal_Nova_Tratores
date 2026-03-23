@@ -206,13 +206,14 @@ export default function ChatPanel({ open, onClose, chat, userId, userProfile, is
     setCriandoChat(true)
     try {
       if (novoChatTipo === 'individual') {
-        if (selectedUsers.length !== 1) return
+        if (selectedUsers.length !== 1) { setCriandoChat(false); return }
         const id = await chat.criarChatIndividual(selectedUsers[0])
         if (id) { chat.setChatAtivo(id); setMobileView('room') }
       } else {
-        if (!grupoNome.trim() || selectedUsers.length < 1) return
+        if (!grupoNome.trim() || selectedUsers.length < 1) { setCriandoChat(false); return }
         const id = await chat.criarGrupo(grupoNome.trim(), selectedUsers)
         if (id) { chat.setChatAtivo(id); setMobileView('room') }
+        else { alert('Erro ao criar grupo. Verifique o console.'); }
       }
       setNovoChat(false)
       setSelectedUsers([])
@@ -220,6 +221,7 @@ export default function ChatPanel({ open, onClose, chat, userId, userProfile, is
       setUserSearch('')
     } catch (err) {
       console.error('Erro ao criar chat:', err)
+      alert('Erro ao criar chat: ' + (err instanceof Error ? err.message : String(err)))
     } finally {
       setCriandoChat(false)
     }
