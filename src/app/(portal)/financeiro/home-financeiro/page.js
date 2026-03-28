@@ -699,6 +699,7 @@ function HomeFinanceiroContent() {
                 </div>
                 <div style={{ display:'flex', gap:'15px', flexWrap:'wrap' }}>
                   <AttachmentTag icon={<FileText size={18}/>} label="Nota Fiscal" fileUrl={tarefaSelecionada.anexo_nf} onUpload={f => handleUpdateFileDirect(tarefaSelecionada, 'anexo_nf', f)} />
+                  <AttachmentTag icon={<Barcode size={18}/>} label="Boleto" fileUrl={tarefaSelecionada.anexo_boleto} onUpload={f => handleUpdateFileDirect(tarefaSelecionada, 'anexo_boleto', f)} />
                   {tarefaSelecionada.comprovante_pagamento && <AttachmentTag icon={<CheckCircle size={18}/>} label="Comprovante" fileUrl={tarefaSelecionada.comprovante_pagamento} onUpload={f => handleUpdateFileDirect(tarefaSelecionada, 'comprovante_pagamento', f)} />}
                   {tarefaSelecionada.anexo_requisicao && tarefaSelecionada.anexo_requisicao.split(',').map((url, i) => url.trim() && (
                     <AttachmentTag key={`req-old-${i}`} icon={<Paperclip size={18}/>} label={`Requisicao ${i + 1}`} fileUrl={url.trim()} onUpload={null} />

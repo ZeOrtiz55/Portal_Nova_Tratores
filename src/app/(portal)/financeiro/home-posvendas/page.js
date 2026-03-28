@@ -541,6 +541,7 @@ function HomePosVendasContent() {
                           </div>
                           <div style={{ display:'flex', gap:'15px', flexWrap:'wrap' }}>
                             <AttachmentTag label="Nota Fiscal" fileUrl={tarefaSelecionada.anexo_nf} onUpload={f => handleUpdateFileDirect(tarefaSelecionada, 'anexo_nf', f)} />
+                            <AttachmentTag icon={<Barcode size={18}/>} label="Boleto" fileUrl={tarefaSelecionada.anexo_boleto} onUpload={f => handleUpdateFileDirect(tarefaSelecionada, 'anexo_boleto', f)} />
                             {tarefaSelecionada.anexo_requisicao && <AttachmentTag label="Requisicao" fileUrl={tarefaSelecionada.anexo_requisicao} onUpload={f => handleUpdateFileDirect(tarefaSelecionada, 'anexo_requisicao', f)} />}
                           </div>
                         </div>
