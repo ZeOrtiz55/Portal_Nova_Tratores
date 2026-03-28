@@ -42,6 +42,7 @@ export default function Kanban() {
   { id: 'gerar_boleto', titulo: 'GERAR BOLETO' },
   { id: 'enviar_cliente', titulo: 'ENVIAR PARA CLIENTE' },
   { id: 'aguardando_vencimento', titulo: 'AGUARDANDO VENCIMENTO' },
+  { id: 'sem_boleto', titulo: 'CLIENTE SEM BOLETO' },
   { id: 'pago', titulo: 'PAGO' },
   { id: 'vencido', titulo: 'VENCIDO' }
  ];
@@ -209,6 +210,11 @@ export default function Kanban() {
     carregarDados();
  };
 
+ const handleMoverParaPago = async (t) => {
+    await supabase.from('Chamado_NF').update({ status: 'pago', tarefa: 'Pagamento Confirmado' }).eq('id', t.id);
+    carregarDados();
+ };
+
  const chamadosFiltrados = chamados.filter(c => {
     const matchCliente = c.nom_cliente?.toLowerCase().includes(filtroCliente.toLowerCase());
     const matchNF = (c.num_nf_servico?.toString().includes(filtroNF) || c.num_nf_peca?.toString().includes(filtroNF));
@@ -267,13 +273,15 @@ export default function Kanban() {
           <div style={{ background: t.status === 'vencido' ? '#fef2f2' : (t.status === 'pago' ? '#f0fdf4' : '#ffffff'), padding: '25px', color: '#1e293b', borderBottom: '1px solid #e5e7eb' }}>
            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
              <h4 onClick={() => setTarefaSelecionada(t)} style={{ margin: 0, fontSize: '20px', fontWeight: '500', color: t.status === 'vencido' ? '#dc2626' : (t.status === 'pago' ? '#16a34a' : '#1e293b'), cursor: 'pointer', flex: 1 }}>{t.nom_cliente?.toUpperCase()}</h4>
-             <button
-               title="Mover para Cliente Sem Boleto"
-               onClick={(e) => { e.stopPropagation(); handleMoverSemBoleto(t); }}
-               style={{ background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: '8px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#6b7280', fontSize: '14px', fontWeight: '700', transition: '0.2s', flexShrink: 0 }}
-               onMouseEnter={e => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.color = '#dc2626'; e.currentTarget.style.borderColor = '#fca5a5'; }}
-               onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#6b7280'; e.currentTarget.style.borderColor = '#e5e7eb'; }}
-             >@</button>
+             {t.status !== 'sem_boleto' && t.status !== 'pago' && (
+               <button
+                 title="Mover para Cliente Sem Boleto"
+                 onClick={(e) => { e.stopPropagation(); handleMoverSemBoleto(t); }}
+                 style={{ background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: '8px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#6b7280', fontSize: '14px', fontWeight: '700', transition: '0.2s', flexShrink: 0 }}
+                 onMouseEnter={e => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.color = '#dc2626'; e.currentTarget.style.borderColor = '#fca5a5'; }}
+                 onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#6b7280'; e.currentTarget.style.borderColor = '#e5e7eb'; }}
+               >@</button>
+             )}
            </div>
            {t.isPagamentoRealizado && (
              <div style={{ marginTop: '12px', display:'flex', alignItems:'center', gap:'6px', color:'#16a34a', fontSize:'11px', fontWeight:'600', letterSpacing:'1px' }}>
@@ -311,6 +319,9 @@ export default function Kanban() {
           <div onClick={() => setTarefaSelecionada(t)} style={{ padding: '25px', background:'#f9fafb', cursor: 'pointer' }}>
            <div style={cardInfoStyle}><CreditCard size={16}/> <span>FORMA:</span> {t.forma_pagamento?.toUpperCase()}</div>
            <div style={cardInfoStyle}><Calendar size={16}/> <span>VENC:</span> {formatarDataBR(t.vencimento_boleto)}</div>
+           {(t.num_nf_servico || t.num_nf_peca) && (
+             <div style={cardInfoStyle}><FileText size={16}/> <span>NF:</span> {[t.num_nf_servico && `S ${t.num_nf_servico}`, t.num_nf_peca && `P ${t.num_nf_peca}`].filter(Boolean).join(' / ')}</div>
+           )}
            <div style={{fontSize:'32px', fontWeight:'500', margin:'15px 0', color:'#1e293b'}}>{formatarMoeda(t.valor_exibicao)}</div>
            <div style={miniTagStyle}>ID: {t.id}</div>
           </div>
@@ -324,14 +335,14 @@ export default function Kanban() {
 
    {/* --- MODAL DETALHES --- */}
    {tarefaSelecionada && (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(10px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-     <div style={{ background: '#ffffff', width: '1100px', maxWidth: '98%', maxHeight: '95vh', borderRadius: '30px', overflow:'hidden', boxShadow: '0 25px 60px rgba(0,0,0,0.15)', border: '1px solid #e5e7eb' }}>
+    <div onClick={(e) => { if (e.target === e.currentTarget) setTarefaSelecionada(null); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(10px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+     <div style={{ background: '#ffffff', width: '1100px', maxWidth: '98%', maxHeight: '95vh', borderRadius: '30px', overflow:'hidden', boxShadow: '0 25px 60px rgba(0,0,0,0.15)', border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column' }}>
 
-      <div style={{ padding: '50px', overflowY: 'auto', maxHeight: '95vh' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <button onClick={() => setTarefaSelecionada(null)} className="btn-back"><ArrowLeft size={18}/> VOLTAR AO PAINEL</button>
-          <button onClick={() => setTarefaSelecionada(null)} style={{ background:'transparent', border:'none', cursor:'pointer', padding:'10px' }} title="Fechar"><X size={28} color="#dc2626"/></button>
-        </div>
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, background: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid #f0f0f0', flexShrink: 0 }}>
+        <button onClick={() => setTarefaSelecionada(null)} className="btn-back"><ArrowLeft size={18}/> VOLTAR AO PAINEL</button>
+        <button onClick={() => setTarefaSelecionada(null)} style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', cursor:'pointer', padding:'8px 12px', display: 'flex', alignItems: 'center', gap: '6px', color: '#dc2626', fontSize: '13px', fontWeight: '600', transition: '0.2s' }} title="Fechar"><X size={18}/> Fechar</button>
+      </div>
+      <div style={{ flex: 1, padding: '30px 50px 50px', overflowY: 'auto' }}>
         <h2 style={{fontSize:'32px', fontWeight:'500', margin:'25px 0', letterSpacing:'-1px', color:'#1e293b', lineHeight: '1'}}>{tarefaSelecionada.nom_cliente?.toUpperCase()}</h2>
 
         <div style={{display:'flex', gap:'30px', marginBottom:'45px'}}>
@@ -449,7 +460,8 @@ export default function Kanban() {
             </div>
           </div>
 
-          {/* BOLETO DO FINANCEIRO */}
+          {/* BOLETO DO FINANCEIRO — esconde para sem_boleto */}
+          {tarefaSelecionada.status !== 'sem_boleto' && (
           <div style={{ background: tarefaSelecionada.anexo_boleto ? '#eff6ff' : '#fef2f2', border: `1px solid ${tarefaSelecionada.anexo_boleto ? '#bfdbfe' : '#fecaca'}`, borderRadius:'22px', padding:'24px', display:'flex', flexDirection:'column', gap:'12px' }}>
             <label style={{...labelModalStyle, margin:0, color: tarefaSelecionada.anexo_boleto ? '#3b82f6' : '#dc2626', display:'flex', alignItems:'center', gap:'8px'}}>
               {tarefaSelecionada.anexo_boleto ? <CheckCircle size={16} color="#3b82f6"/> : <Calendar size={16} color="#dc2626"/>}
@@ -486,7 +498,20 @@ export default function Kanban() {
               </div>
             )}
           </div>
+          )}
         </div>
+
+        {/* Mover para Pago — só no modal para sem_boleto */}
+        {tarefaSelecionada.status === 'sem_boleto' && (
+          <div style={{ marginTop:'20px', background:'#f0fdf4', padding:'20px', borderRadius:'16px', border:'1px solid #bbf7d0', display:'flex', justifyContent:'center' }}>
+            <button
+              onClick={() => { handleMoverParaPago(tarefaSelecionada); setTarefaSelecionada(null); }}
+              style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '14px 32px', borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px', transition: '0.2s' }}
+              onMouseEnter={e => e.currentTarget.style.background = '#15803d'}
+              onMouseLeave={e => e.currentTarget.style.background = '#16a34a'}
+            ><CheckCircle size={16}/> Mover para Pago</button>
+          </div>
+        )}
 
         {/* OBSERVAÇÕES — só mostra se tiver conteúdo */}
         {tarefaSelecionada.obs && (
@@ -539,7 +564,7 @@ export default function Kanban() {
    <style jsx global>{`
     .kanban-card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 20px; cursor: pointer; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; margin-bottom: 5px; flex-shrink: 0; }
     .kanban-card:hover { transform: translateY(-6px); box-shadow: 0 12px 30px rgba(0,0,0,0.08); border-color: #d1d5db; }
-    .btn-back { background: transparent; color: #6b7280; border: 1px solid #e5e7eb; padding: 12px 28px; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size:14px; transition: 0.2s; margin-bottom:10px; font-family: Montserrat, sans-serif; }
+    .btn-back { background: transparent; color: #6b7280; border: 1px solid #e5e7eb; padding: 12px 28px; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size:14px; transition: 0.2s; font-family: Montserrat, sans-serif; }
     .btn-back:hover { background: #f5f5f5; color: #1e293b; }
     ::-webkit-scrollbar { width: 8px; height: 12px; }
     ::-webkit-scrollbar-track { background: #f5f5f5; }
