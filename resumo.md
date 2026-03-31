@@ -26,8 +26,11 @@ src/
       revisoes/         # Controle de revisoes de equipamentos
       tarefas/          # Gestao de tarefas entre usuarios
       atividades/       # Log de auditoria geral
+      agenda-tecnicos/  # Agenda semanal dos tecnicos
+      painel-mecanicos/ # Painel de gestao dos mecanicos
+      meu-painel/       # Painel individual do tecnico
     api/                # Backend API routes
-      pos/              # 16 endpoints
+      pos/              # 17 endpoints (inclui estimativa de tempo)
       ppv/              # 13 endpoints
       financeiro/       # 1 endpoint (notificacoes)
       tarefas/          # 3 endpoints
@@ -52,7 +55,7 @@ src/
     useRefreshOnFocus.ts # Auto-refresh ao voltar na aba
   lib/
     supabase.ts         # Cliente Supabase (client-side)
-    pos/                # Logica POS (omie, sync, types, constants)
+    pos/                # Logica POS (omie, sync, types, constants, ors)
     ppv/                # Logica PPV (omie, schemas, queries, types)
     financeiro/         # Utils, constants, export (PDF/Excel)
     revisoes/           # Logica de revisoes
@@ -91,7 +94,14 @@ Gerencia ordens de servico de manutencao/revisao de tratores.
 - Impressao de OS
 - Integracao Omie (enviar OS e criar Pedido de Venda)
 
-**Tabelas:** `Ordem_Servico`, `logs_ppo`, `tecnico_metricas`, `lembretes_clientes`
+- Estimativa de tempo automatica (ida + servico + volta) usando OpenRouteService API
+  - Base: Nova Tratores - Av. Sao Sebastiao, 1065, Vila Campos, Piraju-SP (lat: -23.209201, lng: -49.370573)
+  - Busca endereco do cliente em 2 fontes (Omie e OS), tenta cada uma ate geocodificar
+  - Dropdown para escolher entre enderecos disponiveis + campo editavel + botao Fixar/Recalcular
+  - Badge indica fonte do endereco: OMIE, CLIENTE MANUAL ou ENDERECO DA OS
+- Multiplos dias de execucao por OS (sincroniza com agenda_tecnico)
+
+**Tabelas:** `Ordem_Servico`, `logs_ppo`, `tecnico_metricas`, `lembretes_clientes`, `agenda_tecnico`
 
 **Campos principais da OS:**
 | Campo | Descricao |
@@ -107,6 +117,7 @@ Gerencia ordens de servico de manutencao/revisao de tratores.
 | Ordem_Omie | Numero da OS no Omie (quando enviada) |
 | Previsao_Execucao | Data para auto-move |
 | Previsao_Faturamento | Data de faturamento |
+| Cidade_Cliente | Cidade do cliente |
 | Desconto, Desconto_Hora, Desconto_KM | Descontos aplicados |
 
 ---
@@ -146,7 +157,7 @@ Gerencia movimentacao de pecas (saidas e devolucoes).
 
 Modulo financeiro com visoes separadas para equipe Financeiro e Pos-Vendas.
 
-**Sub-paginas (15):**
+**Sub-paginas (16):**
 | Rota | Descricao |
 |------|-----------|
 | `/financeiro` | Redirect baseado na funcao do usuario |
@@ -164,6 +175,7 @@ Modulo financeiro com visoes separadas para equipe Financeiro e Pos-Vendas.
 | `/novo-chamado-rh` | Criar chamado RH |
 | `/novo-pagar-receber` | Criar conta a pagar/receber |
 | `/configuracoes` | Configuracoes do usuario |
+| `/logs` | Logs de auditoria do financeiro (somente admins) |
 
 **Fluxo NF (Chamado_NF):**
 ```
@@ -232,11 +244,47 @@ Hub central com cards de acesso rapido para todos os modulos. Mostra resumo de t
 
 Painel administrativo para gerenciar permissoes de usuarios.
 
-**Modulos controlados:** Financeiro, Requisicoes, Revisoes, Pos-Vendas, Pecas, Propostas, Tarefas, Atividades, Mapa Geral
+**Modulos controlados:** Financeiro, Requisicoes, Revisoes, Pos-Vendas, Pecas, Propostas, Tarefas, Atividades, Mapa Geral, Painel Mecanicos
+
+**Funcionalidades:**
+- Controle de permissoes por modulo (toggle individual + toggle todos)
+- Toggle admin por usuario
+- Categoria (Pos Vendas, Pecas, Comercial, Financeiro)
+- Exibe email do usuario (populado automaticamente no login)
 
 ---
 
-### 10. Atividades (`/atividades`)
+### 10. Agenda Tecnicos (`/agenda-tecnicos`)
+
+Agenda semanal dos tecnicos de campo.
+
+**Funcionalidades:**
+- Agendamento vinculado a OS ou servico manual (sem OS)
+- Servicos manuais com nome do cliente e endereco
+- Sincronizacao automatica com datas de execucao das OS
+- Selecao de turno (manha, tarde, integral)
+- Cards com tag "MANUAL" para servicos sem OS
+
+**Tabela:** `agenda_tecnico` (tecnico_nome, id_ordem, data_agendada, turno, cliente, endereco, descricao, status)
+
+---
+
+### 11. Painel Mecanicos (`/painel-mecanicos`)
+
+Painel de gestao dos mecanicos/tecnicos de campo. Acesso controlado pelo modulo `painel-mecanicos` no admin.
+
+**Funcionalidades:**
+- Visao geral dos tecnicos
+- Agenda semanal com grid visual (mostra OS e servicos manuais)
+- Caminhos, ocorrencias, justificativas
+- Requisicoes de material dos tecnicos
+- Cidade do cliente visivel nos cards
+
+**Tabelas:** `mecanico_usuarios`, `agenda_tecnico`, `Ordem_Servico`
+
+---
+
+### 12. Atividades (`/atividades`)
 
 Visualizador de log de auditoria. Mostra acoes de usuarios em todos os modulos com filtros por sistema e paginacao.
 
@@ -259,7 +307,7 @@ Visualizador de log de auditoria. Mostra acoes de usuarios em todos os modulos c
 ### Tabelas Principais
 
 **Usuarios e Permissoes:**
-- `financeiro_usu` - Usuarios (id, nome, funcao, avatar_url, som_notificacao, tema)
+- `financeiro_usu` - Usuarios (id, nome, funcao, avatar_url, email, som_notificacao, tema)
 - `portal_permissoes` - Permissoes por modulo (user_id, is_admin, modulos_permitidos[])
 
 **POS:**
@@ -267,6 +315,7 @@ Visualizador de log de auditoria. Mostra acoes de usuarios em todos os modulos c
 - `logs_ppo` - Logs de atividade POS
 - `tecnico_metricas` - Metricas de desempenho
 - `lembretes_clientes` - Lembretes por cliente
+- `agenda_tecnico` - Agenda dos tecnicos (tecnico_nome, id_ordem, data_agendada, turno, cliente, endereco, descricao, status)
 
 **PPV:**
 - `pedidos` - Pedidos pos-venda
@@ -317,6 +366,14 @@ Visualizador de log de auditoria. Mostra acoes de usuarios em todos os modulos c
   - `/servicos/os/` - Ordens de servico
   - `/produtos/pedido/` - Pedidos de venda
 - **Arquivos:** `src/lib/pos/omie.ts`, `src/lib/ppv/omie.ts`, `src/lib/pos/sync-omie.ts`
+
+### OpenRouteService (ORS)
+- **Uso:** Geocodificacao de enderecos e calculo de rotas para estimativa de tempo do tecnico
+- **API:** `https://api.openrouteservice.org/` (plano free, 1000 req/dia)
+  - `/geocode/search` - Geocodificacao de endereco para coordenadas
+  - `/v2/directions/driving-car` - Calculo de rota entre dois pontos
+- **Base:** Nova Tratores, Av. Sao Sebastiao 1065, Piraju-SP (lat: -23.209201, lng: -49.370573)
+- **Arquivo:** `src/lib/pos/ors.ts`
 
 ### Gmail (Nodemailer)
 - **Uso:** Notificacoes de revisao de equipamentos
@@ -374,6 +431,9 @@ GMAIL_APP_PASSWORD=
 
 # Push Notifications
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=
+
+# OpenRouteService (Estimativa de tempo POS)
+ORS_API_KEY=
 ```
 
 ---

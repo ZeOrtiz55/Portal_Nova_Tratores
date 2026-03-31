@@ -6,7 +6,7 @@ import SemPermissao from '@/components/SemPermissao'
 import { supabase } from '@/lib/supabase'
 import {
   Users, Calendar, Wrench, Package, AlertTriangle, Check,
-  Clock, ChevronDown, ChevronUp, RefreshCw, UserPlus, UserX,
+  Clock, ChevronDown, ChevronUp, RefreshCw,
   MapPin, Navigation, Star, XCircle, FileText, Plus, X,
   ChevronLeft, ChevronRight, AlertOctagon, ThumbsUp, ThumbsDown,
   Send, TrendingDown, Eye
@@ -14,11 +14,10 @@ import {
 
 // ─── Types ───────────────────────────────────────────────────────────
 interface Tecnico {
-  id: string
+  user_id: string
   tecnico_nome: string
   tecnico_email: string
-  telefone: string | null
-  ativo: boolean
+  mecanico_role: 'tecnico' | 'observador'
 }
 
 interface AgendaItem {
@@ -225,6 +224,7 @@ function PainelMecanicosPage() {
 
     const [
       { data: tecs },
+      { data: usus },
       { data: agenda },
       { data: execs },
       { data: reqs },
@@ -236,7 +236,8 @@ function PainelMecanicosPage() {
       { data: ocors },
       { data: justs },
     ] = await Promise.all([
-      supabase.from('mecanico_usuarios').select('*').order('tecnico_nome'),
+      supabase.from('portal_permissoes').select('user_id, mecanico_role, mecanico_tecnico_nome').not('mecanico_role', 'is', null).not('mecanico_tecnico_nome', 'is', null),
+      supabase.from('financeiro_usu').select('id, email'),
       supabase.from('agenda_tecnico').select('*').gte('data_agendada', weekStart).lte('data_agendada', weekEnd).order('hora_inicio'),
       supabase.from('os_tecnico_execucao').select('*').order('created_at', { ascending: false }).limit(50),
       supabase.from('mecanico_requisicoes').select('*').order('created_at', { ascending: false }).limit(100),
@@ -279,7 +280,16 @@ function PainelMecanicosPage() {
     })
     setClientesCidade(lista)
 
-    setTecnicos((tecs as Tecnico[]) || [])
+    const emailMap: Record<string, string> = {}
+    ;((usus || []) as any[]).forEach(u => { emailMap[u.id] = u.email || '' })
+    setTecnicos(
+      ((tecs || []) as any[]).map(t => ({
+        user_id: t.user_id,
+        tecnico_nome: t.mecanico_tecnico_nome,
+        tecnico_email: emailMap[t.user_id] || '',
+        mecanico_role: t.mecanico_role,
+      })).sort((a, b) => a.tecnico_nome.localeCompare(b.tecnico_nome))
+    )
     setAgendaSemana((agenda as AgendaItem[]) || [])
     setExecucoesRecentes((execs as Execucao[]) || [])
     setRequisicoes((reqs as Requisicao[]) || [])
@@ -306,7 +316,7 @@ function PainelMecanicosPage() {
   }, [])
 
   // ─── Computed ────────────────────────────────────────────────────
-  const tecnicosAtivos = tecnicos.filter(t => t.ativo)
+  const tecnicosAtivos = tecnicos.filter(t => t.mecanico_role === 'tecnico')
   const reqPendentes = requisicoes.filter(r => r.status === 'pendente')
   const justPendentes = justificativas.filter(j => j.status === 'pendente')
   const caminhosAtivos = caminhos.filter(c => c.status === 'em_transito')
@@ -353,7 +363,7 @@ function PainelMecanicosPage() {
     return map
   }, [ordens, ordensAbertas, clientesCidade])
 
-  // Mapeamento: para cada técnico do mecanico_usuarios, encontra as ordens dele via nome fuzzy
+  // Mapeamento: para cada técnico, encontra as ordens dele via nome fuzzy
   const ordensPorTecnico = useMemo(() => {
     const map: Record<string, OrdemServico[]> = {}
     tecnicos.forEach(tec => {
@@ -426,11 +436,6 @@ function PainelMecanicosPage() {
   }
 
   // ─── Actions ─────────────────────────────────────────────────────
-  const toggleTecnicoAtivo = async (tec: Tecnico) => {
-    await supabase.from('mecanico_usuarios').update({ ativo: !tec.ativo }).eq('id', tec.id)
-    setTecnicos(prev => prev.map(t => t.id === tec.id ? { ...t, ativo: !tec.ativo } : t))
-  }
-
   const aprovarRequisicao = async (reqId: number) => {
     await supabase.from('mecanico_requisicoes').update({ status: 'aprovada', data_aprovacao: new Date().toISOString() }).eq('id', reqId)
     const req = requisicoes.find(r => r.id === reqId)
@@ -697,7 +702,7 @@ function PainelMecanicosPage() {
               const temAtividade = caminhoAtivo || ordensHojeTec.length > 0
 
               return (
-                <div key={tec.id} style={{
+                <div key={tec.user_id} style={{
                   ...STAT_CARD, padding: 14,
                   borderLeft: `4px solid ${caminhoAtivo ? '#8B5CF6' : ordensHojeTec.length > 0 ? '#3B82F6' : '#D1D5DB'}`,
                 }}>
@@ -979,7 +984,7 @@ function PainelMecanicosPage() {
                 const ordensDoTec = ordensPorTecnico[tec.tecnico_nome] || []
 
                 return (
-                  <div key={tec.id} style={{ display: 'grid', gridTemplateColumns: '150px repeat(7, 1fr)', gap: 1, marginBottom: 1 }}>
+                  <div key={tec.user_id} style={{ display: 'grid', gridTemplateColumns: '150px repeat(7, 1fr)', gap: 1, marginBottom: 1 }}>
                     <div style={{
                       padding: '12px 10px', background: '#fff', border: '1px solid #E5E7EB',
                       display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, color: '#1E3A5F',
@@ -1108,26 +1113,28 @@ function PainelMecanicosPage() {
       {tab === 'tecnicos' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {tecnicos.map(tec => {
-            const isExpanded = expandedTec === tec.id
+            const isExpanded = expandedTec === tec.user_id
             const pontos = pontuacaoTecnico[tec.tecnico_nome] ?? 100
             const atrasosDoTec = ordensAtrasoPorTecnico[tec.tecnico_nome] || []
             const ocorrDoTec = ocorrencias.filter(o => o.tecnico_nome === tec.tecnico_nome)
             const execsDoTec = execucoesRecentes.filter(e => e.tecnico_nome === tec.tecnico_nome)
             const pontosColor = pontos >= 80 ? '#10B981' : pontos >= 50 ? '#F59E0B' : '#EF4444'
+            const roleLabel = tec.mecanico_role === 'tecnico' ? 'TÉCNICO' : 'OBSERVADOR'
+            const roleColor = tec.mecanico_role === 'tecnico' ? '#1E3A5F' : '#7C3AED'
 
             return (
-              <div key={tec.id} style={{ ...STAT_CARD, padding: 0, overflow: 'hidden' }}>
+              <div key={tec.user_id} style={{ ...STAT_CARD, padding: 0, overflow: 'hidden' }}>
                 <div
                   style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     padding: '14px 16px', cursor: 'pointer',
                   }}
-                  onClick={() => { setExpandedTec(isExpanded ? null : tec.id); setTecSubTab('atrasos') }}
+                  onClick={() => { setExpandedTec(isExpanded ? null : tec.user_id); setTecSubTab('atrasos') }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{
                       width: 36, height: 36, borderRadius: '50%',
-                      background: tec.ativo ? '#1E3A5F' : '#D1D5DB',
+                      background: '#1E3A5F',
                       color: '#fff', display: 'flex', alignItems: 'center',
                       justifyContent: 'center', fontSize: 14, fontWeight: 700,
                     }}>
@@ -1137,7 +1144,7 @@ function PainelMecanicosPage() {
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#1F2937' }}>{tec.tecnico_nome}</div>
                       <div style={{ fontSize: 11, color: '#6B7280' }}>
                         {tec.tecnico_email}
-                        {!tec.ativo && <span style={{ color: '#EF4444', marginLeft: 8 }}>INATIVO</span>}
+                        <span style={{ color: roleColor, marginLeft: 8, fontWeight: 700 }}>{roleLabel}</span>
                       </div>
                     </div>
                   </div>
@@ -1315,19 +1322,6 @@ function PainelMecanicosPage() {
                         )
                       )}
 
-                      {/* Toggle ativo */}
-                      <button
-                        onClick={() => toggleTecnicoAtivo(tec)}
-                        style={{
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                          width: '100%', padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 600,
-                          border: '1px solid #E5E7EB', cursor: 'pointer', marginTop: 12,
-                          background: tec.ativo ? '#FEE2E2' : '#D1FAE5',
-                          color: tec.ativo ? '#DC2626' : '#065F46',
-                        }}
-                      >
-                        {tec.ativo ? <><UserX size={14} /> Desativar</> : <><UserPlus size={14} /> Ativar</>}
-                      </button>
                     </div>
                   </div>
                 )}
@@ -1611,7 +1605,7 @@ function PainelMecanicosPage() {
                 >
                   <option value="">Selecione...</option>
                   {tecnicosAtivos.map(t => (
-                    <option key={t.id} value={t.tecnico_nome}>{t.tecnico_nome}</option>
+                    <option key={t.user_id} value={t.tecnico_nome}>{t.tecnico_nome}</option>
                   ))}
                 </select>
               </div>
@@ -1703,7 +1697,7 @@ function PainelMecanicosPage() {
                 >
                   <option value="">Selecione...</option>
                   {tecnicos.map(t => (
-                    <option key={t.id} value={t.tecnico_nome}>{t.tecnico_nome}</option>
+                    <option key={t.user_id} value={t.tecnico_nome}>{t.tecnico_nome}</option>
                   ))}
                 </select>
               </div>

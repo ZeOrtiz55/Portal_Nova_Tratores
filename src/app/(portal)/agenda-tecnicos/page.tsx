@@ -7,9 +7,9 @@ import {
 } from 'lucide-react'
 
 interface Tecnico {
-  id: string
+  user_id: string
   tecnico_nome: string
-  ativo: boolean
+  mecanico_role: 'tecnico' | 'observador'
 }
 
 interface AgendaItem {
@@ -87,10 +87,16 @@ export default function AgendaTecnicosPage() {
   useEffect(() => {
     const carregarBase = async () => {
       const [{ data: tecs }, { data: os }] = await Promise.all([
-        supabase.from('mecanico_usuarios').select('id, tecnico_nome, ativo').eq('ativo', true).order('tecnico_nome'),
+        supabase.from('portal_permissoes').select('user_id, mecanico_role, mecanico_tecnico_nome').not('mecanico_role', 'is', null).not('mecanico_tecnico_nome', 'is', null),
         supabase.from('Ordem_Servico').select('Id_Ordem, Os_Cliente, Endereco_Cliente, Os_Tecnico, Os_Tecnico2').not('Status', 'in', '("Concluída","Cancelada")').order('Id_Ordem', { ascending: false }),
       ])
-      setTecnicos((tecs as Tecnico[]) || [])
+      setTecnicos(
+        ((tecs || []) as any[]).map(t => ({
+          user_id: t.user_id,
+          tecnico_nome: t.mecanico_tecnico_nome,
+          mecanico_role: t.mecanico_role,
+        })).sort((a, b) => a.tecnico_nome.localeCompare(b.tecnico_nome))
+      )
       setOsList((os as OSBasic[]) || [])
     }
     carregarBase()
@@ -255,7 +261,7 @@ export default function AgendaTecnicosPage() {
         >
           <option value="">Todos os técnicos</option>
           {tecnicos.map((t) => (
-            <option key={t.id} value={t.tecnico_nome}>{t.tecnico_nome}</option>
+            <option key={t.user_id} value={t.tecnico_nome}>{t.tecnico_nome}</option>
           ))}
         </select>
       </div>
@@ -291,7 +297,7 @@ export default function AgendaTecnicosPage() {
             </thead>
             <tbody>
               {tecnicosFiltrados.map((tec) => (
-                <tr key={tec.id}>
+                <tr key={tec.user_id}>
                   <td style={{
                     padding: '8px', fontSize: 12, fontWeight: 600, color: '#1F2937',
                     borderBottom: '1px solid #F3F4F6', verticalAlign: 'top',
@@ -399,7 +405,7 @@ export default function AgendaTecnicosPage() {
                 <select value={formTecnico} onChange={(e) => setFormTecnico(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 13 }}>
                   <option value="">Selecione...</option>
                   {tecnicos.map((t) => (
-                    <option key={t.id} value={t.tecnico_nome}>{t.tecnico_nome}</option>
+                    <option key={t.user_id} value={t.tecnico_nome}>{t.tecnico_nome}</option>
                   ))}
                 </select>
               </div>

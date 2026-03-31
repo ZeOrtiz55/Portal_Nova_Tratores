@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import {
   Shield, Users, Check, X, Search, ChevronDown,
-  User as UserIcon, Lock, Unlock
+  User as UserIcon, Lock, Unlock, Wrench
 } from 'lucide-react'
 
 const MODULOS = [
@@ -38,6 +38,8 @@ interface Permissao {
   is_admin: boolean
   categoria: string
   modulos_permitidos: string[]
+  mecanico_role: 'tecnico' | 'observador' | null
+  mecanico_tecnico_nome: string | null
 }
 
 export default function AdminPage() {
@@ -67,6 +69,7 @@ export default function AdminPage() {
       const map: Record<string, Permissao> = {}
       ;(perms || []).forEach((p: Permissao) => { map[p.user_id] = p })
       setPermissoes(map)
+
       setLoading(false)
     }
     carregar()
@@ -78,7 +81,7 @@ export default function AdminPage() {
 
     // Update otimista — atualiza UI imediatamente
     setPermissoes(prev => {
-      const base: Permissao = prev[userId] ?? { user_id: userId, is_admin: false, categoria: '', modulos_permitidos: [] }
+      const base: Permissao = prev[userId] ?? { user_id: userId, is_admin: false, categoria: '', modulos_permitidos: [], mecanico_role: null, mecanico_tecnico_nome: null }
       return { ...prev, [userId]: { ...base, ...updates } }
     })
 
@@ -91,6 +94,8 @@ export default function AdminPage() {
           is_admin: false,
           categoria: '',
           modulos_permitidos: [],
+          mecanico_role: null,
+          mecanico_tecnico_nome: null,
           ...updates,
         }])
       }
@@ -120,6 +125,33 @@ export default function AdminPage() {
 
   const setCategoria = (userId: string, cat: string) => {
     salvar(userId, { categoria: cat })
+  }
+
+  const setMecanicoRole = (userId: string, role: string) => {
+    const newRole = role === '' ? null : role as 'tecnico' | 'observador'
+    const updates: Partial<Permissao> = { mecanico_role: newRole }
+
+    // Preencher automaticamente com o nome do usuário do portal
+    const user = usuarios.find(u => u.id === userId)
+    if (newRole && user) {
+      updates.mecanico_tecnico_nome = user.nome
+    }
+
+    // Limpar técnico vinculado se removeu o papel
+    if (!newRole) {
+      updates.mecanico_tecnico_nome = null
+    }
+
+    // Auto-adicionar módulo painel-mecanicos quando atribui papel
+    if (newRole) {
+      const perm = permissoes[userId]
+      const modulos = perm?.modulos_permitidos || []
+      if (!modulos.includes('painel-mecanicos')) {
+        updates.modulos_permitidos = [...modulos, 'painel-mecanicos']
+      }
+    }
+
+    salvar(userId, updates)
   }
 
   const toggleTodos = (userId: string) => {
@@ -170,10 +202,11 @@ export default function AdminPage() {
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '32px' }}>
         {[
           { label: 'TOTAL USUÁRIOS', value: usuarios.length, icon: <Users size={20} /> },
           { label: 'ADMINISTRADORES', value: Object.values(permissoes).filter(p => p.is_admin).length, icon: <Shield size={20} /> },
+          { label: 'MECÂNICOS APP', value: Object.values(permissoes).filter(p => p.mecanico_role).length, icon: <Wrench size={20} /> },
           { label: 'SEM ACESSO', value: usuarios.filter(u => !permissoes[u.id] || (permissoes[u.id].modulos_permitidos || []).length === 0).length, icon: <Lock size={20} /> },
         ].map((stat, i) => (
           <div key={i} style={{
@@ -221,7 +254,7 @@ export default function AdminPage() {
       }}>
         {/* Table Header */}
         <div style={{
-          display: 'grid', gridTemplateColumns: '280px 140px 160px 1fr 80px',
+          display: 'grid', gridTemplateColumns: '260px 120px 150px 1fr 200px 80px',
           padding: '16px 24px', background: '#fafafa', borderBottom: '1px solid #f0f0f0',
           fontSize: '11px', fontWeight: '700', color: '#a3a3a3', letterSpacing: '1px'
         }}>
@@ -229,6 +262,7 @@ export default function AdminPage() {
           <span>ADMIN</span>
           <span>CATEGORIA</span>
           <span>MÓDULOS PERMITIDOS</span>
+          <span>APP MECÂNICOS</span>
           <span style={{ textAlign: 'center' }}>TODOS</span>
         </div>
 
@@ -243,7 +277,7 @@ export default function AdminPage() {
             <div
               key={user.id}
               style={{
-                display: 'grid', gridTemplateColumns: '280px 140px 160px 1fr 80px',
+                display: 'grid', gridTemplateColumns: '260px 120px 150px 1fr 200px 80px',
                 padding: '16px 24px', borderBottom: '1px solid #f5f5f5',
                 alignItems: 'center', transition: '0.15s',
                 opacity: isSaving ? 0.6 : 1,
@@ -331,6 +365,35 @@ export default function AdminPage() {
                     </button>
                   )
                 })}
+              </div>
+
+              {/* App Mecânicos */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <select
+                  value={perm?.mecanico_role || ''}
+                  onChange={(e) => setMecanicoRole(user.id, e.target.value)}
+                  style={{
+                    padding: '6px 10px', borderRadius: '8px',
+                    border: '1px solid #e5e5e5',
+                    background: perm?.mecanico_role === 'tecnico' ? '#dcfce7' : perm?.mecanico_role === 'observador' ? '#dbeafe' : '#fff',
+                    fontSize: '11px', fontWeight: '700',
+                    color: perm?.mecanico_role === 'tecnico' ? '#16a34a' : perm?.mecanico_role === 'observador' ? '#2563eb' : '#a3a3a3',
+                    cursor: 'pointer', outline: 'none'
+                  }}
+                >
+                  <option value="">Sem acesso</option>
+                  <option value="tecnico">Técnico</option>
+                  <option value="observador">Observador</option>
+                </select>
+
+                {perm?.mecanico_role && perm?.mecanico_tecnico_nome && (
+                  <span style={{
+                    fontSize: '10px', fontWeight: '600', color: '#525252',
+                    padding: '4px 8px', background: '#f5f5f5', borderRadius: '6px',
+                  }}>
+                    {perm.mecanico_tecnico_nome}
+                  </span>
+                )}
               </div>
 
               {/* Toggle All */}

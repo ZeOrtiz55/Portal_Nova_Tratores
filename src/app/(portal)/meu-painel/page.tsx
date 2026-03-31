@@ -3,9 +3,9 @@ import { useEffect, useState, useMemo } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import {
-  Calendar, Wrench, Package, Clock, Navigation, MapPin,
+  Calendar, Package, Clock, Navigation, MapPin,
   Plus, X, Send, FileText, AlertTriangle, ChevronRight, ChevronLeft,
-  ClipboardList, AlertOctagon
+  AlertOctagon, Check, Truck, MessageSquare, Star, ChevronDown, ChevronUp
 } from 'lucide-react'
 
 interface AgendaItem {
@@ -81,11 +81,6 @@ interface Justificativa {
   status: string
 }
 
-const STAT_CARD = {
-  background: '#fff', borderRadius: 14, padding: 20,
-  boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
-}
-
 function getWeekDays(date: Date): Date[] {
   const d = new Date(date)
   const day = d.getDay()
@@ -104,18 +99,18 @@ function formatDate(d: Date) {
 }
 
 function formatDateBR(d: string) {
-  const [y, m, day] = d.split('-')
+  const [, m, day] = d.split('-')
   return `${day}/${m}`
 }
 
 const DIAS_SEMANA = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
 
-const TIPO_OCORRENCIA: Record<string, { label: string; color: string }> = {
-  atraso: { label: 'Atraso', color: '#F59E0B' },
-  erro: { label: 'Erro', color: '#EF4444' },
-  retrabalho: { label: 'Retrabalho', color: '#DC2626' },
-  falta_material: { label: 'Falta Material', color: '#8B5CF6' },
-  outros: { label: 'Outros', color: '#6B7280' },
+const TIPO_OCORRENCIA: Record<string, { label: string; color: string; icon: string }> = {
+  atraso: { label: 'Atraso', color: '#F59E0B', icon: '⏱' },
+  erro: { label: 'Erro', color: '#EF4444', icon: '✕' },
+  retrabalho: { label: 'Retrabalho', color: '#DC2626', icon: '↺' },
+  falta_material: { label: 'Falta Material', color: '#8B5CF6', icon: '📦' },
+  outros: { label: 'Outros', color: '#6B7280', icon: '•' },
 }
 
 export default function MeuPainelPage() {
@@ -136,27 +131,28 @@ export default function MeuPainelPage() {
   const [justTexto, setJustTexto] = useState('')
   const [semanaRef, setSemanaRef] = useState(new Date())
   const [ordensSemana, setOrdensSemana] = useState<OrdemServico[]>([])
+  const [agendaAberta, setAgendaAberta] = useState(false)
+  const [secaoAtiva, setSecaoAtiva] = useState<string | null>(null)
 
   const hoje = new Date().toISOString().split('T')[0]
   const weekDays = useMemo(() => getWeekDays(semanaRef), [semanaRef])
   const weekStart = formatDate(weekDays[0])
   const weekEnd = formatDate(weekDays[6])
 
-  // Identificar técnico pelo nome do usuário logado
+  // Identificar técnico pelo portal_permissoes
   useEffect(() => {
-    if (!userProfile?.nome) return
+    if (!userProfile?.id) return
     const buscarTecnico = async () => {
       const { data } = await supabase
-        .from('mecanico_usuarios')
-        .select('tecnico_nome')
-        .ilike('tecnico_nome', `%${userProfile.nome.split(' ')[0]}%`)
-        .limit(1)
+        .from('portal_permissoes')
+        .select('mecanico_tecnico_nome')
+        .eq('user_id', userProfile.id)
         .single()
-      if (data) setTecnicoNome(data.tecnico_nome)
+      if (data?.mecanico_tecnico_nome) setTecnicoNome(data.mecanico_tecnico_nome)
       else setTecnicoNome(userProfile.nome)
     }
     buscarTecnico()
-  }, [userProfile?.nome])
+  }, [userProfile?.id, userProfile?.nome])
 
   const carregar = async () => {
     if (!tecnicoNome) return
@@ -177,7 +173,6 @@ export default function MeuPainelPage() {
         .or(`Os_Tecnico.eq.${tecnicoNome},Os_Tecnico2.eq.${tecnicoNome}`)
         .not('Status', 'in', '("Concluída","Cancelada")')
         .order('Previsao_Execucao', { ascending: true }),
-      // Ordens da semana (todas, incluindo concluídas - para a agenda)
       supabase.from('Ordem_Servico').select('*')
         .or(`Os_Tecnico.eq.${tecnicoNome},Os_Tecnico2.eq.${tecnicoNome}`)
         .not('Previsao_Execucao', 'is', null)
@@ -296,28 +291,26 @@ export default function MeuPainelPage() {
 
   const reqPendentes = requisicoes.filter(r => r.status === 'aprovada' && !r.atualizada_pelo_tecnico)
   const ocorrenciasSemJust = ocorrencias.filter(o => !justificativas.some(j => j.id_ocorrencia === o.id))
+  const totalPendencias = reqPendentes.length + ocorrenciasSemJust.length
 
-  // Serviços previstos para hoje (agenda + ordens)
   const servicosHoje = useMemo(() => {
-    const items: { id: string; ordem: string; cliente: string; endereco: string; tipo: string; hora?: string }[] = []
+    const items: { id: string; ordem: string; cliente: string; endereco: string; cidade: string; tipo: string; hora?: string; solicitacao: string }[] = []
     agendaHoje.forEach(a => {
       items.push({
-        id: `ag-${a.id}`,
-        ordem: a.id_ordem || '',
-        cliente: a.cliente || '',
-        endereco: a.endereco || '',
-        tipo: '',
-        hora: a.hora_inicio || undefined,
+        id: `ag-${a.id}`, ordem: a.id_ordem || '', cliente: a.cliente || '',
+        endereco: a.endereco || '', cidade: '', tipo: '', hora: a.hora_inicio || undefined, solicitacao: a.descricao || '',
       })
     })
     ordensHoje.forEach(o => {
       if (!items.some(it => it.ordem === o.Id_Ordem)) {
+        let solicitacao = ''
+        if (o.Serv_Solicitado) {
+          const match = o.Serv_Solicitado.match(/Solicitação do cliente:\s*([\s\S]*?)(?:\nServiço Realizado:|$)/i)
+          solicitacao = match ? match[1].trim() : o.Serv_Solicitado.substring(0, 120)
+        }
         items.push({
-          id: `os-${o.Id_Ordem}`,
-          ordem: o.Id_Ordem,
-          cliente: o.Os_Cliente,
-          endereco: o.Endereco_Cliente,
-          tipo: o.Tipo_Servico,
+          id: `os-${o.Id_Ordem}`, ordem: o.Id_Ordem, cliente: o.Os_Cliente,
+          endereco: o.Endereco_Cliente, cidade: o.Cidade_Cliente || '', tipo: o.Tipo_Servico, solicitacao,
         })
       }
     })
@@ -325,404 +318,534 @@ export default function MeuPainelPage() {
   }, [agendaHoje, ordensHoje])
 
   if (loading && !tecnicoNome) {
-    return <div style={{ textAlign: 'center', padding: 60, color: '#9CA3AF' }}>Carregando...</div>
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#F8FAFC' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: 40, height: 40, border: '3px solid #E2E8F0', borderTopColor: '#1E3A5F', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
+          <p style={{ color: '#94A3B8', fontSize: 13, letterSpacing: 2 }}>CARREGANDO...</p>
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+      </div>
+    )
   }
 
   const avatarUrl = userProfile?.avatar_url
+  const primeiroNome = (tecnicoNome || userProfile?.nome || '').split(' ')[0]
+  const hojeLabel = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
 
   return (
-    <div style={{ maxWidth: 600, margin: '0 auto', padding: '16px 16px 40px' }}>
+    <div style={{ maxWidth: 480, margin: '0 auto', padding: '0 0 40px', background: '#F8FAFC', minHeight: '100vh' }}>
 
-      {/* ── Perfil ── */}
-      <div style={{ textAlign: 'center', marginBottom: 28 }}>
-        <div style={{
-          width: 90, height: 90, borderRadius: '50%', margin: '0 auto 12px',
-          overflow: 'hidden', border: '3px solid #1E3A5F',
-          background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="Perfil" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : (
-            <span style={{ fontSize: 36, fontWeight: 700, color: '#1E3A5F' }}>
-              {(tecnicoNome || userProfile?.nome || '?').charAt(0)}
-            </span>
-          )}
+      {/* ════════════ HEADER ════════════ */}
+      <div style={{
+        background: 'linear-gradient(135deg, #1E3A5F 0%, #0F2439 100%)',
+        padding: '24px 20px 28px', borderRadius: '0 0 28px 28px',
+        position: 'relative', overflow: 'hidden',
+      }}>
+        {/* Decoração sutil */}
+        <div style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
+        <div style={{ position: 'absolute', bottom: -20, left: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.03)' }} />
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{
+              width: 52, height: 52, borderRadius: 16, overflow: 'hidden',
+              border: '2px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <span style={{ fontSize: 22, fontWeight: 700, color: '#fff' }}>
+                  {primeiroNome.charAt(0)}
+                </span>
+              )}
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 2 }}>
+                Bem-vindo
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: '#fff' }}>
+                {primeiroNome}
+              </div>
+            </div>
+          </div>
+
+          {/* Pontuação */}
+          <div style={{
+            background: `${pontosColor}20`, borderRadius: 14, padding: '8px 14px',
+            display: 'flex', alignItems: 'center', gap: 6, border: `1px solid ${pontosColor}40`,
+          }}>
+            <Star size={16} color={pontosColor} fill={pontosColor} />
+            <span style={{ fontSize: 20, fontWeight: 800, color: pontosColor }}>{pontuacao}</span>
+          </div>
         </div>
-        <h1 style={{ fontSize: 20, fontWeight: 700, color: '#1E3A5F', margin: '0 0 4px' }}>
-          {tecnicoNome || userProfile?.nome}
-        </h1>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8 }}>
-          <span style={{
-            fontSize: 12, fontWeight: 600, color: '#6B7280',
-          }}>
-            Técnico de Campo
-          </span>
-          <span style={{
-            fontSize: 14, fontWeight: 800, color: pontosColor,
-            background: `${pontosColor}15`, padding: '2px 10px', borderRadius: 8,
-          }}>
-            {pontuacao} pts
-          </span>
+
+        {/* Data */}
+        <div style={{
+          marginTop: 16, fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: 500,
+          position: 'relative', zIndex: 1, textTransform: 'capitalize',
+        }}>
+          {hojeLabel}
+        </div>
+
+        {/* Stats rápidos */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10,
+          marginTop: 16, position: 'relative', zIndex: 1,
+        }}>
+          {[
+            { label: 'Hoje', value: servicosHoje.length, color: '#3B82F6' },
+            { label: 'Pendências', value: totalPendencias, color: totalPendencias > 0 ? '#F59E0B' : '#10B981' },
+            { label: 'Ocorrências', value: ocorrenciasSemJust.length, color: ocorrenciasSemJust.length > 0 ? '#EF4444' : '#10B981' },
+          ].map((s, i) => (
+            <div key={i} style={{
+              background: 'rgba(255,255,255,0.08)', borderRadius: 12, padding: '10px 12px',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: 22, fontWeight: 800, color: s.color }}>{s.value}</div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 600, letterSpacing: 0.5 }}>{s.label}</div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* ── Agenda Semanal ── */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <button onClick={() => { const d = new Date(semanaRef); d.setDate(d.getDate() - 7); setSemanaRef(d) }} style={{
-            background: '#F3F4F6', border: 'none', borderRadius: 8, padding: '6px 10px', cursor: 'pointer',
+      <div style={{ padding: '20px 16px 0' }}>
+
+        {/* ════════════ CAMINHO ATIVO ════════════ */}
+        {caminhoAtivo && (
+          <div style={{
+            background: 'linear-gradient(135deg, #7C3AED, #6D28D9)', borderRadius: 16,
+            padding: 18, marginBottom: 16, position: 'relative', overflow: 'hidden',
           }}>
-            <ChevronLeft size={16} />
-          </button>
-          <div style={{ textAlign: 'center' }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#1F2937', margin: 0, display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
-              <Calendar size={16} color="#3B82F6" /> Semana {formatDateBR(weekStart)} - {formatDateBR(weekEnd)}
-            </h2>
-            <button onClick={() => setSemanaRef(new Date())} style={{
-              background: 'none', border: 'none', color: '#3B82F6', fontSize: 11,
-              fontWeight: 600, cursor: 'pointer', marginTop: 2,
+            <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, position: 'relative', zIndex: 1 }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: 10, background: 'rgba(255,255,255,0.15)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Truck size={16} color="#fff" />
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: 1, textTransform: 'uppercase' }}>
+                Em trânsito
+              </span>
+            </div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: '#fff', marginBottom: 4, position: 'relative', zIndex: 1 }}>
+              {caminhoAtivo.destino}
+            </div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4, position: 'relative', zIndex: 1 }}>
+              <MapPin size={12} /> {caminhoAtivo.cidade}
+            </div>
+            {caminhoAtivo.motivo && (
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 12, position: 'relative', zIndex: 1 }}>{caminhoAtivo.motivo}</div>
+            )}
+            <button onClick={() => finalizarCaminho(caminhoAtivo.id)} style={{
+              width: '100%', padding: '12px 0', borderRadius: 12, border: 'none',
+              background: '#fff', color: '#7C3AED', fontSize: 14, fontWeight: 700,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              position: 'relative', zIndex: 1,
             }}>
-              Ir para semana atual
+              <Check size={16} /> Cheguei no destino
             </button>
           </div>
-          <button onClick={() => { const d = new Date(semanaRef); d.setDate(d.getDate() + 7); setSemanaRef(d) }} style={{
-            background: '#F3F4F6', border: 'none', borderRadius: 8, padding: '6px 10px', cursor: 'pointer',
-          }}>
-            <ChevronRight size={16} />
-          </button>
+        )}
+
+        {/* ════════════ SERVIÇOS DE HOJE ════════════ */}
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1E293B', margin: 0 }}>
+              Serviços de hoje
+            </h2>
+            {servicosHoje.length > 0 && (
+              <span style={{
+                fontSize: 11, fontWeight: 700, color: '#3B82F6', background: '#EFF6FF',
+                padding: '4px 10px', borderRadius: 20,
+              }}>
+                {servicosHoje.length} {servicosHoje.length === 1 ? 'serviço' : 'serviços'}
+              </span>
+            )}
+          </div>
+
+          {servicosHoje.length === 0 ? (
+            <div style={{
+              background: '#fff', borderRadius: 16, padding: '32px 20px', textAlign: 'center',
+              border: '1px solid #F1F5F9',
+            }}>
+              <Calendar size={28} color="#CBD5E1" style={{ marginBottom: 8 }} />
+              <p style={{ fontSize: 14, color: '#94A3B8', fontWeight: 500, margin: 0 }}>Nenhum serviço agendado para hoje</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {servicosHoje.map(s => (
+                <div key={s.id} style={{
+                  background: '#fff', borderRadius: 14, padding: '14px 16px',
+                  border: '1px solid #F1F5F9', position: 'relative', overflow: 'hidden',
+                }}>
+                  <div style={{
+                    position: 'absolute', left: 0, top: 0, bottom: 0, width: 4,
+                    background: '#3B82F6', borderRadius: '14px 0 0 14px',
+                  }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#1E293B' }}>
+                      {s.cliente || 'Cliente não informado'}
+                    </div>
+                    {s.hora && (
+                      <span style={{
+                        fontSize: 11, fontWeight: 600, color: '#3B82F6', background: '#EFF6FF',
+                        padding: '2px 8px', borderRadius: 6, whiteSpace: 'nowrap',
+                      }}>
+                        {s.hora}
+                      </span>
+                    )}
+                  </div>
+                  {s.cidade && (
+                    <div style={{ fontSize: 12, color: '#64748B', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+                      <MapPin size={11} /> {s.cidade}
+                    </div>
+                  )}
+                  {s.solicitacao && (
+                    <div style={{ fontSize: 12, color: '#94A3B8', lineHeight: 1.4, marginTop: 4 }}>
+                      {s.solicitacao.substring(0, 120)}{s.solicitacao.length > 120 ? '...' : ''}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                    {s.ordem && (
+                      <span style={{ fontSize: 10, fontWeight: 600, color: '#64748B', background: '#F1F5F9', padding: '2px 8px', borderRadius: 4 }}>
+                        OS {s.ordem}
+                      </span>
+                    )}
+                    {s.tipo && (
+                      <span style={{ fontSize: 10, fontWeight: 600, color: '#64748B', background: '#F1F5F9', padding: '2px 8px', borderRadius: 4 }}>
+                        {s.tipo}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Grid semanal */}
-        <div style={{ overflowX: 'auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1, minWidth: 600 }}>
-            {/* Header dias */}
-            {weekDays.map((d, i) => {
-              const isHoje = formatDate(d) === hoje
-              return (
-                <div key={i} style={{
-                  padding: '10px 6px', textAlign: 'center',
-                  background: isHoje ? '#2563EB' : '#1E3A5F',
-                  color: '#fff', fontSize: 12, fontWeight: 700,
-                  borderRadius: i === 0 ? '8px 0 0 0' : i === 6 ? '0 8px 0 0' : undefined,
+        {/* ════════════ REGISTRAR CAMINHO ════════════ */}
+        {!showCaminhoForm ? (
+          <button onClick={() => setShowCaminhoForm(true)} style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            width: '100%', padding: '14px 0', borderRadius: 14, border: 'none',
+            background: 'linear-gradient(135deg, #7C3AED, #6D28D9)', color: '#fff',
+            fontSize: 14, fontWeight: 700, cursor: 'pointer', marginBottom: 16,
+            boxShadow: '0 4px 14px rgba(124,58,237,0.3)',
+          }}>
+            <Navigation size={16} /> {caminhoAtivo ? 'Novo Destino' : 'Registrar Caminho'}
+          </button>
+        ) : (
+          <div style={{
+            background: '#fff', borderRadius: 16, padding: 18, marginBottom: 16,
+            border: '2px solid #C4B5FD',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <span style={{ fontSize: 15, fontWeight: 700, color: '#7C3AED' }}>Novo Caminho</span>
+              <button onClick={() => setShowCaminhoForm(false)} style={{
+                background: '#F1F5F9', border: 'none', cursor: 'pointer', color: '#94A3B8',
+                width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <X size={16} />
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <input
+                type="text" placeholder="Destino (ex: Fazenda São João)"
+                value={novoCaminho.destino}
+                onChange={e => setNovoCaminho({ ...novoCaminho, destino: e.target.value })}
+                style={{
+                  width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid #E2E8F0',
+                  fontSize: 14, boxSizing: 'border-box', background: '#F8FAFC', outline: 'none',
+                }}
+              />
+              <input
+                type="text" placeholder="Cidade"
+                value={novoCaminho.cidade}
+                onChange={e => setNovoCaminho({ ...novoCaminho, cidade: e.target.value })}
+                style={{
+                  width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid #E2E8F0',
+                  fontSize: 14, boxSizing: 'border-box', background: '#F8FAFC', outline: 'none',
+                }}
+              />
+              <input
+                type="text" placeholder="Motivo (opcional)"
+                value={novoCaminho.motivo}
+                onChange={e => setNovoCaminho({ ...novoCaminho, motivo: e.target.value })}
+                style={{
+                  width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid #E2E8F0',
+                  fontSize: 14, boxSizing: 'border-box', background: '#F8FAFC', outline: 'none',
+                }}
+              />
+              <button onClick={salvarCaminho} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                width: '100%', padding: '13px 0', borderRadius: 12, border: 'none',
+                background: 'linear-gradient(135deg, #7C3AED, #6D28D9)', color: '#fff',
+                fontSize: 14, fontWeight: 700, cursor: 'pointer',
+              }}>
+                <Send size={16} /> Registrar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ════════════ AGENDA SEMANAL (Colapsável) ════════════ */}
+        <div style={{ marginBottom: 16 }}>
+          <button
+            onClick={() => setAgendaAberta(!agendaAberta)}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              width: '100%', padding: '14px 16px', borderRadius: agendaAberta ? '14px 14px 0 0' : 14,
+              border: '1px solid #F1F5F9', background: '#fff',
+              cursor: 'pointer', fontSize: 15, fontWeight: 700, color: '#1E293B',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Calendar size={18} color="#3B82F6" />
+              Agenda Semanal
+            </div>
+            {agendaAberta ? <ChevronUp size={18} color="#94A3B8" /> : <ChevronDown size={18} color="#94A3B8" />}
+          </button>
+
+          {agendaAberta && (
+            <div style={{
+              background: '#fff', borderRadius: '0 0 14px 14px', padding: '12px 12px 16px',
+              border: '1px solid #F1F5F9', borderTop: 'none',
+            }}>
+              {/* Navegação semana */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <button onClick={() => { const d = new Date(semanaRef); d.setDate(d.getDate() - 7); setSemanaRef(d) }} style={{
+                  background: '#F1F5F9', border: 'none', borderRadius: 8, padding: '6px 10px', cursor: 'pointer',
                 }}>
-                  <div>{DIAS_SEMANA[i]}</div>
-                  <div style={{ fontSize: 18, marginTop: 2 }}>{d.getDate()}</div>
+                  <ChevronLeft size={16} color="#64748B" />
+                </button>
+                <div style={{ textAlign: 'center' }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>
+                    {formatDateBR(weekStart)} - {formatDateBR(weekEnd)}
+                  </span>
+                  <button onClick={() => setSemanaRef(new Date())} style={{
+                    background: 'none', border: 'none', color: '#3B82F6', fontSize: 11,
+                    fontWeight: 600, cursor: 'pointer', display: 'block', margin: '2px auto 0',
+                  }}>
+                    Semana atual
+                  </button>
                 </div>
-              )
-            })}
-
-            {/* Células dos dias */}
-            {weekDays.map((d, dayIdx) => {
-              const dateStr = formatDate(d)
-              const isHoje = dateStr === hoje
-              const isPast = d < new Date(hoje)
-              const ordensNoDia = ordensSemana.filter(o => o.Previsao_Execucao === dateStr)
-              const caminhosNoDia = caminhos.filter(c => c.data_saida.split('T')[0] === dateStr)
-
-              return (
-                <div key={dayIdx} style={{
-                  padding: 6, background: isHoje ? '#EFF6FF' : isPast ? '#FAFAFA' : '#fff',
-                  border: `1px solid ${isHoje ? '#BFDBFE' : '#E5E7EB'}`,
-                  minHeight: 100, fontSize: 11, display: 'flex', flexDirection: 'column', gap: 4,
+                <button onClick={() => { const d = new Date(semanaRef); d.setDate(d.getDate() + 7); setSemanaRef(d) }} style={{
+                  background: '#F1F5F9', border: 'none', borderRadius: 8, padding: '6px 10px', cursor: 'pointer',
                 }}>
-                  {ordensNoDia.map(o => {
-                    const cidade = o.Cidade_Cliente?.trim() || ''
-                    const isConcluida = o.Status === 'Concluída'
-                    const isCancelada = o.Status === 'Cancelada'
-                    const isExecucao = o.Status.includes('Execução') || o.Status.includes('Aguardando ordem')
-                    const bgColor = isConcluida ? '#F0FDF4' : isCancelada ? '#F5F5F5' : isExecucao ? '#EFF6FF' : '#FFFBEB'
-                    const borderColor = isConcluida ? '#10B981' : isCancelada ? '#9CA3AF' : isExecucao ? '#3B82F6' : '#F59E0B'
-                    const clienteNome = o.Os_Cliente ? o.Os_Cliente.split(' ').slice(0, 2).join(' ') : ''
-                    let solicitacao = ''
-                    if (o.Serv_Solicitado) {
-                      const match = o.Serv_Solicitado.match(/Solicitação do cliente:\s*([\s\S]*?)(?:\nServiço Realizado:|$)/i)
-                      solicitacao = match ? match[1].trim() : o.Serv_Solicitado.substring(0, 80)
-                    }
+                  <ChevronRight size={16} color="#64748B" />
+                </button>
+              </div>
+
+              {/* Grid semanal */}
+              <div style={{ overflowX: 'auto' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1, minWidth: 560 }}>
+                  {weekDays.map((d, i) => {
+                    const isHoje = formatDate(d) === hoje
                     return (
-                      <div key={o.Id_Ordem} style={{
-                        background: bgColor, borderRadius: 6, padding: '6px 8px',
-                        borderLeft: `3px solid ${borderColor}`,
-                        opacity: isCancelada ? 0.5 : 1,
+                      <div key={i} style={{
+                        padding: '8px 4px', textAlign: 'center',
+                        background: isHoje ? '#3B82F6' : '#1E293B',
+                        color: '#fff', fontSize: 11, fontWeight: 700,
+                        borderRadius: i === 0 ? '8px 0 0 0' : i === 6 ? '0 8px 0 0' : undefined,
                       }}>
-                        <div style={{ fontWeight: 700, color: '#1E3A5F', fontSize: 12, marginBottom: 2 }}>
-                          {clienteNome}{cidade ? ` - ${cidade}` : ''}
-                          {isConcluida && (
-                            <span style={{ fontSize: 8, fontWeight: 700, color: '#065F46', background: '#D1FAE5', padding: '1px 4px', borderRadius: 3, marginLeft: 4 }}>OK</span>
-                          )}
-                        </div>
-                        {solicitacao && (
-                          <div style={{ color: '#374151', fontSize: 10, lineHeight: 1.3 }}>
-                            {solicitacao.substring(0, 100)}
+                        <div>{DIAS_SEMANA[i]}</div>
+                        <div style={{ fontSize: 16, marginTop: 2 }}>{d.getDate()}</div>
+                      </div>
+                    )
+                  })}
+
+                  {weekDays.map((d, dayIdx) => {
+                    const dateStr = formatDate(d)
+                    const isHoje = dateStr === hoje
+                    const isPast = d < new Date(hoje)
+                    const ordensNoDia = ordensSemana.filter(o => o.Previsao_Execucao === dateStr)
+                    const caminhosNoDia = caminhos.filter(c => c.data_saida.split('T')[0] === dateStr)
+
+                    return (
+                      <div key={dayIdx} style={{
+                        padding: 4, background: isHoje ? '#EFF6FF' : isPast ? '#FAFAFA' : '#fff',
+                        border: `1px solid ${isHoje ? '#BFDBFE' : '#F1F5F9'}`,
+                        minHeight: 80, fontSize: 10, display: 'flex', flexDirection: 'column', gap: 3,
+                      }}>
+                        {ordensNoDia.map(o => {
+                          const cidade = o.Cidade_Cliente?.trim() || ''
+                          const isConcluida = o.Status === 'Concluída'
+                          const isCancelada = o.Status === 'Cancelada'
+                          const isExecucao = o.Status.includes('Execução') || o.Status.includes('Aguardando ordem')
+                          const bgColor = isConcluida ? '#F0FDF4' : isCancelada ? '#F5F5F5' : isExecucao ? '#EFF6FF' : '#FFFBEB'
+                          const borderColor = isConcluida ? '#10B981' : isCancelada ? '#9CA3AF' : isExecucao ? '#3B82F6' : '#F59E0B'
+                          const clienteNome = o.Os_Cliente ? o.Os_Cliente.split(' ').slice(0, 2).join(' ') : ''
+                          let solicitacao = ''
+                          if (o.Serv_Solicitado) {
+                            const match = o.Serv_Solicitado.match(/Solicitação do cliente:\s*([\s\S]*?)(?:\nServiço Realizado:|$)/i)
+                            solicitacao = match ? match[1].trim() : o.Serv_Solicitado.substring(0, 80)
+                          }
+                          return (
+                            <div key={o.Id_Ordem} style={{
+                              background: bgColor, borderRadius: 5, padding: '4px 6px',
+                              borderLeft: `3px solid ${borderColor}`,
+                              opacity: isCancelada ? 0.5 : 1,
+                            }}>
+                              <div style={{ fontWeight: 700, color: '#1E293B', fontSize: 10, marginBottom: 1 }}>
+                                {clienteNome}{cidade ? ` - ${cidade}` : ''}
+                                {isConcluida && (
+                                  <span style={{ fontSize: 7, fontWeight: 700, color: '#065F46', background: '#D1FAE5', padding: '0px 3px', borderRadius: 3, marginLeft: 3 }}>OK</span>
+                                )}
+                              </div>
+                              {solicitacao && (
+                                <div style={{ color: '#64748B', fontSize: 9, lineHeight: 1.3 }}>
+                                  {solicitacao.substring(0, 60)}
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                        {caminhosNoDia.map(cam => (
+                          <div key={cam.id} style={{
+                            background: '#EDE9FE', borderRadius: 5, padding: '4px 6px',
+                            borderLeft: '3px solid #8B5CF6',
+                          }}>
+                            <div style={{ fontWeight: 700, color: '#7C3AED', fontSize: 10 }}>
+                              {cam.destino}
+                            </div>
+                            <div style={{ fontSize: 9, color: '#64748B' }}>{cam.cidade}</div>
                           </div>
+                        ))}
+                        {ordensNoDia.length === 0 && caminhosNoDia.length === 0 && (
+                          <div style={{ color: '#E2E8F0', fontSize: 9, textAlign: 'center', paddingTop: 24 }}>—</div>
                         )}
                       </div>
                     )
                   })}
-                  {caminhosNoDia.map(cam => (
-                    <div key={cam.id} style={{
-                      background: '#EDE9FE', borderRadius: 6, padding: '5px 8px',
-                      borderLeft: '3px solid #8B5CF6',
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ════════════ PENDÊNCIAS ════════════ */}
+        {totalPendencias > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1E293B', margin: 0 }}>Pendências</h2>
+              <span style={{
+                fontSize: 11, fontWeight: 700, color: '#F59E0B', background: '#FFFBEB',
+                padding: '3px 10px', borderRadius: 20, border: '1px solid #FEF3C7',
+              }}>
+                {totalPendencias}
+              </span>
+            </div>
+
+            {/* Requisições aprovadas */}
+            {reqPendentes.map(req => (
+              <div key={req.id} style={{
+                background: '#fff', borderRadius: 14, padding: '14px 16px', marginBottom: 8,
+                border: '1px solid #F1F5F9', position: 'relative', overflow: 'hidden',
+              }}>
+                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, background: '#F59E0B' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                  <Package size={14} color="#F59E0B" />
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#F59E0B', letterSpacing: 0.5 }}>REQUISIÇÃO APROVADA</span>
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#1E293B' }}>{req.material_solicitado}</div>
+                <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 2 }}>
+                  {req.quantidade && `Qtd: ${req.quantidade}`}
+                  {req.id_ordem && ` • OS: ${req.id_ordem}`}
+                </div>
+              </div>
+            ))}
+
+            {/* Ocorrências sem justificativa */}
+            {ocorrenciasSemJust.map(oc => {
+              const tipoInfo = TIPO_OCORRENCIA[oc.tipo] || TIPO_OCORRENCIA.outros
+              const isFormOpen = showJustForm === oc.id
+              return (
+                <div key={oc.id} style={{
+                  background: '#fff', borderRadius: 14, padding: '14px 16px', marginBottom: 8,
+                  border: '1px solid #F1F5F9', position: 'relative', overflow: 'hidden',
+                }}>
+                  <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, background: tipoInfo.color }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
+                        background: `${tipoInfo.color}15`, color: tipoInfo.color,
+                      }}>
+                        {tipoInfo.icon} {tipoInfo.label}
+                      </span>
+                      {oc.id_ordem && <span style={{ fontSize: 11, color: '#94A3B8' }}>OS: {oc.id_ordem}</span>}
+                    </div>
+                    <span style={{
+                      fontSize: 12, fontWeight: 800, color: '#EF4444',
+                      background: '#FEF2F2', padding: '2px 8px', borderRadius: 6,
                     }}>
-                      <div style={{ fontWeight: 700, color: '#7C3AED', fontSize: 11, marginBottom: 2 }}>
-                        <Navigation size={10} style={{ verticalAlign: 'middle', marginRight: 3 }} />
-                        {cam.destino}
-                      </div>
-                      <div style={{ fontSize: 10, color: '#6B7280', display: 'flex', alignItems: 'center', gap: 3 }}>
-                        <MapPin size={8} /> {cam.cidade}
+                      -{oc.pontos_descontados}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 13, color: '#475569', marginBottom: 4, lineHeight: 1.4 }}>{oc.descricao}</div>
+                  <div style={{ fontSize: 11, color: '#CBD5E1', marginBottom: 10 }}>
+                    {new Date(oc.data).toLocaleDateString('pt-BR')}
+                  </div>
+
+                  {!isFormOpen ? (
+                    <button onClick={() => setShowJustForm(oc.id)} style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      width: '100%', padding: '10px 0', borderRadius: 10, border: 'none',
+                      background: '#1E3A5F', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                    }}>
+                      <MessageSquare size={14} /> Enviar Justificativa
+                    </button>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <textarea
+                        value={justTexto}
+                        onChange={e => setJustTexto(e.target.value)}
+                        placeholder="Explique o que aconteceu..."
+                        rows={3}
+                        style={{
+                          width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid #E2E8F0',
+                          fontSize: 13, resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box',
+                          background: '#F8FAFC', outline: 'none',
+                        }}
+                      />
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button onClick={() => enviarJustificativa(oc.id)} style={{
+                          flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                          background: '#1E3A5F', color: '#fff', border: 'none', borderRadius: 10,
+                          padding: '11px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                        }}>
+                          <Send size={14} /> Enviar
+                        </button>
+                        <button onClick={() => { setShowJustForm(null); setJustTexto('') }} style={{
+                          padding: '11px 16px', background: '#F1F5F9', color: '#64748B', border: 'none',
+                          borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                        }}>
+                          Cancelar
+                        </button>
                       </div>
                     </div>
-                  ))}
-                  {ordensNoDia.length === 0 && caminhosNoDia.length === 0 && (
-                    <div style={{ color: '#E5E7EB', fontSize: 10, textAlign: 'center', paddingTop: 30 }}>—</div>
                   )}
                 </div>
               )
             })}
           </div>
-        </div>
+        )}
+
+        {/* Sem pendências */}
+        {totalPendencias === 0 && (
+          <div style={{
+            background: '#fff', borderRadius: 16, padding: '28px 20px', textAlign: 'center',
+            border: '1px solid #F1F5F9', marginBottom: 16,
+          }}>
+            <Check size={28} color="#10B981" style={{ marginBottom: 8 }} />
+            <p style={{ fontSize: 14, color: '#94A3B8', fontWeight: 500, margin: 0 }}>Tudo em dia! Nenhuma pendência.</p>
+          </div>
+        )}
+
       </div>
-
-      {/* ── Caminho Ativo ── */}
-      {caminhoAtivo && (
-        <div style={{
-          ...STAT_CARD, padding: 16, borderLeft: '4px solid #8B5CF6', marginBottom: 20,
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Navigation size={16} color="#8B5CF6" />
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#7C3AED' }}>Em trânsito</span>
-            </div>
-            <button onClick={() => finalizarCaminho(caminhoAtivo.id)} style={{
-              background: '#D1FAE5', color: '#065F46', border: 'none', borderRadius: 6,
-              padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer',
-            }}>
-              Cheguei
-            </button>
-          </div>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#374151' }}>{caminhoAtivo.destino}</div>
-          <div style={{ fontSize: 12, color: '#6B7280', display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
-            <MapPin size={12} /> {caminhoAtivo.cidade}
-          </div>
-          {caminhoAtivo.motivo && <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 4 }}>{caminhoAtivo.motivo}</div>}
-        </div>
-      )}
-
-      {/* ── Botão Novo Caminho ── */}
-      {!showCaminhoForm ? (
-        <button onClick={() => setShowCaminhoForm(true)} style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          width: '100%', padding: '14px 0', borderRadius: 12, border: '2px dashed #C4B5FD',
-          background: '#F5F3FF', color: '#7C3AED', fontSize: 14, fontWeight: 700,
-          cursor: 'pointer', marginBottom: 20,
-        }}>
-          <Navigation size={18} /> {caminhoAtivo ? 'Novo Destino' : 'Registrar Caminho'}
-        </button>
-      ) : (
-        <div style={{ ...STAT_CARD, padding: 16, marginBottom: 20, border: '2px solid #C4B5FD' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: '#7C3AED' }}>Novo Caminho</span>
-            <button onClick={() => setShowCaminhoForm(false)} style={{
-              background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF',
-            }}>
-              <X size={18} />
-            </button>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <input
-              type="text" placeholder="Destino (ex: Fazenda São João)"
-              value={novoCaminho.destino}
-              onChange={e => setNovoCaminho({ ...novoCaminho, destino: e.target.value })}
-              style={{
-                width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D1D5DB',
-                fontSize: 14, boxSizing: 'border-box',
-              }}
-            />
-            <input
-              type="text" placeholder="Cidade"
-              value={novoCaminho.cidade}
-              onChange={e => setNovoCaminho({ ...novoCaminho, cidade: e.target.value })}
-              style={{
-                width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D1D5DB',
-                fontSize: 14, boxSizing: 'border-box',
-              }}
-            />
-            <input
-              type="text" placeholder="Motivo (opcional)"
-              value={novoCaminho.motivo}
-              onChange={e => setNovoCaminho({ ...novoCaminho, motivo: e.target.value })}
-              style={{
-                width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D1D5DB',
-                fontSize: 14, boxSizing: 'border-box',
-              }}
-            />
-            <button onClick={salvarCaminho} style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              width: '100%', padding: '12px 0', borderRadius: 10, border: 'none',
-              background: '#7C3AED', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer',
-            }}>
-              <Send size={16} /> Registrar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── Botões de Ação ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
-        <button onClick={() => window.location.href = '/pos'} style={{
-          ...STAT_CARD, padding: 16, border: 'none', cursor: 'pointer', textAlign: 'center',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-        }}>
-          <div style={{
-            width: 44, height: 44, borderRadius: 12, background: '#EFF6FF',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Wrench size={22} color="#3B82F6" />
-          </div>
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Ordens de Serviço</span>
-        </button>
-        <button onClick={() => window.location.href = '/requisicoes'} style={{
-          ...STAT_CARD, padding: 16, border: 'none', cursor: 'pointer', textAlign: 'center',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-        }}>
-          <div style={{
-            width: 44, height: 44, borderRadius: 12, background: '#FEF3C7',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <ClipboardList size={22} color="#D97706" />
-          </div>
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Requisições</span>
-        </button>
-        <button onClick={() => window.location.href = '/agenda-tecnicos'} style={{
-          ...STAT_CARD, padding: 16, border: 'none', cursor: 'pointer', textAlign: 'center',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-        }}>
-          <div style={{
-            width: 44, height: 44, borderRadius: 12, background: '#D1FAE5',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Calendar size={22} color="#065F46" />
-          </div>
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Minha Agenda</span>
-        </button>
-        <button onClick={() => window.location.href = '/painel-mecanicos'} style={{
-          ...STAT_CARD, padding: 16, border: 'none', cursor: 'pointer', textAlign: 'center',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-        }}>
-          <div style={{
-            width: 44, height: 44, borderRadius: 12, background: '#EDE9FE',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <FileText size={22} color="#7C3AED" />
-          </div>
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Painel Geral</span>
-        </button>
-      </div>
-
-      {/* ── Pendências ── */}
-      <h2 style={{ fontSize: 15, fontWeight: 700, color: '#1F2937', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-        <AlertTriangle size={16} color="#F59E0B" /> Pendências
-      </h2>
-
-      {/* Requisições pendentes de confirmação */}
-      {reqPendentes.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: '#D97706', marginBottom: 6 }}>
-            Requisições aprovadas - confirme o recebimento:
-          </div>
-          {reqPendentes.map(req => (
-            <div key={req.id} style={{
-              ...STAT_CARD, padding: 12, marginBottom: 8, borderLeft: '4px solid #F59E0B',
-            }}>
-              <div style={{ fontSize: 13, fontWeight: 600 }}>{req.material_solicitado}</div>
-              <div style={{ fontSize: 11, color: '#6B7280', marginTop: 2 }}>
-                {req.quantidade && `Qtd: ${req.quantidade} • `}
-                {req.id_ordem && `OS: ${req.id_ordem}`}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Ocorrências sem justificativa */}
-      {ocorrenciasSemJust.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: '#DC2626', marginBottom: 6 }}>
-            Ocorrências pendentes de justificativa:
-          </div>
-          {ocorrenciasSemJust.map(oc => {
-            const tipoInfo = TIPO_OCORRENCIA[oc.tipo] || TIPO_OCORRENCIA.outros
-            const isFormOpen = showJustForm === oc.id
-            return (
-              <div key={oc.id} style={{
-                ...STAT_CARD, padding: 12, marginBottom: 8, borderLeft: `4px solid ${tipoInfo.color}`,
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
-                      background: `${tipoInfo.color}20`, color: tipoInfo.color,
-                    }}>
-                      {tipoInfo.label}
-                    </span>
-                    {oc.id_ordem && <span style={{ fontSize: 11, color: '#6B7280' }}>OS: {oc.id_ordem}</span>}
-                  </div>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: '#DC2626' }}>-{oc.pontos_descontados} pts</span>
-                </div>
-                <div style={{ fontSize: 12, color: '#374151', marginBottom: 6 }}>{oc.descricao}</div>
-                <div style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 8 }}>
-                  {new Date(oc.data).toLocaleDateString('pt-BR')}
-                </div>
-
-                {!isFormOpen ? (
-                  <button onClick={() => setShowJustForm(oc.id)} style={{
-                    display: 'flex', alignItems: 'center', gap: 4,
-                    background: '#EFF6FF', color: '#1E3A5F', border: 'none', borderRadius: 6,
-                    padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', width: '100%',
-                    justifyContent: 'center',
-                  }}>
-                    <FileText size={14} /> Enviar Justificativa
-                  </button>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <textarea
-                      value={justTexto}
-                      onChange={e => setJustTexto(e.target.value)}
-                      placeholder="Explique o que aconteceu..."
-                      rows={3}
-                      style={{
-                        width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D1D5DB',
-                        fontSize: 13, resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box',
-                      }}
-                    />
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button onClick={() => enviarJustificativa(oc.id)} style={{
-                        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                        background: '#1E3A5F', color: '#fff', border: 'none', borderRadius: 8,
-                        padding: '10px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                      }}>
-                        <Send size={14} /> Enviar
-                      </button>
-                      <button onClick={() => { setShowJustForm(null); setJustTexto('') }} style={{
-                        padding: '10px 14px', background: '#F3F4F6', color: '#6B7280', border: 'none',
-                        borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                      }}>
-                        Cancelar
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      {/* Sem pendências */}
-      {reqPendentes.length === 0 && ocorrenciasSemJust.length === 0 && (
-        <div style={{ ...STAT_CARD, textAlign: 'center', color: '#9CA3AF', fontSize: 13, padding: 24 }}>
-          Nenhuma pendência no momento
-        </div>
-      )}
     </div>
   )
 }

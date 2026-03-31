@@ -95,14 +95,6 @@ const navItems: NavItem[] = [
     icon: <Users size={18} />,
     tag: 'CAMPO',
     gradient: 'linear-gradient(135deg, #1E3A5F, #1d4ed8)'
-  },
-  {
-    id: 'meu-painel',
-    name: 'Meu Painel',
-    href: '/meu-painel',
-    icon: <UserIcon size={18} />,
-    tag: 'TÉCNICO',
-    gradient: 'linear-gradient(135deg, #7C3AED, #5B21B6)'
   }
 ]
 
