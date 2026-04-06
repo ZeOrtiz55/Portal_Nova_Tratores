@@ -77,7 +77,6 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
   const [listaPPVAbertos, setListaPPVAbertos] = useState<Array<{ id: string; cliente: string; status: string }>>([]);
   const [relatorioTecnico, setRelatorioTecnico] = useState("");
   const [previsaoExecucao, setPrevisaoExecucao] = useState("");
-  const [datasExecucao, setDatasExecucao] = useState<string[]>([]);
   const [previsaoFaturamento, setPrevisaoFaturamento] = useState("");
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [totalPecas, setTotalPecas] = useState(0);
@@ -309,7 +308,7 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
       substitutoTipo: temSubstituto ? substitutoTipo : null,
       substitutoId: temSubstituto ? substitutoId : null,
       descontoValor: descValor, descontoHora: descHoraValor, descontoKm: descKmValor,
-      relatorioTecnico, previsaoExecucao, datasExecucaoExtras: datasExecucao.filter(d => d), previsaoFaturamento,
+      relatorioTecnico, previsaoExecucao, previsaoFaturamento,
       gerarPPV: mode === "create" && tipoServico === "Revisão" && gerarPPV,
       userName,
     };
@@ -334,7 +333,7 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
     }
   }, [mode, osId, clienteChave, clienteInfo, tecnico1, tecnico2, tipoServico, revisao, projeto,
       servSolicitado, qtdHoras, qtdKm, ppv, status, ordemOmie, motivoCancel, descValor,
-      descHoraValor, descKmValor, relatorioTecnico, previsaoExecucao, datasExecucao, previsaoFaturamento,
+      descHoraValor, descKmValor, relatorioTecnico, previsaoExecucao, previsaoFaturamento,
       gerarPPV, onClose, onSaved]);
 
   // ── Reset form to defaults ──
@@ -345,7 +344,7 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
     setPpv(""); setQtdHoras(1); setQtdKm(0); setDescPorc(0); setDescValor(0); setDescHoraValor(0); setDescKmValor(0);
     setOrdemOmie(""); setMotivoCancel(""); setTemSubstituto(false); setSubstitutoTipo("POS"); setSubstitutoId("");
     setRelatorioTecnico("");
-    setPrevisaoExecucao(""); setDatasExecucao([]); setPrevisaoFaturamento("");
+    setPrevisaoExecucao(""); setPrevisaoFaturamento("");
     setEstimativa(null); setErroEstimativa(""); setLoadingEstimativa(false); setEnderecoEstimativa(""); setEnderecosDisponiveis([]);
     setProdutos([]); setTotalPecas(0); setShowLogs(false); setRequisicoes([]);
     setGerarPPV(false); setShowDescontos(false); setLoadingData(false);
@@ -395,7 +394,6 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
           setSubstitutoId(d.substitutoId || "");
           setRelatorioTecnico(d.relatorioTecnico || "");
           setPrevisaoExecucao(d.previsaoExecucao || "");
-          setDatasExecucao(d.datasExecucaoExtras || []);
           setPrevisaoFaturamento(d.previsaoFaturamento || "");
           setRequisicoes(d.infoRequisicoes || []);
           setDadosTecnico(d.dadosTecnico || null);
@@ -897,54 +895,27 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
                   {/* ── Previsões ── */}
                   <div className="os-card">
                     <div className="os-card-title"><i className="fas fa-calendar-alt" /> Previsões</div>
-                    <div style={{ marginBottom: 12 }}>
-                      <label>Dias de Execução</label>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        {/* Primeiro dia (principal) */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <input type="date" value={previsaoExecucao} onChange={(e) => setPrevisaoExecucao(e.target.value)} style={{ flex: 1, marginBottom: 0 }} />
-                          <span style={{ fontSize: 10, color: '#92400E', fontWeight: 700, background: '#FEF3C7', padding: '2px 8px', borderRadius: 4, whiteSpace: 'nowrap' }}>DIA 1</span>
-                        </div>
-                        {/* Dias extras */}
-                        {datasExecucao.map((data, i) => (
-                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <input
-                              type="date"
-                              value={data}
-                              onChange={(e) => {
-                                const novas = [...datasExecucao];
-                                novas[i] = e.target.value;
-                                setDatasExecucao(novas);
-                              }}
-                              style={{ flex: 1, marginBottom: 0 }}
-                            />
-                            <span style={{ fontSize: 10, color: '#1E3A5F', fontWeight: 700, background: '#DBEAFE', padding: '2px 8px', borderRadius: 4, whiteSpace: 'nowrap' }}>DIA {i + 2}</span>
-                            <button
-                              type="button"
-                              onClick={() => setDatasExecucao(datasExecucao.filter((_, j) => j !== i))}
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', fontSize: 16, padding: '0 4px', lineHeight: 1 }}
-                              title="Remover dia"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ))}
-                        {/* Botão adicionar */}
-                        <button
-                          type="button"
-                          onClick={() => setDatasExecucao([...datasExecucao, ''])}
-                          style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F0F9FF', border: '1px dashed #93C5FD', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', color: '#2563EB', fontSize: 12, fontWeight: 600, width: 'fit-content' }}
-                        >
-                          <i className="fas fa-plus" style={{ fontSize: 10 }} /> Adicionar dia de execução
-                        </button>
-                      </div>
-                    </div>
                     <div className="os-row">
+                      <div style={S_FLEX1}>
+                        <label>Início da Execução</label>
+                        <input type="date" value={previsaoExecucao} onChange={(e) => setPrevisaoExecucao(e.target.value)} style={S_MB0} />
+                      </div>
                       <div style={S_FLEX1}>
                         <label>Previsão de Faturamento</label>
                         <input type="date" value={previsaoFaturamento} onChange={(e) => setPrevisaoFaturamento(e.target.value)} style={S_MB0} />
                       </div>
                     </div>
+                    {previsaoExecucao && previsaoFaturamento && previsaoFaturamento >= previsaoExecucao && (() => {
+                      const d1 = new Date(previsaoExecucao + 'T00:00:00');
+                      const d2 = new Date(previsaoFaturamento + 'T00:00:00');
+                      const dias = Math.round((d2.getTime() - d1.getTime()) / 86400000) + 1;
+                      return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, padding: '6px 10px', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 6 }}>
+                          <i className="fas fa-calendar-check" style={{ color: '#16A34A', fontSize: 12 }} />
+                          <span style={{ fontSize: 12, color: '#15803D', fontWeight: 600 }}>{dias} dia{dias > 1 ? 's' : ''} de execução</span>
+                        </div>
+                      );
+                    })()}
                   </div>
 
 

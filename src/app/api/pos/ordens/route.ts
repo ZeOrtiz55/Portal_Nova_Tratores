@@ -27,31 +27,22 @@ async function autoMoveByDate() {
     await sincronizarStatusPPV(os.Id_Ordem, "Execução");
   }
 
-  // 2. Execução há +1 dia → Aguardando ordem Técnico (vacilo)
-  //    MAS só se não houver datas futuras na agenda_tecnico
+  // 2. Execução → Aguardando ordem Técnico
+  //    SÓ move se tem Previsao_Faturamento preenchida E já passou (período completo encerrado)
+  //    Se não tem Previsao_Faturamento, NÃO move automaticamente — o admin decide
   const { data: execAtrasadas } = await supabase
     .from(TBL_OS)
-    .select("Id_Ordem, Status, Previsao_Execucao, Os_Tecnico")
+    .select("Id_Ordem, Status, Previsao_Execucao, Previsao_Faturamento, Os_Tecnico")
     .not("Previsao_Execucao", "is", null)
-    .lte("Previsao_Execucao", ontemISO)
+    .not("Previsao_Faturamento", "is", null)
+    .lt("Previsao_Faturamento", hojeISO)
     .in("Status", ["Execução"]);
 
   for (const os of execAtrasadas || []) {
-    // Verifica se existe alguma data futura na agenda_tecnico para esta OS
-    const { data: agendaFutura } = await supabase
-      .from("agenda_tecnico")
-      .select("id")
-      .eq("id_ordem", os.Id_Ordem)
-      .gte("data_agendada", hojeISO)
-      .limit(1);
-
-    // Se ainda tem datas futuras agendadas, não mover — a OS ainda será executada
-    if (agendaFutura && agendaFutura.length > 0) continue;
-
     await supabase.from(TBL_OS).update({ Status: "Aguardando ordem Técnico" }).eq("Id_Ordem", os.Id_Ordem);
-    await registrarLog(os.Id_Ordem, "Auto-move: +1 dia em Execução sem conclusão", "Aguardando ordem Técnico", os.Status);
+    await registrarLog(os.Id_Ordem, "Auto-move: período de execução encerrado sem conclusão", "Aguardando ordem Técnico", os.Status);
+    await sincronizarStatusPPV(os.Id_Ordem, "Aguardando ordem Técnico");
 
-    // Registra métrica de atraso
     await supabase.from(TBL_METRICAS).insert({
       id_ordem: os.Id_Ordem,
       tecnico: os.Os_Tecnico || "N/A",
@@ -333,24 +324,29 @@ export async function POST(req: NextRequest) {
     notifLink: `/pos?id=${newId}`,
   });
 
-  // Criar entradas na agenda_tecnico para cada data de execução
-  const todasDatas: string[] = [];
-  if (dados.previsaoExecucao) todasDatas.push(dados.previsaoExecucao);
-  if (Array.isArray(dados.datasExecucaoExtras)) {
-    dados.datasExecucaoExtras.forEach((d: string) => { if (d && !todasDatas.includes(d)) todasDatas.push(d); });
-  }
-  if (dados.tecnicoResponsavel && todasDatas.length > 0) {
-    await supabase.from('agenda_tecnico').insert(
-      todasDatas.map((d: string) => ({
-        tecnico_nome: dados.tecnicoResponsavel,
-        id_ordem: newId,
-        data_agendada: d,
-        turno: 'integral',
-        cliente: dados.nomeCliente || null,
-        endereco: dados.enderecoCliente || null,
-        status: 'agendado',
-      }))
-    );
+  // Criar entradas na agenda_tecnico para período de execução (início → faturamento)
+  if (dados.tecnicoResponsavel && dados.previsaoExecucao) {
+    const inicio = new Date(dados.previsaoExecucao + 'T00:00:00');
+    const fim = dados.previsaoFaturamento ? new Date(dados.previsaoFaturamento + 'T00:00:00') : inicio;
+    const todasDatas: string[] = [];
+    const cur = new Date(inicio);
+    while (cur <= fim) {
+      todasDatas.push(cur.toISOString().slice(0, 10));
+      cur.setDate(cur.getDate() + 1);
+    }
+    if (todasDatas.length > 0) {
+      await supabase.from('agenda_tecnico').insert(
+        todasDatas.map((d: string) => ({
+          tecnico_nome: dados.tecnicoResponsavel,
+          id_ordem: newId,
+          data_agendada: d,
+          turno: 'integral',
+          cliente: dados.nomeCliente || null,
+          endereco: dados.enderecoCliente || null,
+          status: 'agendado',
+        }))
+      );
+    }
   }
 
   const ordens = await getOrdensParaKanban();

@@ -144,6 +144,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   const statusBg = status.includes("Exec") ? "#FEF3C7" : status === "Concluída" ? "#D1FAE5" : status === "Cancelada" ? "#FEE2E2" : "#E8E0D0";
 
   const totalDescontos = desconto + descontoHora + descontoKm;
+  const totalCalculado = (vHoras - descontoHora) + (vKm - descontoKm) + totalPecas + totalReq - desconto;
 
   const descontoRows = [];
   if (descontoHora > 0) descontoRows.push(`<tr class="discount"><td>Desconto Horas</td><td style="text-align:center">—</td><td style="text-align:right">- R$ ${descontoHora.toFixed(2)}</td></tr>`);
@@ -302,7 +303,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         ${totalDescontos > 0 ? `<div class="total-sub"><span>Descontos: - R$ ${totalDescontos.toFixed(2)}</span></div>` : ""}
         <div class="total-lbl">Total da Ordem</div>
       </div>
-      <div class="total-val">R$ ${valorTotal.toFixed(2)}</div>
+      <div class="total-val">R$ ${totalCalculado.toFixed(2)}</div>
     </div>
   </div>
 

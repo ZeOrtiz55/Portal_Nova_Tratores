@@ -13,11 +13,17 @@ interface KanbanBoardProps {
 }
 
 const COLUMNS = [
-  { key: "Aguardando", title: "Aguardando" },
-  { key: "Em Andamento", title: "Em Andamento" },
-  { key: "Aguardando Para Faturar", title: "Aguar. Faturar" },
-  { key: "Fechado", title: "Fechado" },
-  { key: "Cancelado", title: "Cancelado" },
+  { key: "Orçamento", title: "Orçamento" },
+  { key: "Orçamento enviado para o cliente e aguardando", title: "Orç. Enviado" },
+  { key: "Execução", title: "Execução" },
+  { key: "Execução Procurando peças", title: "Proc. Peças" },
+  { key: "Execução aguardando peças (em transporte)", title: "Aguar. Peças" },
+  { key: "Executada aguardando comercial", title: "Aguar. Comercial" },
+  { key: "Aguardando outros", title: "Aguar. Outros" },
+  { key: "Aguardando ordem Técnico", title: "Aguar. Técnico" },
+  { key: "Executada aguardando cliente", title: "Aguar. Cliente" },
+  { key: "Concluída", title: "Concluída" },
+  { key: "Cancelada", title: "Cancelada" },
 ] as const;
 
 export default function KanbanBoard({ items, searchFilter, onCardClick, onStatusChange }: KanbanBoardProps) {
@@ -30,7 +36,7 @@ export default function KanbanBoard({ items, searchFilter, onCardClick, onStatus
   const grouped = COLUMNS.map((col) => ({
     ...col,
     items: filteredItems.filter((i) => normalizarStatus(i.status) === col.key),
-    colors: STATUS_COLORS[col.key],
+    colors: STATUS_COLORS[col.key] || { text: "#64748B", bg: "#F8FAFC" },
   }));
 
   return (

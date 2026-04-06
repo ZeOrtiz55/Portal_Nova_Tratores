@@ -262,29 +262,23 @@ export async function buscarDadosCliente(nomeCliente: string): Promise<{ documen
 // SINCRONIZAR STATUS DOS PPVs COM AS OS VINCULADAS
 // =============================================
 
-// Mapeamento: status da OS → status do PPV
+// Mapeamento: status da OS → status do PPV (1:1, PPV acompanha POS)
 function mapearStatusOS(statusOS: string): string | null {
-  const s = (statusOS || "").trim().toLowerCase();
-
-  // OS em execução → PPV "Em Andamento"
-  if (s.startsWith("execu") && !s.startsWith("executada")) return "Em Andamento";
-  // "Execução", "Execução Procurando peças", "Execução aguardando peças (em transporte)"
-
-  // OS executada → PPV "Aguardando Para Faturar"
-  if (s.startsWith("executada")) return "Aguardando Para Faturar";
-  // "Executada", "Executada aguardando cliente", "Executada aguardando comercial"
-
-  // OS em orçamento/aguardando → PPV fica "Aguardando"
-  if (s.includes("orçamento") || s.includes("orcamento") || s.includes("aguardando ordem") || s.includes("aguardando outros")) return "Aguardando";
-
-  return null; // sem mapeamento → não altera
+  const s = (statusOS || "").trim();
+  const fasesValidas = [
+    "Orçamento", "Orçamento enviado para o cliente e aguardando",
+    "Execução", "Execução Procurando peças", "Execução aguardando peças (em transporte)",
+    "Executada aguardando comercial", "Aguardando outros", "Aguardando ordem Técnico",
+    "Executada aguardando cliente", "Concluída", "Cancelada",
+  ];
+  return fasesValidas.find(f => f.toLowerCase() === s.toLowerCase()) || null;
 }
 
 export async function sincronizarStatusComOS(): Promise<void> {
   try {
     // Busca todos os PPVs que têm OS vinculada, NÃO estão em estado terminal e NÃO têm override manual
     const pedidos = await supabaseFetch<Record<string, unknown>[]>(
-      `${TBL_PEDIDOS}?Id_Os=neq.&status=not.in.(Fechado,Cancelado)&status_manual_override=not.is.true&select=id_pedido,Id_Os,status`
+      `${TBL_PEDIDOS}?Id_Os=neq.&status=not.in.(Concluída,Cancelada,Fechado,Cancelado)&status_manual_override=not.is.true&select=id_pedido,Id_Os,status`
     );
 
     if (!pedidos || pedidos.length === 0) return;

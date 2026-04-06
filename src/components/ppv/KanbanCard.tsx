@@ -17,7 +17,7 @@ export default function KanbanCard({ item, onClick, onStatusChange }: KanbanCard
   const valorFmt = item.valor ? formatarMoeda(parseFloat(String(item.valor))) : "R$ 0,00";
   const dataFmt = formatarDataFrontend(item.data);
 
-  const bgCard = statusNorm === "Fechado" ? "#ecfdf5" : statusNorm === "Cancelado" ? "#fef2f2" : "#FFFAF5";
+  const bgCard = statusNorm === "Concluída" ? "#ecfdf5" : statusNorm === "Cancelada" ? "#fef2f2" : "#FFFAF5";
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);

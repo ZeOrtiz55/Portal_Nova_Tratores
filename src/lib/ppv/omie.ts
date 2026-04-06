@@ -236,8 +236,8 @@ export async function enviarPPVParaOmie(idPPV: string): Promise<{ sucesso: boole
   }
 
   // 2. Validações
-  if (detalhes.status !== "Aguardando Para Faturar") {
-    return { sucesso: false, erro: `Status inválido: "${detalhes.status}". Precisa estar "Aguardando Para Faturar"` };
+  if (detalhes.status !== "Executada aguardando comercial" && detalhes.status !== "Aguardando Para Faturar") {
+    return { sucesso: false, erro: `Status inválido: "${detalhes.status}". Precisa estar "Executada aguardando comercial"` };
   }
 
   if (detalhes.pedidoOmie) {
@@ -400,7 +400,7 @@ export async function enviarPPVParaOmie(idPPV: string): Promise<{ sucesso: boole
     await supabaseFetch(
       `${TBL_PEDIDOS}?id_pedido=eq.${idPPV}`,
       "PATCH",
-      { pedido_omie: numPedido, status: "Fechado" }
+      { pedido_omie: numPedido, status: "Concluída" }
     );
 
     await registrarLog(idPPV, `Pedido de Venda Omie nº ${numPedido} criado (${acc.name}). PPV fechado.`);

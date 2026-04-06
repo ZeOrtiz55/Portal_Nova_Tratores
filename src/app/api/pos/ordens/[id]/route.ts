@@ -82,15 +82,6 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     descontoKm: safeGet(row, "Desconto_KM"),
     previsaoExecucao: safeGet(row, "Previsao_Execucao") || "",
     previsaoFaturamento: safeGet(row, "Previsao_Faturamento") || "",
-    datasExecucaoExtras: await (async () => {
-      const { data: agItems } = await supabase
-        .from('agenda_tecnico')
-        .select('data_agendada')
-        .eq('id_ordem', idOs)
-        .order('data_agendada');
-      const principal = safeGet(row, "Previsao_Execucao") || "";
-      return (agItems || []).map(a => a.data_agendada).filter(d => d !== principal);
-    })(),
     dadosTecnico: tecData ? {
       tipoServico: tecData.TipoServico,
       diagnostico: tecData.Motivo,
@@ -251,30 +242,22 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   // Sincroniza status do PPV vinculado
   await sincronizarStatusPPV(idOs, dados.status);
 
-  // Sincronizar agenda_tecnico com datas de execução
-  // Só mexe nas datas da agenda se datasExecucaoExtras foi explicitamente enviado no payload
-  const datasEnviadas = 'datasExecucaoExtras' in dados;
-  const todasDatas: string[] = [];
-  if (dados.previsaoExecucao) todasDatas.push(dados.previsaoExecucao);
-  if (Array.isArray(dados.datasExecucaoExtras)) {
-    dados.datasExecucaoExtras.forEach((d: string) => { if (d && !todasDatas.includes(d)) todasDatas.push(d); });
-  }
-
+  // Sincronizar agenda_tecnico com período de execução (início → faturamento)
   const tecNome = dados.tecnicoResponsavel || "";
-  if (tecNome && todasDatas.length > 0) {
-    // Buscar agenda existente para esta OS
-    const { data: agendaExistente } = await supabase
-      .from('agenda_tecnico')
-      .select('id, data_agendada')
-      .eq('id_ordem', idOs);
+  await supabase.from('agenda_tecnico').delete().eq('id_ordem', idOs);
 
-    const existentes = (agendaExistente || []).map(a => a.data_agendada);
-
-    // Adicionar datas novas
-    const novas = todasDatas.filter(d => !existentes.includes(d));
-    if (novas.length > 0) {
+  if (tecNome && dados.previsaoExecucao) {
+    const inicio = new Date(dados.previsaoExecucao + 'T00:00:00');
+    const fim = dados.previsaoFaturamento ? new Date(dados.previsaoFaturamento + 'T00:00:00') : inicio;
+    const todasDatas: string[] = [];
+    const cur = new Date(inicio);
+    while (cur <= fim) {
+      todasDatas.push(cur.toISOString().slice(0, 10));
+      cur.setDate(cur.getDate() + 1);
+    }
+    if (todasDatas.length > 0) {
       await supabase.from('agenda_tecnico').insert(
-        novas.map(d => ({
+        todasDatas.map(d => ({
           tecnico_nome: tecNome,
           id_ordem: idOs,
           data_agendada: d,
@@ -285,23 +268,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         }))
       );
     }
-
-    // Remover datas que não estão mais na lista — só se datasExecucaoExtras foi enviado
-    if (datasEnviadas) {
-      const paraRemover = (agendaExistente || []).filter(a => !todasDatas.includes(a.data_agendada));
-      if (paraRemover.length > 0) {
-        await supabase.from('agenda_tecnico').delete().in('id', paraRemover.map(a => a.id));
-      }
-    }
-
-    // Atualizar técnico se mudou
-    const paraAtualizar = (agendaExistente || []).filter(a => todasDatas.includes(a.data_agendada));
-    if (paraAtualizar.length > 0) {
-      await supabase.from('agenda_tecnico').update({ tecnico_nome: tecNome, cliente: dados.nomeCliente || null, endereco: dados.enderecoCliente || null }).eq('id_ordem', idOs);
-    }
-  } else if (todasDatas.length === 0 && datasEnviadas) {
-    // Se não tem mais datas E o campo foi explicitamente enviado, remover da agenda
-    await supabase.from('agenda_tecnico').delete().eq('id_ordem', idOs);
   }
 
   // Audit log + notificação para admins

@@ -26,11 +26,17 @@ interface Props {
 }
 
 const STATUS_ICON: Record<string, string> = {
-  Aguardando: "fa-clock",
-  "Em Andamento": "fa-play-circle",
-  "Aguardando Para Faturar": "fa-file-invoice-dollar",
-  Fechado: "fa-check-circle",
-  Cancelado: "fa-times-circle",
+  "Orçamento": "fa-file-alt",
+  "Orçamento enviado para o cliente e aguardando": "fa-paper-plane",
+  "Execução": "fa-play-circle",
+  "Execução Procurando peças": "fa-search",
+  "Execução aguardando peças (em transporte)": "fa-truck",
+  "Executada aguardando comercial": "fa-file-invoice-dollar",
+  "Aguardando outros": "fa-clock",
+  "Aguardando ordem Técnico": "fa-user-cog",
+  "Executada aguardando cliente": "fa-user-clock",
+  "Concluída": "fa-check-circle",
+  "Cancelada": "fa-times-circle",
 };
 
 export default function ModalDetalhes({
@@ -44,7 +50,7 @@ export default function ModalDetalhes({
 
   const [details, setDetails] = useState<PPVDetalhes | null>(null);
   const [tab, setTab] = useState<"dados" | "itens" | "historico">("dados");
-  const [status, setStatus] = useState("Aguardando");
+  const [status, setStatus] = useState("Orçamento");
   const [tecnico, setTecnico] = useState("");
   const [cliente, setCliente] = useState("");
   const [clienteDoc, setClienteDoc] = useState("");
@@ -154,8 +160,8 @@ export default function ModalDetalhes({
     const erros: string[] = [];
     if (!cliente.trim()) erros.push("Cliente");
     if (!tecnico.trim()) erros.push("Técnico");
-    if (status === "Cancelado" && !motivoCancelamento.trim()) erros.push("Motivo do Cancelamento");
-    if (status === "Fechado" && !pedidoOmie.trim()) erros.push("Pedido OMIE");
+    if (status === "Cancelada" && !motivoCancelamento.trim()) erros.push("Motivo do Cancelamento");
+    if (status === "Concluída" && !pedidoOmie.trim()) erros.push("Pedido OMIE");
 
     if (erros.length > 0) {
       showToast("error", `Campos obrigatórios: ${erros.join(", ")}`);
@@ -348,7 +354,7 @@ export default function ModalDetalhes({
               </div>
 
               {/* Campos condicionais */}
-              {status === "Fechado" && (
+              {status === "Concluída" && (
                 <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-6">
                   <label className="mb-2 flex items-center gap-2 text-sm font-bold text-emerald-700">
                     <i className="fas fa-file-invoice text-base" /> Pedido OMIE <span className="text-red-500">*</span>
@@ -363,7 +369,7 @@ export default function ModalDetalhes({
                 </div>
               )}
 
-              {status === "Cancelado" && (
+              {status === "Cancelada" && (
                 <div className="rounded-2xl border-2 border-red-300 bg-red-50 p-6">
                   <label className="mb-2 flex items-center gap-2 text-sm font-bold text-red-700">
                     <i className="fas fa-exclamation-triangle text-base" /> Motivo do Cancelamento <span className="text-red-500">*</span>

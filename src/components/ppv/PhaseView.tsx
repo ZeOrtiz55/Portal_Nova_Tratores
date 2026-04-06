@@ -16,24 +16,36 @@ interface PhaseViewProps {
 }
 
 export const PHASE_COLORS: Record<string, string> = {
-  Aguardando: "#C2410C",
-  "Em Andamento": "#1D4ED8",
-  "Aguardando Para Faturar": "#8B5CF6",
-  Fechado: "#047857",
-  Cancelado: "#B91C1C",
+  "Orçamento": "#B45309",
+  "Orçamento enviado para o cliente e aguardando": "#C2410C",
+  "Execução": "#1D4ED8",
+  "Execução Procurando peças": "#0369A1",
+  "Execução aguardando peças (em transporte)": "#6D28D9",
+  "Executada aguardando comercial": "#7C3AED",
+  "Aguardando outros": "#CA8A04",
+  "Aguardando ordem Técnico": "#D97706",
+  "Executada aguardando cliente": "#0891B2",
+  "Concluída": "#047857",
+  "Cancelada": "#B91C1C",
 };
 
 export const PHASES = STATUS_OPTIONS.map((s) => s.value);
 
 export const PHASE_SHORT: Record<string, string> = {
-  Aguardando: "Aguardando",
-  "Em Andamento": "Em Andamento",
-  "Aguardando Para Faturar": "Aguar. Faturar",
-  Fechado: "Fechado",
-  Cancelado: "Cancelado",
+  "Orçamento": "Orçamento",
+  "Orçamento enviado para o cliente e aguardando": "Orç. Enviado",
+  "Execução": "Execução",
+  "Execução Procurando peças": "Proc. Peças",
+  "Execução aguardando peças (em transporte)": "Aguar. Peças",
+  "Executada aguardando comercial": "Aguar. Comercial",
+  "Aguardando outros": "Aguar. Outros",
+  "Aguardando ordem Técnico": "Aguar. Técnico",
+  "Executada aguardando cliente": "Aguar. Cliente",
+  "Concluída": "Concluída",
+  "Cancelada": "Cancelada",
 };
 
-const COLLAPSED_DEFAULT = new Set(["Fechado", "Cancelado"]);
+const COLLAPSED_DEFAULT = new Set(["Concluída", "Cancelada"]);
 
 const MiniCard = memo(function MiniCard({
   order: o,

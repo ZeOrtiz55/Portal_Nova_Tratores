@@ -14,14 +14,19 @@ export const TBL_REV_PRONTAS = "Revisoes_Pronta";
 export const TBL_METRICAS = "tecnico_metricas";
 export const TBL_LEMBRETES = "lembretes_clientes";
 
-// Mapa de status POS → PPV
+// Mapa de status POS → PPV (1:1, PPV acompanha POS)
 export const POS_TO_PPV_STATUS: Record<string, string> = {
-  "Execução": "Em Andamento",
-  "Execução Procurando peças": "Em Andamento",
-  "Execução aguardando peças (em transporte)": "Em Andamento",
-  "Executada": "Aguardando Para Faturar",
-  "Executada aguardando cliente": "Aguardando Para Faturar",
-  "Executada aguardando comercial": "Aguardando Para Faturar",
+  "Orçamento": "Orçamento",
+  "Orçamento enviado para o cliente e aguardando": "Orçamento enviado para o cliente e aguardando",
+  "Execução": "Execução",
+  "Execução Procurando peças": "Execução Procurando peças",
+  "Execução aguardando peças (em transporte)": "Execução aguardando peças (em transporte)",
+  "Executada aguardando comercial": "Executada aguardando comercial",
+  "Aguardando outros": "Aguardando outros",
+  "Aguardando ordem Técnico": "Aguardando ordem Técnico",
+  "Executada aguardando cliente": "Executada aguardando cliente",
+  "Concluída": "Concluída",
+  "Cancelada": "Cancelada",
 };
 
 // Valores

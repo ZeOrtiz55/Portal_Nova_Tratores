@@ -29,9 +29,9 @@ export async function sincronizarStatusPPV(idOrdem: string, novoStatusPOS: strin
     .select("id_pedido, status")
     .in("id_pedido", ppvIds);
 
-  // Filtra os que podem ser atualizados
+  // Filtra os que podem ser atualizados (não altera Concluída/Cancelada)
   const aAtualizar = (ppvs || []).filter(
-    (p) => p.status && p.status !== "Fechado" && p.status !== "Cancelado" && p.status !== novoStatusPPV
+    (p) => p.status && p.status !== "Concluída" && p.status !== "Cancelada" && p.status !== "Fechado" && p.status !== "Cancelado" && p.status !== novoStatusPPV
   );
 
   if (aAtualizar.length === 0) return;

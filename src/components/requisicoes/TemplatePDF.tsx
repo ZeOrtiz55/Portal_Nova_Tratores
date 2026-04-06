@@ -148,7 +148,7 @@ export default function TemplatePDF({ req }: { req: any, onUpdate?: any, onPrint
         </div>
 
         {/* BLOCO TÉCNICO CONDICIONAL ATUALIZADO */}
-        {(req.tipo === 'Frota-Veiculos' || req.setor === 'Trator-Cliente' || req.setor === 'Trator-Loja' || req.tipo === 'Ferramenta') && (
+        {(req.tipo === 'Frota-Veiculos' || ((req.setor === 'Trator-Cliente' || req.setor === 'Trator-Loja' || req.tipo === 'Ferramenta') && req.Chassis_Modelo)) && (
           <div className="border-2 border-black rounded-2xl overflow-hidden mb-4 shadow-sm">
             <div className={`grid grid-cols-4 divide-x-2 divide-black uppercase ${req.setor === 'Trator-Cliente' ? 'border-b-2 border-black' : ''}`}>
                 {req.tipo === 'Frota-Veiculos' ? (

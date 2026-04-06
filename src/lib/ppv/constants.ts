@@ -18,14 +18,20 @@ export const TBL_LOGS = "logs_ppv";
 export const MOV_SAIDA = "Saída";
 export const MOV_DEVOLUCAO = "Devolução";
 
-// Cores dos Status
-export const STATUS_COLORS = {
-  Aguardando: { text: "#C2410C", bg: "#FFF7ED" },
-  "Em Andamento": { text: "#1D4ED8", bg: "#EFF6FF" },
-  "Aguardando Para Faturar": { text: "#8B5CF6", bg: "#F5F3FF" },
-  Fechado: { text: "#047857", bg: "#ECFDF5" },
-  Cancelado: { text: "#B91C1C", bg: "#FEF2F2" },
-} as const;
+// Cores dos Status — mesmas fases do POS
+export const STATUS_COLORS: Record<string, { text: string; bg: string }> = {
+  "Orçamento": { text: "#B45309", bg: "#FFFBEB" },
+  "Orçamento enviado para o cliente e aguardando": { text: "#C2410C", bg: "#FFF7ED" },
+  "Execução": { text: "#1D4ED8", bg: "#EFF6FF" },
+  "Execução Procurando peças": { text: "#0369A1", bg: "#F0F9FF" },
+  "Execução aguardando peças (em transporte)": { text: "#6D28D9", bg: "#F5F3FF" },
+  "Executada aguardando comercial": { text: "#7C3AED", bg: "#FAF5FF" },
+  "Aguardando outros": { text: "#CA8A04", bg: "#FEFCE8" },
+  "Aguardando ordem Técnico": { text: "#D97706", bg: "#FFF7ED" },
+  "Executada aguardando cliente": { text: "#0891B2", bg: "#ECFEFF" },
+  "Concluída": { text: "#047857", bg: "#ECFDF5" },
+  "Cancelada": { text: "#B91C1C", bg: "#FEF2F2" },
+};
 
 export type StatusKey = keyof typeof STATUS_COLORS;
 
@@ -43,9 +49,15 @@ export const MOTIVOS_SAIDA = [
 ];
 
 export const STATUS_OPTIONS = [
-  { value: "Aguardando", label: "Aguardando" },
-  { value: "Em Andamento", label: "Em Andamento" },
-  { value: "Aguardando Para Faturar", label: "Aguardando Para Faturar" },
-  { value: "Fechado", label: "Fechado" },
-  { value: "Cancelado", label: "Cancelado" },
+  { value: "Orçamento", label: "Orçamento" },
+  { value: "Orçamento enviado para o cliente e aguardando", label: "Orçamento enviado" },
+  { value: "Execução", label: "Execução" },
+  { value: "Execução Procurando peças", label: "Procurando peças" },
+  { value: "Execução aguardando peças (em transporte)", label: "Aguardando peças" },
+  { value: "Executada aguardando comercial", label: "Aguardando comercial" },
+  { value: "Aguardando outros", label: "Aguardando outros" },
+  { value: "Aguardando ordem Técnico", label: "Aguardando técnico" },
+  { value: "Executada aguardando cliente", label: "Aguardando cliente" },
+  { value: "Concluída", label: "Concluída" },
+  { value: "Cancelada", label: "Cancelada" },
 ];

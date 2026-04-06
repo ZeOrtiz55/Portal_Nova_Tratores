@@ -180,8 +180,9 @@ function PPVApp() {
   // Filtro combinado: status + técnico + cliente
   const filteredKanban = kanbanItems.filter((item) => {
     const st = (item.status || "").toLowerCase();
-    if (statusFilter === "ATIVOS" && (st.includes("fechado") || st.includes("concluido") || st.includes("cancelado"))) return false;
-    if (statusFilter === "FECHADOS" && !(st.includes("fechado") || st.includes("concluido") || st.includes("cancelado"))) return false;
+    const terminal = st.includes("concluída") || st.includes("concluida") || st.includes("cancelada") || st.includes("fechado") || st.includes("cancelado");
+    if (statusFilter === "ATIVOS" && terminal) return false;
+    if (statusFilter === "FECHADOS" && !terminal) return false;
     if (tecnicoFilter && item.tecnico !== tecnicoFilter) return false;
     if (clienteFilter && item.cliente !== clienteFilter) return false;
     return true;

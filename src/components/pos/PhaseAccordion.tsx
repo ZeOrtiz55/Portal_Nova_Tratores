@@ -86,7 +86,7 @@ const MiniCard = memo(function MiniCard({ order: o, color, onClick, onPhaseChang
           )}
         </div>
       )}
-      {o.diasAtraso > 0 && (
+      {o.diasAtraso > 0 && !(o.status || '').toLowerCase().includes('execu') && (
         <div className="mini-card-atraso">
           <i className="fas fa-exclamation-circle" /> {o.diasAtraso}d atrasado — cobrar {o.tecnico}
         </div>

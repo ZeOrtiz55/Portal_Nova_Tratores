@@ -4,13 +4,14 @@ import { useAuth } from '@/hooks/useAuth'
 import { usePermissoes } from '@/hooks/usePermissoes'
 import SemPermissao from '@/components/SemPermissao'
 import { supabase } from '@/lib/supabase'
+import BlocoVisaoGeral from '@/components/painel-mecanicos/BlocoVisaoGeral'
 import BlocoOrdens from '@/components/painel-mecanicos/BlocoOrdens'
 import BlocoRequisicoes from '@/components/painel-mecanicos/BlocoRequisicoes'
 import BlocoAlertas, { type Alerta } from '@/components/painel-mecanicos/BlocoAlertas'
 import {
-  Users, FileText, Package, AlertTriangle, RefreshCw, Shield,
-  ChevronDown, ChevronUp, Star, Clock, Wrench, AlertOctagon,
-  ThumbsUp, ThumbsDown, X, Send, Navigation, Plus
+  Users, FileText, Package, AlertTriangle, RefreshCw,
+  ChevronDown, Star, Clock, Wrench, AlertOctagon,
+  ThumbsUp, ThumbsDown, X, LayoutDashboard
 } from 'lucide-react'
 
 // ─── Types ───────────────────────────────────────────────────────
@@ -29,10 +30,12 @@ interface OrdemServico {
   Os_Tecnico: string
   Os_Tecnico2: string
   Previsao_Execucao: string | null
+  Previsao_Faturamento: string | null
   Serv_Solicitado: string
   Endereco_Cliente: string
   Cidade_Cliente: string
   Tipo_Servico: string
+  Qtd_HR: string | number | null
 }
 
 interface RequisicaoGeral {
@@ -53,25 +56,33 @@ interface UsuarioBanco {
   email: string
 }
 
+interface Caminho {
+  id: number
+  tecnico_nome: string
+  destino: string
+  cidade: string
+  motivo: string
+  data_saida: string
+  status: string
+}
+
 interface Execucao {
   id: number
-  id_ordem: string
   tecnico_nome: string
+  id_ordem: string
+  servico_realizado: string
   data_execucao: string
   status: string
-  servico_realizado: string | null
-  created_at: string
 }
 
 interface RequisicaoMecanico {
   id: number
-  id_ordem: string | null
   tecnico_nome: string
   material_solicitado: string
-  quantidade: string | null
+  quantidade: string
   urgencia: string
+  id_ordem: string | null
   status: string
-  atualizada_pelo_tecnico: boolean
   created_at: string
 }
 
@@ -81,9 +92,8 @@ interface Ocorrencia {
   id_ordem: string | null
   tipo: string
   descricao: string
-  data: string
   pontos_descontados: number
-  created_at: string
+  data: string
 }
 
 interface Justificativa {
@@ -100,11 +110,6 @@ interface Justificativa {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────
-const STAT_CARD = {
-  background: '#fff', borderRadius: 14, padding: 20,
-  boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
-}
-
 function normalizarNome(nome: string): string[] {
   return nome
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -126,14 +131,14 @@ function nomesBatem(nomeA: string, nomeB: string): boolean {
 }
 
 const TIPO_OCORRENCIA: Record<string, { label: string; color: string }> = {
-  atraso: { label: 'Atraso', color: '#F59E0B' },
-  erro: { label: 'Erro', color: '#EF4444' },
-  retrabalho: { label: 'Retrabalho', color: '#DC2626' },
-  falta_material: { label: 'Falta Material', color: '#8B5CF6' },
-  outros: { label: 'Outros', color: '#6B7280' },
+  atraso: { label: 'Atraso', color: '#D97706' },
+  erro: { label: 'Erro', color: '#DC2626' },
+  retrabalho: { label: 'Retrabalho', color: '#B91C1C' },
+  falta_material: { label: 'Falta Material', color: '#7C3AED' },
+  outros: { label: 'Outros', color: '#71717A' },
 }
 
-type Bloco = 'ordens' | 'requisicoes' | 'alertas' | 'tecnicos'
+type Bloco = 'visao' | 'ordens' | 'requisicoes' | 'alertas' | 'tecnicos'
 
 // ─── Component ───────────────────────────────────────────────────
 export default function PainelMecanicosWrapper() {
@@ -150,12 +155,13 @@ function PainelMecanicosPage() {
   const [requisicoes, setRequisicoes] = useState<RequisicaoGeral[]>([])
   const [usuariosBanco, setUsuariosBanco] = useState<UsuarioBanco[]>([])
   const [alertas, setAlertas] = useState<Alerta[]>([])
+  const [caminhos, setCaminhos] = useState<Caminho[]>([])
   const [execucoesRecentes, setExecucoesRecentes] = useState<Execucao[]>([])
   const [reqsMecanico, setReqsMecanico] = useState<RequisicaoMecanico[]>([])
   const [ocorrencias, setOcorrencias] = useState<Ocorrencia[]>([])
   const [justificativas, setJustificativas] = useState<Justificativa[]>([])
   const [loading, setLoading] = useState(true)
-  const [blocoAtivo, setBlocoAtivo] = useState<Bloco>('ordens')
+  const [blocoAtivo, setBlocoAtivo] = useState<Bloco>('visao')
 
   // Técnicos expandidos
   const [expandedTec, setExpandedTec] = useState<string | null>(null)
@@ -174,6 +180,7 @@ function PainelMecanicosPage() {
       { data: ords },
       { data: reqs },
       { data: alerts },
+      { data: cams },
       { data: execs },
       { data: reqsMec },
       { data: ocors },
@@ -191,6 +198,8 @@ function PainelMecanicosPage() {
         .limit(500),
       supabase.from('painel_alertas').select('*')
         .order('created_at', { ascending: false }),
+      supabase.from('tecnico_caminhos').select('*')
+        .order('created_at', { ascending: false }).limit(50),
       supabase.from('os_tecnico_execucao').select('*')
         .order('created_at', { ascending: false }).limit(50),
       supabase.from('mecanico_requisicoes').select('*')
@@ -236,6 +245,7 @@ function PainelMecanicosPage() {
     )
 
     setAlertas((alerts as Alerta[]) || [])
+    setCaminhos((cams as Caminho[]) || [])
     setExecucoesRecentes((execs as Execucao[]) || [])
     setReqsMecanico((reqsMec as RequisicaoMecanico[]) || [])
     setOcorrencias((ocors as Ocorrencia[]) || [])
@@ -254,6 +264,8 @@ function PainelMecanicosPage() {
       supabase.channel('painel_exec').on('postgres_changes', { event: '*', schema: 'public', table: 'os_tecnico_execucao' }, () => carregar()).subscribe(),
       supabase.channel('painel_req_m').on('postgres_changes', { event: '*', schema: 'public', table: 'mecanico_requisicoes' }, () => carregar()).subscribe(),
       supabase.channel('painel_just').on('postgres_changes', { event: '*', schema: 'public', table: 'tecnico_justificativas' }, () => carregar()).subscribe(),
+      supabase.channel('painel_cam').on('postgres_changes', { event: '*', schema: 'public', table: 'tecnico_caminhos' }, () => carregar()).subscribe(),
+      supabase.channel('painel_agenda_visao').on('postgres_changes', { event: '*', schema: 'public', table: 'agenda_visao' }, () => carregar()).subscribe(),
     ]
     return () => { channels.forEach(c => supabase.removeChannel(c)) }
   }, [carregar])
@@ -262,6 +274,18 @@ function PainelMecanicosPage() {
   const tecnicosAtivos = tecnicos.filter(t => t.mecanico_role === 'tecnico')
   const reqPendentes = reqsMecanico.filter(r => r.status === 'pendente')
   const justPendentes = justificativas.filter(j => j.status === 'pendente')
+
+  // Ordens ativas por técnico
+  const ordensPorTecnico = useMemo(() => {
+    const map: Record<string, OrdemServico[]> = {}
+    tecnicos.forEach(tec => {
+      map[tec.tecnico_nome] = ordens.filter(o =>
+        o.Status !== 'Concluída' && o.Status !== 'Cancelada' &&
+        (nomesBatem(tec.tecnico_nome, o.Os_Tecnico) || nomesBatem(tec.tecnico_nome, o.Os_Tecnico2))
+      )
+    })
+    return map
+  }, [tecnicos, ordens])
 
   // Pontuação por técnico
   const pontuacaoTecnico = useMemo(() => {
@@ -396,73 +420,90 @@ function PainelMecanicosPage() {
   }
 
   // ─── Render ──────────────────────────────────────────────────
-  if (loading) return <div style={{ textAlign: 'center', padding: 60, color: '#9CA3AF' }}>Carregando painel...</div>
+  if (loading) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80, color: '#A1A1AA', gap: 10 }}>
+      <RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} />
+      <span style={{ fontSize: 14 }}>Carregando...</span>
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
 
-  const BLOCOS: { id: Bloco; label: string; icon: React.ReactNode; color: string; badge?: number }[] = [
-    { id: 'ordens', label: 'Ordens', icon: <FileText size={20} />, color: '#1E3A5F', badge: ordensAtivasCount },
-    { id: 'requisicoes', label: 'Requisições', icon: <Package size={20} />, color: '#F59E0B', badge: reqsPedidoCount },
-    { id: 'alertas', label: 'Alertas', icon: <AlertTriangle size={20} />, color: '#EF4444', badge: alertasAbertosCount },
-    { id: 'tecnicos', label: 'Técnicos', icon: <Users size={20} />, color: '#7C3AED', badge: tecnicosAtivos.length },
+  const TABS: { id: Bloco; label: string; icon: React.ReactNode; count?: number }[] = [
+    { id: 'visao', label: 'Visão Geral', icon: <LayoutDashboard size={15} /> },
+    { id: 'ordens', label: 'Ordens', icon: <FileText size={15} />, count: ordensAtivasCount },
+    { id: 'requisicoes', label: 'Requisições', icon: <Package size={15} />, count: reqsPedidoCount },
+    { id: 'alertas', label: 'Alertas', icon: <AlertTriangle size={15} />, count: alertasAbertosCount },
+    { id: 'tecnicos', label: 'Técnicos', icon: <Users size={15} />, count: tecnicosAtivos.length },
   ]
 
+  const INP: React.CSSProperties = {
+    width: '100%', padding: '9px 12px', borderRadius: 8,
+    border: '1px solid #E4E4E7', fontSize: 13, boxSizing: 'border-box',
+    background: '#FAFAFA', outline: 'none', color: '#18181B',
+  }
+  const MLBL: React.CSSProperties = { fontSize: 12, fontWeight: 500, color: '#71717A', display: 'block', marginBottom: 5 }
+
   return (
-    <div style={{ maxWidth: 1400, margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1E3A5F', margin: 0 }}>
-          <Shield size={22} style={{ verticalAlign: 'middle', marginRight: 8 }} />
-          Painel Mecânicos
-        </h1>
+    <div style={{ maxWidth: 1440, margin: '0 auto', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+      {/* ─── Header ─── */}
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
+        marginBottom: 32,
+      }}>
+        <div>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#18181B', margin: 0, letterSpacing: '-0.025em' }}>
+            Painel Mecânicos
+          </h1>
+          <p style={{ fontSize: 13, color: '#A1A1AA', margin: '4px 0 0', fontWeight: 400 }}>
+            {tecnicosAtivos.length} técnicos · {ordensAtivasCount} ordens ativas · {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'short' })}
+          </p>
+        </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => setShowOcorrenciaModal(true)} style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            background: '#DC2626', color: '#fff', border: 'none', borderRadius: 8,
-            padding: '8px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            background: '#18181B', color: '#fff', border: 'none', borderRadius: 8,
+            padding: '8px 16px', fontSize: 13, fontWeight: 500, cursor: 'pointer',
           }}>
             <AlertOctagon size={14} /> Nova Ocorrência
           </button>
           <button onClick={carregar} style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            background: '#EFF6FF', color: '#1E3A5F', border: 'none', borderRadius: 8,
-            padding: '8px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            background: '#fff', color: '#71717A', border: '1px solid #E4E4E7', borderRadius: 8,
+            padding: '8px 16px', fontSize: 13, fontWeight: 500, cursor: 'pointer',
           }}>
             <RefreshCw size={14} /> Atualizar
           </button>
         </div>
       </div>
 
-      {/* ═══ Seletor de Blocos ═══ */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 28 }}>
-        {BLOCOS.map(b => {
-          const isActive = blocoAtivo === b.id
+      {/* ─── Tabs ─── */}
+      <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid #E4E4E7', marginBottom: 28 }}>
+        {TABS.map(t => {
+          const active = blocoAtivo === t.id
           return (
             <button
-              key={b.id}
-              onClick={() => setBlocoAtivo(b.id)}
+              key={t.id}
+              onClick={() => setBlocoAtivo(t.id)}
               style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                padding: '18px 16px', borderRadius: 14,
-                border: isActive ? `3px solid ${b.color}` : '3px solid transparent',
-                background: isActive ? '#fff' : '#F9FAFB',
-                boxShadow: isActive ? `0 4px 16px ${b.color}25` : '0 1px 4px rgba(0,0,0,0.04)',
-                cursor: 'pointer', transition: 'all 0.15s',
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '10px 20px', border: 'none',
+                background: 'transparent', cursor: 'pointer',
+                borderBottom: active ? '2px solid #18181B' : '2px solid transparent',
+                marginBottom: -1, transition: 'all 0.15s',
               }}
             >
-              <div style={{ color: isActive ? b.color : '#9CA3AF' }}>{b.icon}</div>
-              <span style={{
-                fontSize: 16, fontWeight: 800,
-                color: isActive ? b.color : '#6B7280',
-              }}>
-                {b.label}
+              <span style={{ color: active ? '#18181B' : '#A1A1AA', display: 'flex' }}>{t.icon}</span>
+              <span style={{ fontSize: 13, fontWeight: active ? 600 : 400, color: active ? '#18181B' : '#71717A' }}>
+                {t.label}
               </span>
-              {(b.badge !== undefined && b.badge > 0) && (
+              {(t.count !== undefined && t.count > 0) && (
                 <span style={{
-                  fontSize: 13, fontWeight: 800, minWidth: 28, textAlign: 'center',
-                  padding: '2px 8px', borderRadius: 10,
-                  background: isActive ? b.color : '#E5E7EB',
-                  color: isActive ? '#fff' : '#6B7280',
+                  fontSize: 11, fontWeight: 500, minWidth: 18, textAlign: 'center',
+                  padding: '1px 6px', borderRadius: 10,
+                  background: active ? '#18181B' : '#F4F4F5',
+                  color: active ? '#fff' : '#71717A',
                 }}>
-                  {b.badge}
+                  {t.count}
                 </span>
               )}
             </button>
@@ -470,96 +511,98 @@ function PainelMecanicosPage() {
         })}
       </div>
 
-      {/* ═══ BLOCO: ORDENS ═══ */}
+      {/* ═══ VISÃO GERAL ═══ */}
+      {blocoAtivo === 'visao' && (
+        <BlocoVisaoGeral tecnicos={tecnicos} ordens={ordens} caminhos={caminhos} />
+      )}
+
+      {/* ═══ ORDENS ═══ */}
       {blocoAtivo === 'ordens' && (
         <BlocoOrdens tecnicos={tecnicos} ordens={ordens} />
       )}
 
-      {/* ═══ BLOCO: REQUISIÇÕES ═══ */}
+      {/* ═══ REQUISIÇÕES ═══ */}
       {blocoAtivo === 'requisicoes' && (
-        <BlocoRequisicoes
-          tecnicos={tecnicos}
-          requisicoes={requisicoes}
-          usuariosBanco={usuariosBanco}
-        />
+        <BlocoRequisicoes tecnicos={tecnicos} requisicoes={requisicoes} usuariosBanco={usuariosBanco} />
       )}
 
-      {/* ═══ BLOCO: ALERTAS ═══ */}
+      {/* ═══ ALERTAS ═══ */}
       {blocoAtivo === 'alertas' && (
-        <BlocoAlertas
-          tecnicos={tecnicos}
-          alertas={alertas}
-          onRecarregar={carregar}
-          userName={userProfile?.nome || ''}
-        />
+        <BlocoAlertas tecnicos={tecnicos} alertas={alertas} onRecarregar={carregar} userName={userProfile?.nome || ''} />
       )}
 
-      {/* ═══ BLOCO: TÉCNICOS ═══ */}
+      {/* ═══ TÉCNICOS ═══ */}
       {blocoAtivo === 'tecnicos' && (
         <div>
-          {/* Justificativas pendentes no topo */}
+          {/* Justificativas pendentes */}
           {justPendentes.length > 0 && (
-            <div style={{ marginBottom: 24 }}>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#D97706', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Clock size={16} /> Justificativas Pendentes ({justPendentes.length})
-              </h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: 10 }}>
+            <div style={{ marginBottom: 32 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: '#18181B', margin: 0 }}>
+                  Justificativas pendentes
+                </h3>
+                <span style={{ fontSize: 11, fontWeight: 500, color: '#D97706', background: '#FFFBEB', padding: '2px 8px', borderRadius: 10 }}>
+                  {justPendentes.length}
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: 12 }}>
                 {justPendentes.map(j => {
                   const oc = ocorrencias.find(o => o.id === j.id_ocorrencia)
                   return (
                     <div key={j.id} style={{
-                      ...STAT_CARD, padding: 16, borderLeft: '4px solid #F59E0B',
+                      background: '#fff', borderRadius: 10, padding: 18,
+                      border: '1px solid #E4E4E7', borderLeft: '3px solid #D97706',
                     }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
                         <div>
-                          <span style={{ fontSize: 14, fontWeight: 700, color: '#1E3A5F' }}>{j.tecnico_nome}</span>
-                          {j.id_ordem && <span style={{ fontSize: 12, color: '#6B7280', marginLeft: 8 }}>OS: {j.id_ordem}</span>}
+                          <span style={{ fontSize: 14, fontWeight: 600, color: '#18181B' }}>{j.tecnico_nome}</span>
+                          {j.id_ordem && <span style={{ fontSize: 12, color: '#A1A1AA', marginLeft: 8 }}>OS: {j.id_ordem}</span>}
                         </div>
-                        <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, background: '#FEF3C7', color: '#D97706' }}>
+                        <span style={{ fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 6, background: '#FFFBEB', color: '#D97706' }}>
                           Pendente
                         </span>
                       </div>
                       {oc && (
                         <div style={{
-                          background: '#F9FAFB', borderRadius: 6, padding: 10, marginBottom: 8,
-                          border: '1px solid #E5E7EB',
+                          background: '#FAFAFA', borderRadius: 8, padding: 12, marginBottom: 12,
+                          border: '1px solid #F4F4F5',
                         }}>
-                          <div style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', marginBottom: 4 }}>Ocorrência:</div>
-                          <div style={{ fontSize: 12, color: '#374151' }}>
+                          <div style={{ fontSize: 11, fontWeight: 500, color: '#A1A1AA', marginBottom: 4 }}>Ocorrência</div>
+                          <div style={{ fontSize: 13, color: '#3F3F46' }}>
                             <span style={{
-                              fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4,
-                              background: `${(TIPO_OCORRENCIA[oc.tipo] || TIPO_OCORRENCIA.outros).color}20`,
+                              fontSize: 11, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
+                              background: `${(TIPO_OCORRENCIA[oc.tipo] || TIPO_OCORRENCIA.outros).color}12`,
                               color: (TIPO_OCORRENCIA[oc.tipo] || TIPO_OCORRENCIA.outros).color,
                               marginRight: 6,
                             }}>
                               {(TIPO_OCORRENCIA[oc.tipo] || TIPO_OCORRENCIA.outros).label}
                             </span>
                             {oc.descricao}
-                            <span style={{ color: '#DC2626', fontWeight: 700, marginLeft: 8 }}>-{oc.pontos_descontados} pts</span>
+                            <span style={{ color: '#DC2626', fontWeight: 600, marginLeft: 8 }}>-{oc.pontos_descontados}pts</span>
                           </div>
                         </div>
                       )}
                       <div style={{
-                        fontSize: 13, color: '#374151', marginBottom: 12, background: '#FFFBEB',
-                        padding: 10, borderRadius: 6, border: '1px solid #FDE68A',
+                        fontSize: 13, color: '#3F3F46', marginBottom: 14, background: '#FFFBEB',
+                        padding: 12, borderRadius: 8, border: '1px solid #FEF3C7', lineHeight: 1.5,
                       }}>
-                        <div style={{ fontSize: 11, fontWeight: 600, color: '#92400E', marginBottom: 4 }}>Justificativa:</div>
+                        <div style={{ fontSize: 11, fontWeight: 500, color: '#92400E', marginBottom: 4 }}>Justificativa</div>
                         {j.justificativa}
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button onClick={() => avaliarJustificativa(j.id, true)} style={{
                           flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                          background: '#10B981', color: '#fff', border: 'none', borderRadius: 8,
-                          padding: '10px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                          background: '#18181B', color: '#fff', border: 'none', borderRadius: 8,
+                          padding: '9px 0', fontSize: 13, fontWeight: 500, cursor: 'pointer',
                         }}>
-                          <ThumbsUp size={16} /> Aceitar
+                          <ThumbsUp size={14} /> Aceitar
                         </button>
                         <button onClick={() => avaliarJustificativa(j.id, false)} style={{
                           flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                          background: '#DC2626', color: '#fff', border: 'none', borderRadius: 8,
-                          padding: '10px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                          background: '#fff', color: '#DC2626', border: '1px solid #FECACA', borderRadius: 8,
+                          padding: '9px 0', fontSize: 13, fontWeight: 500, cursor: 'pointer',
                         }}>
-                          <ThumbsDown size={16} /> Recusar
+                          <ThumbsDown size={14} /> Recusar
                         </button>
                       </div>
                     </div>
@@ -571,43 +614,47 @@ function PainelMecanicosPage() {
 
           {/* Requisições pendentes do mecânico */}
           {reqPendentes.length > 0 && (
-            <div style={{ marginBottom: 24 }}>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#F59E0B', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Package size={16} /> Requisições de Material Pendentes ({reqPendentes.length})
-              </h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 10 }}>
+            <div style={{ marginBottom: 32 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: '#18181B', margin: 0 }}>
+                  Requisições de material
+                </h3>
+                <span style={{ fontSize: 11, fontWeight: 500, color: '#D97706', background: '#FFFBEB', padding: '2px 8px', borderRadius: 10 }}>
+                  {reqPendentes.length}
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 12 }}>
                 {reqPendentes.map(req => (
                   <div key={req.id} style={{
-                    ...STAT_CARD, padding: 14, borderLeft: '4px solid #F59E0B',
+                    background: '#fff', borderRadius: 10, padding: 16,
+                    border: '1px solid #E4E4E7',
                   }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#1E3A5F' }}>{req.tecnico_nome.split(' ').slice(0, 2).join(' ')}</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#18181B' }}>{req.tecnico_nome.split(' ').slice(0, 2).join(' ')}</span>
                       <span style={{
-                        fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
-                        background: req.urgencia === 'alta' ? '#FEE2E2' : '#FEF3C7',
-                        color: req.urgencia === 'alta' ? '#DC2626' : '#D97706',
+                        fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 6,
+                        background: req.urgencia === 'alta' ? '#FEF2F2' : '#F4F4F5',
+                        color: req.urgencia === 'alta' ? '#DC2626' : '#71717A',
                       }}>
                         {req.urgencia === 'alta' ? 'Urgente' : 'Normal'}
                       </span>
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 600 }}>{req.material_solicitado}</div>
-                    <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 4 }}>
-                      {req.quantidade && `Qtd: ${req.quantidade} • `}
-                      {req.id_ordem && `OS: ${req.id_ordem} • `}
+                    <div style={{ fontSize: 14, fontWeight: 500, color: '#3F3F46' }}>{req.material_solicitado}</div>
+                    <div style={{ fontSize: 12, color: '#A1A1AA', marginTop: 4 }}>
+                      {req.quantidade && `Qtd: ${req.quantidade} · `}
+                      {req.id_ordem && `OS: ${req.id_ordem} · `}
                       {new Date(req.created_at).toLocaleDateString('pt-BR')}
                     </div>
-                    <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                       <button onClick={() => aprovarRequisicao(req.id)} style={{
-                        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-                        background: '#D1FAE5', color: '#065F46', border: 'none', borderRadius: 6,
-                        padding: '6px 0', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                        flex: 1, padding: '7px 0', fontSize: 12, fontWeight: 500,
+                        background: '#18181B', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer',
                       }}>
                         Aprovar
                       </button>
                       <button onClick={() => recusarRequisicao(req.id)} style={{
-                        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-                        background: '#FEE2E2', color: '#DC2626', border: 'none', borderRadius: 6,
-                        padding: '6px 0', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                        flex: 1, padding: '7px 0', fontSize: 12, fontWeight: 500,
+                        background: '#fff', color: '#71717A', border: '1px solid #E4E4E7', borderRadius: 6, cursor: 'pointer',
                       }}>
                         Recusar
                       </button>
@@ -619,89 +666,106 @@ function PainelMecanicosPage() {
           )}
 
           {/* Lista de técnicos */}
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1F2937', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Users size={16} /> Técnicos ({tecnicosAtivos.length})
-          </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, color: '#18181B', margin: 0 }}>Equipe</h3>
+            <span style={{ fontSize: 11, fontWeight: 500, color: '#71717A', background: '#F4F4F5', padding: '2px 8px', borderRadius: 10 }}>
+              {tecnicosAtivos.length}
+            </span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {tecnicos.map(tec => {
               const isExpanded = expandedTec === tec.user_id
               const pontos = pontuacaoTecnico[tec.tecnico_nome] ?? 100
               const atrasosDoTec = ordensAtrasoPorTecnico[tec.tecnico_nome] || []
               const ocorrDoTec = ocorrencias.filter(o => o.tecnico_nome === tec.tecnico_nome)
               const execsDoTec = execucoesRecentes.filter(e => e.tecnico_nome === tec.tecnico_nome)
-              const pontosColor = pontos >= 80 ? '#10B981' : pontos >= 50 ? '#F59E0B' : '#EF4444'
-              const roleLabel = tec.mecanico_role === 'tecnico' ? 'TÉCNICO' : 'OBSERVADOR'
-              const roleColor = tec.mecanico_role === 'tecnico' ? '#1E3A5F' : '#7C3AED'
+              const ordsTec = ordensPorTecnico[tec.tecnico_nome] || []
+              const pontosColor = pontos >= 80 ? '#18181B' : pontos >= 50 ? '#D97706' : '#DC2626'
+              const isTecnico = tec.mecanico_role === 'tecnico'
 
               return (
-                <div key={tec.user_id} style={{ ...STAT_CARD, padding: 0, overflow: 'hidden' }}>
+                <div key={tec.user_id} style={{
+                  background: '#fff', borderRadius: 10, border: '1px solid #E4E4E7', overflow: 'hidden',
+                }}>
                   <div
                     style={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      padding: '14px 16px', cursor: 'pointer',
+                      padding: '14px 20px', cursor: 'pointer',
                     }}
                     onClick={() => { setExpandedTec(isExpanded ? null : tec.user_id); setTecSubTab('atrasos') }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                       <div style={{
-                        width: 36, height: 36, borderRadius: '50%', background: '#1E3A5F',
-                        color: '#fff', display: 'flex', alignItems: 'center',
+                        width: 36, height: 36, borderRadius: 10,
+                        background: '#F4F4F5',
+                        color: '#3F3F46', display: 'flex', alignItems: 'center',
                         justifyContent: 'center', fontSize: 14, fontWeight: 700,
                       }}>
                         {tec.tecnico_nome.charAt(0)}
                       </div>
                       <div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: '#1F2937' }}>{tec.tecnico_nome}</div>
-                        <div style={{ fontSize: 11, color: '#6B7280' }}>
-                          {tec.tecnico_email}
-                          <span style={{ color: roleColor, marginLeft: 8, fontWeight: 700 }}>{roleLabel}</span>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: '#18181B' }}>{tec.tecnico_nome}</div>
+                        <div style={{ fontSize: 12, color: '#A1A1AA', display: 'flex', alignItems: 'center', gap: 6, marginTop: 1 }}>
+                          <span>{ordsTec.length} ordens</span>
+                          <span style={{ color: '#D4D4D8' }}>·</span>
+                          <span style={{
+                            fontSize: 11, fontWeight: 500, padding: '0px 6px', borderRadius: 4,
+                            background: isTecnico ? '#F4F4F5' : '#FAF5FF',
+                            color: isTecnico ? '#71717A' : '#7C3AED',
+                          }}>
+                            {isTecnico ? 'Técnico' : 'Observador'}
+                          </span>
                         </div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: 4,
-                        background: `${pontosColor}15`, padding: '4px 10px', borderRadius: 8,
-                      }}>
-                        <Star size={14} color={pontosColor} />
-                        <span style={{ fontSize: 16, fontWeight: 800, color: pontosColor }}>{pontos}</span>
-                      </div>
                       {atrasosDoTec.length > 0 && (
                         <span style={{
-                          background: '#FEE2E2', color: '#DC2626', fontSize: 10, fontWeight: 700,
-                          padding: '2px 8px', borderRadius: 10,
+                          background: '#FEF2F2', color: '#DC2626', fontSize: 11, fontWeight: 500,
+                          padding: '3px 10px', borderRadius: 6,
                         }}>
-                          {atrasosDoTec.length} atraso(s)
+                          {atrasosDoTec.length} atraso{atrasosDoTec.length !== 1 ? 's' : ''}
                         </span>
                       )}
-                      {isExpanded ? <ChevronUp size={16} color="#6B7280" /> : <ChevronDown size={16} color="#6B7280" />}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Star size={13} color={pontosColor} fill={pontos >= 80 ? pontosColor : 'none'} />
+                        <span style={{ fontSize: 15, fontWeight: 700, color: pontosColor }}>{pontos}</span>
+                      </div>
+                      <ChevronDown size={16} color="#A1A1AA" style={{
+                        transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.2s',
+                      }} />
                     </div>
                   </div>
 
                   {isExpanded && (
-                    <div style={{ borderTop: '1px solid #F3F4F6' }}>
-                      <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid #F3F4F6' }}>
+                    <div style={{ borderTop: '1px solid #F4F4F5' }}>
+                      <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid #F4F4F5' }}>
                         {([
                           { id: 'atrasos', label: `Atrasos (${atrasosDoTec.length})`, icon: <Clock size={13} /> },
                           { id: 'ocorrencias', label: `Ocorrências (${ocorrDoTec.length})`, icon: <AlertOctagon size={13} /> },
                           { id: 'execucoes', label: `Execuções (${execsDoTec.length})`, icon: <Wrench size={13} /> },
-                        ] as const).map(st => (
-                          <button key={st.id} onClick={() => setTecSubTab(st.id)} style={{
-                            padding: '10px 16px', fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', gap: 4,
-                            background: tecSubTab === st.id ? '#EFF6FF' : 'transparent',
-                            color: tecSubTab === st.id ? '#1E3A5F' : '#6B7280',
-                            borderBottom: tecSubTab === st.id ? '2px solid #1E3A5F' : '2px solid transparent',
-                          }}>
-                            {st.icon} {st.label}
-                          </button>
-                        ))}
+                        ] as const).map(st => {
+                          const active = tecSubTab === st.id
+                          return (
+                            <button key={st.id} onClick={() => setTecSubTab(st.id)} style={{
+                              padding: '10px 20px', fontSize: 12, fontWeight: active ? 600 : 400, border: 'none', cursor: 'pointer',
+                              display: 'flex', alignItems: 'center', gap: 5,
+                              background: 'transparent',
+                              color: active ? '#18181B' : '#A1A1AA',
+                              borderBottom: active ? '2px solid #18181B' : '2px solid transparent',
+                              marginBottom: -1,
+                            }}>
+                              {st.icon} {st.label}
+                            </button>
+                          )
+                        })}
                       </div>
 
-                      <div style={{ padding: 16 }}>
+                      <div style={{ padding: 20 }}>
                         {tecSubTab === 'atrasos' && (
                           atrasosDoTec.length === 0 ? (
-                            <div style={{ textAlign: 'center', color: '#9CA3AF', fontSize: 13, padding: 20 }}>
+                            <div style={{ textAlign: 'center', color: '#D4D4D8', fontSize: 13, padding: 24 }}>
                               Nenhum serviço em atraso
                             </div>
                           ) : (
@@ -710,18 +774,18 @@ function PainelMecanicosPage() {
                                 const diasAtraso = Math.ceil((Date.now() - new Date(o.Previsao_Execucao + 'T23:59:59').getTime()) / (1000 * 60 * 60 * 24))
                                 return (
                                   <div key={o.Id_Ordem} style={{
-                                    padding: 12, background: '#FEF2F2', borderRadius: 8,
-                                    borderLeft: '4px solid #EF4444',
+                                    padding: 14, background: '#FAFAFA', borderRadius: 8,
+                                    border: '1px solid #F4F4F5', borderLeft: '3px solid #DC2626',
                                   }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                                      <span style={{ fontSize: 14, fontWeight: 700, color: '#DC2626' }}>{o.Id_Ordem}</span>
-                                      <span style={{ fontSize: 11, fontWeight: 700, color: '#DC2626' }}>
-                                        {diasAtraso} dia(s) de atraso
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                                      <span style={{ fontSize: 13, fontWeight: 600, color: '#18181B' }}>{o.Id_Ordem}</span>
+                                      <span style={{ fontSize: 12, fontWeight: 500, color: '#DC2626' }}>
+                                        {diasAtraso} dia{diasAtraso !== 1 ? 's' : ''} de atraso
                                       </span>
                                     </div>
-                                    <div style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>{o.Os_Cliente}</div>
-                                    <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>
-                                      {o.Tipo_Servico} • Previsão: {o.Previsao_Execucao ? new Date(o.Previsao_Execucao + 'T12:00:00').toLocaleDateString('pt-BR') : '-'}
+                                    <div style={{ fontSize: 13, color: '#3F3F46' }}>{o.Os_Cliente}</div>
+                                    <div style={{ fontSize: 12, color: '#A1A1AA', marginTop: 4 }}>
+                                      {o.Tipo_Servico} · Previsão: {o.Previsao_Execucao ? new Date(o.Previsao_Execucao + 'T12:00:00').toLocaleDateString('pt-BR') : '-'}
                                     </div>
                                   </div>
                                 )
@@ -732,7 +796,7 @@ function PainelMecanicosPage() {
 
                         {tecSubTab === 'ocorrencias' && (
                           ocorrDoTec.length === 0 ? (
-                            <div style={{ textAlign: 'center', color: '#9CA3AF', fontSize: 13, padding: 20 }}>
+                            <div style={{ textAlign: 'center', color: '#D4D4D8', fontSize: 13, padding: 24 }}>
                               Nenhuma ocorrência registrada
                             </div>
                           ) : (
@@ -742,34 +806,34 @@ function PainelMecanicosPage() {
                                 const justDoOc = justificativas.find(j => j.id_ocorrencia === oc.id)
                                 return (
                                   <div key={oc.id} style={{
-                                    padding: 12, background: '#fff', borderRadius: 8,
-                                    border: '1px solid #E5E7EB', borderLeft: `4px solid ${tipoInfo.color}`,
+                                    padding: 14, background: '#FAFAFA', borderRadius: 8,
+                                    border: '1px solid #F4F4F5', borderLeft: `3px solid ${tipoInfo.color}`,
                                   }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                         <span style={{
-                                          fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
-                                          background: `${tipoInfo.color}20`, color: tipoInfo.color,
+                                          fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 4,
+                                          background: `${tipoInfo.color}12`, color: tipoInfo.color,
                                         }}>
                                           {tipoInfo.label}
                                         </span>
-                                        {oc.id_ordem && <span style={{ fontSize: 12, color: '#6B7280' }}>OS: {oc.id_ordem}</span>}
+                                        {oc.id_ordem && <span style={{ fontSize: 12, color: '#A1A1AA' }}>OS: {oc.id_ordem}</span>}
                                       </div>
                                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                        <span style={{ fontSize: 11, fontWeight: 700, color: '#DC2626' }}>-{oc.pontos_descontados} pts</span>
+                                        <span style={{ fontSize: 12, fontWeight: 600, color: '#DC2626' }}>-{oc.pontos_descontados}pts</span>
                                         {justDoOc && (
                                           <span style={{
-                                            fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
-                                            background: justDoOc.status === 'aprovada' ? '#D1FAE5' : justDoOc.status === 'recusada' ? '#FEE2E2' : '#FEF3C7',
-                                            color: justDoOc.status === 'aprovada' ? '#065F46' : justDoOc.status === 'recusada' ? '#DC2626' : '#D97706',
+                                            fontSize: 10, fontWeight: 500, padding: '2px 6px', borderRadius: 4,
+                                            background: justDoOc.status === 'aprovada' ? '#F0FDF4' : justDoOc.status === 'recusada' ? '#FEF2F2' : '#FFFBEB',
+                                            color: justDoOc.status === 'aprovada' ? '#15803D' : justDoOc.status === 'recusada' ? '#DC2626' : '#D97706',
                                           }}>
-                                            Just. {justDoOc.status}
+                                            {justDoOc.status}
                                           </span>
                                         )}
                                       </div>
                                     </div>
-                                    <div style={{ fontSize: 13, color: '#374151' }}>{oc.descricao}</div>
-                                    <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 4 }}>
+                                    <div style={{ fontSize: 13, color: '#3F3F46', lineHeight: 1.5 }}>{oc.descricao}</div>
+                                    <div style={{ fontSize: 12, color: '#D4D4D8', marginTop: 6 }}>
                                       {new Date(oc.data).toLocaleDateString('pt-BR')}
                                     </div>
                                   </div>
@@ -781,33 +845,32 @@ function PainelMecanicosPage() {
 
                         {tecSubTab === 'execucoes' && (
                           execsDoTec.length === 0 ? (
-                            <div style={{ textAlign: 'center', color: '#9CA3AF', fontSize: 13, padding: 20 }}>
+                            <div style={{ textAlign: 'center', color: '#D4D4D8', fontSize: 13, padding: 24 }}>
                               Nenhuma execução registrada
                             </div>
                           ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                               {execsDoTec.slice(0, 10).map(ex => (
                                 <div key={ex.id} style={{
-                                  padding: 10, background: '#fff', borderRadius: 8,
-                                  border: '1px solid #E5E7EB',
-                                  borderLeft: `4px solid ${ex.status === 'enviado' ? '#10B981' : '#F59E0B'}`,
+                                  padding: 14, background: '#FAFAFA', borderRadius: 8,
+                                  border: '1px solid #F4F4F5',
                                 }}>
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                                    <span style={{ fontSize: 13, fontWeight: 700, color: '#1E3A5F' }}>{ex.id_ordem}</span>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                                    <span style={{ fontSize: 13, fontWeight: 600, color: '#18181B' }}>{ex.id_ordem}</span>
                                     <span style={{
-                                      fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
-                                      background: ex.status === 'enviado' ? '#D1FAE5' : '#FEF3C7',
-                                      color: ex.status === 'enviado' ? '#065F46' : '#92400E',
+                                      fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 4,
+                                      background: ex.status === 'enviado' ? '#F0FDF4' : '#FFFBEB',
+                                      color: ex.status === 'enviado' ? '#15803D' : '#92400E',
                                     }}>
                                       {ex.status === 'enviado' ? 'Enviado' : 'Rascunho'}
                                     </span>
                                   </div>
                                   {ex.servico_realizado && (
-                                    <div style={{ fontSize: 12, color: '#374151', lineHeight: 1.4 }}>
+                                    <div style={{ fontSize: 13, color: '#52525B', lineHeight: 1.5 }}>
                                       {ex.servico_realizado.length > 120 ? ex.servico_realizado.substring(0, 120) + '...' : ex.servico_realizado}
                                     </div>
                                   )}
-                                  <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 4 }}>
+                                  <div style={{ fontSize: 12, color: '#D4D4D8', marginTop: 6 }}>
                                     {new Date(ex.data_execucao + 'T12:00:00').toLocaleDateString('pt-BR')}
                                   </div>
                                 </div>
@@ -829,85 +892,67 @@ function PainelMecanicosPage() {
       {showOcorrenciaModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center',
-          justifyContent: 'center', zIndex: 1000,
+          background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
         }} onClick={() => setShowOcorrenciaModal(false)}>
           <div style={{
-            background: '#fff', borderRadius: 16, padding: 28, width: '100%',
-            maxWidth: 460, boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+            background: '#fff', borderRadius: 12, padding: 28, width: '100%',
+            maxWidth: 440, border: '1px solid #E4E4E7',
           }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#DC2626', margin: 0 }}>
-                <AlertOctagon size={18} style={{ verticalAlign: 'middle', marginRight: 8 }} />
-                Nova Ocorrência
-              </h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 600, color: '#18181B', margin: 0 }}>Nova Ocorrência</h2>
               <button onClick={() => setShowOcorrenciaModal(false)} style={{
-                background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280',
+                background: '#F4F4F5', border: 'none', cursor: 'pointer', color: '#A1A1AA',
+                width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <X size={20} />
+                <X size={14} />
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Técnico</label>
-                <select
-                  value={novaOcorrencia.tecnico_nome}
+                <label style={MLBL}>Técnico</label>
+                <select value={novaOcorrencia.tecnico_nome}
                   onChange={e => setNovaOcorrencia({ ...novaOcorrencia, tecnico_nome: e.target.value })}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D1D5DB', fontSize: 14, background: '#fff' }}
-                >
+                  style={{ ...INP, background: '#fff' }}>
                   <option value="">Selecione...</option>
-                  {tecnicos.map(t => (
-                    <option key={t.user_id} value={t.tecnico_nome}>{t.tecnico_nome}</option>
-                  ))}
+                  {tecnicos.map(t => <option key={t.user_id} value={t.tecnico_nome}>{t.tecnico_nome}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>OS (opcional)</label>
-                <input
-                  type="text" value={novaOcorrencia.id_ordem}
+                <label style={MLBL}>OS (opcional)</label>
+                <input type="text" value={novaOcorrencia.id_ordem}
                   onChange={e => setNovaOcorrencia({ ...novaOcorrencia, id_ordem: e.target.value })}
-                  placeholder="Ex: OS-001"
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D1D5DB', fontSize: 14, boxSizing: 'border-box' }}
-                />
+                  placeholder="Ex: OS-001" style={INP} />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Tipo</label>
-                <select
-                  value={novaOcorrencia.tipo}
+                <label style={MLBL}>Tipo</label>
+                <select value={novaOcorrencia.tipo}
                   onChange={e => setNovaOcorrencia({ ...novaOcorrencia, tipo: e.target.value })}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D1D5DB', fontSize: 14, background: '#fff' }}
-                >
-                  {Object.entries(TIPO_OCORRENCIA).map(([k, v]) => (
-                    <option key={k} value={k}>{v.label}</option>
-                  ))}
+                  style={{ ...INP, background: '#fff' }}>
+                  {Object.entries(TIPO_OCORRENCIA).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Descrição</label>
-                <textarea
-                  value={novaOcorrencia.descricao}
+                <label style={MLBL}>Descrição</label>
+                <textarea value={novaOcorrencia.descricao}
                   onChange={e => setNovaOcorrencia({ ...novaOcorrencia, descricao: e.target.value })}
-                  placeholder="Descreva a ocorrência..."
-                  rows={3}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D1D5DB', fontSize: 14, resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }}
-                />
+                  placeholder="Descreva a ocorrência..." rows={3}
+                  style={{ ...INP, resize: 'vertical', fontFamily: 'inherit' }} />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Pontos a descontar</label>
-                <input
-                  type="number" min={0} max={100}
-                  value={novaOcorrencia.pontos_descontados}
+                <label style={MLBL}>Pontos a descontar</label>
+                <input type="number" min={0} max={100} value={novaOcorrencia.pontos_descontados}
                   onChange={e => setNovaOcorrencia({ ...novaOcorrencia, pontos_descontados: Number(e.target.value) })}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D1D5DB', fontSize: 14, boxSizing: 'border-box' }}
-                />
+                  style={INP} />
               </div>
               <button onClick={salvarOcorrencia} style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                width: '100%', padding: '12px 0', borderRadius: 10, border: 'none',
-                background: '#DC2626', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                width: '100%', padding: '10px 0', borderRadius: 8, border: 'none',
+                background: '#18181B', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer',
+                marginTop: 4,
               }}>
-                <AlertOctagon size={16} /> Registrar Ocorrência
+                Registrar Ocorrência
               </button>
             </div>
           </div>

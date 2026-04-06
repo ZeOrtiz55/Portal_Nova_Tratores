@@ -37,7 +37,7 @@ export default function PPVDrawer({
   const { userProfile } = useAuth();
 
   const [details, setDetails] = useState<PPVDetalhes | null>(null);
-  const [status, setStatus] = useState("Aguardando");
+  const [status, setStatus] = useState("Orçamento");
   const [tecnico, setTecnico] = useState("");
   const [cliente, setCliente] = useState("");
   const [clienteDoc, setClienteDoc] = useState("");
@@ -78,7 +78,7 @@ export default function PPVDrawer({
     }
     if (substitutoTipo === "PPV" && listaPPVAbertos.length === 0) {
       fetch("/api/ppv/pedidos").then(r => r.json()).then((data) => {
-        if (Array.isArray(data)) setListaPPVAbertos(data.filter((p: any) => p.status !== "Cancelado" && p.status !== "Fechado" && p.id !== ppvId).map((p: any) => ({ id: p.id, cliente: p.cliente || "", status: p.status || "" })));
+        if (Array.isArray(data)) setListaPPVAbertos(data.filter((p: any) => p.status !== "Cancelada" && p.status !== "Concluída" && p.status !== "Cancelado" && p.status !== "Fechado" && p.id !== ppvId).map((p: any) => ({ id: p.id, cliente: p.cliente || "", status: p.status || "" })));
       }).catch(() => {});
     }
   }, [temSubstituto, substitutoTipo]);
@@ -162,9 +162,9 @@ export default function PPVDrawer({
     const erros: string[] = [];
     if (!cliente.trim()) erros.push("Cliente");
     if (!tecnico.trim()) erros.push("Técnico");
-    if (status === "Cancelado" && !motivoCancelamento.trim()) erros.push("Motivo do Cancelamento");
-    if (status === "Cancelado" && temSubstituto && !substitutoId.trim()) erros.push("ID do Substituto");
-    if (status === "Fechado" && !pedidoOmie.trim()) erros.push("Pedido OMIE");
+    if (status === "Cancelada" && !motivoCancelamento.trim()) erros.push("Motivo do Cancelamento");
+    if (status === "Cancelada" && temSubstituto && !substitutoId.trim()) erros.push("ID do Substituto");
+    if (status === "Concluída" && !pedidoOmie.trim()) erros.push("Pedido OMIE");
     if (erros.length > 0) { showToast("error", `Campos obrigatórios: ${erros.join(", ")}`); return; }
 
     setSalvando(true);
@@ -307,13 +307,13 @@ export default function PPVDrawer({
                     <select value={status} onChange={(e) => setStatus(e.target.value)} style={{ fontWeight: 600, marginBottom: 0 }}>
                       {STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                     </select>
-                    {status === "Fechado" && (
+                    {status === "Concluída" && (
                       <div style={{ marginTop: 12 }}>
                         <label>Pedido OMIE *</label>
                         <input type="text" value={pedidoOmie} onChange={(e) => setPedidoOmie(e.target.value)} placeholder="Código do pedido Omie..." style={{ marginBottom: 0 }} />
                       </div>
                     )}
-                    {status === "Cancelado" && (
+                    {status === "Cancelada" && (
                       <div style={{ marginTop: 12 }}>
                         <label>Motivo do Cancelamento *</label>
                         <textarea rows={2} value={motivoCancelamento} onChange={(e) => setMotivoCancelamento(e.target.value)} placeholder="Descreva o motivo..." style={{ marginBottom: 12 }} />
@@ -494,7 +494,7 @@ export default function PPVDrawer({
                 {/* ── Footer ── */}
                 <div className="ppv-drawer-footer">
                   <button className="ppv-btn-cancel" onClick={onClose}>Cancelar</button>
-                  {status === "Aguardando Para Faturar" && !pedidoOmie && (
+                  {status === "Executada aguardando comercial" && !pedidoOmie && (
                     <button
                       className="ppv-btn-omie"
                       onClick={enviarOmie}
