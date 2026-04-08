@@ -1,6 +1,6 @@
 'use client'
-import { useState, useEffect, useMemo, useCallback } from 'react'
-import { ChevronLeft, ChevronRight, Loader2, MessageSquare, Plus, X, Search, MapPin, Trash2, FileText, Truck } from 'lucide-react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { ChevronLeft, ChevronRight, Loader2, Plus, X, Search, MapPin, Trash2, FileText, Truck, Edit3, StickyNote } from 'lucide-react'
 
 interface Tecnico { user_id: string; tecnico_nome: string; tecnico_email: string; mecanico_role: 'tecnico' | 'observador' }
 interface OrdemServico {
@@ -18,825 +18,440 @@ interface AgendaRow {
 interface ClienteOption { chave: string; display: string }
 
 function normNome(n: string): string[] { return n.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/).filter(p => p.length > 2) }
-function match(a: string, b: string) { if (!a || !b) return false; const pA = normNome(a), pB = normNome(b); if (!pA.length || !pB.length || pA[0] !== pB[0]) return false; if (pA.length === 1 || pB.length === 1) return true; const s = new Set(pA.slice(1)); return pB.slice(1).some(p => s.has(p)) }
+function matchNome(a: string, b: string) { if (!a || !b) return false; const pA = normNome(a), pB = normNome(b); if (!pA.length || !pB.length || pA[0] !== pB[0]) return false; if (pA.length === 1 || pB.length === 1) return true; const s = new Set(pA.slice(1)); return pB.slice(1).some(p => s.has(p)) }
 function extrairSolicitacao(serv: string): string {
   if (!serv) return ''
   const idx = serv.indexOf('Solicitação do cliente:')
   if (idx === -1) return ''
   const after = serv.substring(idx + 'Solicitação do cliente:'.length)
   const fim = after.indexOf('Serviço Realizado')
-  const trecho = fim > -1 ? after.substring(0, fim) : after
-  return trecho.replace(/\n/g, ' ').trim()
+  return (fim > -1 ? after.substring(0, fim) : after).replace(/\n/g, ' ').trim()
 }
 
-const DIAS_SEMANA = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
-const COLORS = ['#6366F1', '#0EA5E9', '#F59E0B', '#10B981', '#EC4899', '#8B5CF6', '#F97316', '#14B8A6']
+const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+const COLORS = ['#B22222', '#0E7490', '#7C3AED', '#059669', '#D97706', '#6366F1', '#DC2626', '#0891B2']
 
 function getSegunda(offset: number): Date {
-  const d = new Date()
-  const day = d.getDay()
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1) + offset * 14
-  const seg = new Date(d.getFullYear(), d.getMonth(), diff)
-  seg.setHours(0, 0, 0, 0)
-  return seg
+  const d = new Date(); const day = d.getDay()
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1) + offset * 7
+  const seg = new Date(d.getFullYear(), d.getMonth(), diff); seg.setHours(0, 0, 0, 0); return seg
 }
-
-// 2 semanas = 12 dias úteis (Seg-Sáb × 2)
-function getDias2Semanas(offset: number): string[] {
+function getDiasSemana(offset: number): string[] {
   const seg = getSegunda(offset)
-  return Array.from({ length: 12 }, (_, i) => {
-    const weekIdx = Math.floor(i / 6)
-    const dayIdx = i % 6
-    const d = new Date(seg)
-    d.setDate(seg.getDate() + weekIdx * 7 + dayIdx)
-    return d.toISOString().split('T')[0]
-  })
+  return Array.from({ length: 6 }, (_, i) => { const d = new Date(seg); d.setDate(seg.getDate() + i); return d.toISOString().split('T')[0] })
 }
-
-function formatDia(dateStr: string): string {
-  const d = new Date(dateStr + 'T12:00:00')
-  return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`
-}
-
-// Calcular dias de execução a partir de Qtd_HR (8h por dia, mínimo 1)
 function calcDiasExecucao(qtdHR: string | number | null | undefined): number {
-  const h = parseFloat(String(qtdHR || 0)) || 0
-  if (h <= 0) return 1
-  return Math.max(1, Math.ceil(h / 8))
+  const h = parseFloat(String(qtdHR || 0)) || 0; return h <= 0 ? 1 : Math.max(1, Math.ceil(h / 8))
+}
+function proximosDiasUteis(diaInicial: string, qtd: number, diasDisponiveis: string[]): string[] {
+  const idx = diasDisponiveis.indexOf(diaInicial); return idx === -1 ? [diaInicial] : diasDisponiveis.slice(idx, idx + qtd)
 }
 
-// Próximos dias úteis a partir de um dia (incluindo o próprio)
-function proximosDiasUteis(diaInicial: string, qtd: number, diasDisponiveis: string[]): string[] {
-  const idx = diasDisponiveis.indexOf(diaInicial)
-  if (idx === -1) return [diaInicial]
-  return diasDisponiveis.slice(idx, idx + qtd)
-}
+const CSS = `
+.ag-tab{padding:12px 0;cursor:pointer;border:none;background:none;text-align:center;flex:1;transition:all .15s;position:relative;border-radius:14px 14px 0 0}
+.ag-tab:hover{background:#F5F5F5}
+.ag-tab.active{background:#fff;box-shadow:0 -2px 8px rgba(0,0,0,.04)}
+.ag-tab.active::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:3px;background:#B22222;border-radius:3px 3px 0 0}
+.ag-tec-card{border-radius:14px;overflow:hidden;transition:box-shadow .2s;border:1px solid #EFEFEF}
+.ag-tec-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.06)}
+.ag-os-item{padding:14px 16px;border-radius:10px;background:#fff;border:1px solid #F0F0F0;transition:all .15s}
+.ag-os-item:hover{border-color:#DDD;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.ag-note-btn{display:inline-flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;padding:5px 10px;border-radius:6px;border:none;background:none;color:#BBB;transition:all .15s}
+.ag-note-btn:hover{background:#F0F0FF;color:#6366F1}
+.ag-note-btn.has{color:#6366F1;background:#EEF2FF}
+.ag-add-btn{display:flex;align-items:center;justify-content:center;gap:5px;padding:10px;border-radius:10px;border:2px dashed #E8E8E8;color:#CCC;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;background:none;width:100%}
+.ag-add-btn:hover{border-color:#BBB;color:#888;background:#FAFAFA}
+.ag-fade-in{animation:agFade .2s ease}
+@keyframes agFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+`
 
 export default function BlocoAgenda({ tecnicos, ordens }: { tecnicos: Tecnico[]; ordens: OrdemServico[] }) {
   const [semanaOffset, setSemanaOffset] = useState(0)
   const [agendaSemana, setAgendaSemana] = useState<AgendaRow[]>([])
   const [loading, setLoading] = useState(false)
-  const [salvando, setSalvando] = useState<Record<number, boolean>>({})
-  const [obsEditando, setObsEditando] = useState<number | null>(null)
-
-  // Add form state
+  const [notas, setNotas] = useState<Record<string, string>>({})
+  const [notaSalvando, setNotaSalvando] = useState<string | null>(null)
+  const [editingNote, setEditingNote] = useState<string | null>(null) // "tec|dia" or "obs-{id}"
   const [addKey, setAddKey] = useState<string | null>(null)
   const [addMode, setAddMode] = useState<'os' | 'manual'>('os')
   const [buscaOS, setBuscaOS] = useState('')
   const [addSalvando, setAddSalvando] = useState(false)
-
-  // Manual mode state
   const [clientes, setClientes] = useState<ClienteOption[]>([])
   const [clienteFilter, setClienteFilter] = useState('')
   const [clienteSelecionado, setClienteSelecionado] = useState<{ chave: string; nome: string; endereco: string; cidade: string } | null>(null)
   const [addHoras, setAddHoras] = useState(2)
   const [addObs, setAddObs] = useState('')
   const [carregandoCliente, setCarregandoCliente] = useState(false)
+  const noteRef = useRef<HTMLTextAreaElement>(null)
 
   const tecs = useMemo(() => tecnicos.filter(t => t.mecanico_role === 'tecnico'), [tecnicos])
-  const dias = useMemo(() => getDias2Semanas(semanaOffset), [semanaOffset])
+  const dias = useMemo(() => getDiasSemana(semanaOffset), [semanaOffset])
   const hoje = useMemo(() => new Date().toISOString().split('T')[0], [])
+  const [diaSel, setDiaSel] = useState('')
+
+  // Inicializar dia selecionado como hoje
+  useEffect(() => {
+    if (dias.includes(hoje)) setDiaSel(hoje)
+    else setDiaSel(dias[0])
+  }, [dias, hoje])
 
   const ordensExecucao = useMemo(() => ordens.filter(o => o.Status === 'Execução'), [ordens])
-
   const ordensPorTec = useMemo(() => {
     const m: Record<string, OrdemServico[]> = {}
-    tecs.forEach(t => {
-      m[t.tecnico_nome] = ordens.filter(o =>
-        o.Status !== 'Concluída' && o.Status !== 'Cancelada' &&
-        (match(t.tecnico_nome, o.Os_Tecnico) || match(t.tecnico_nome, o.Os_Tecnico2))
-      )
-    })
+    tecs.forEach(t => { m[t.tecnico_nome] = ordens.filter(o => o.Status !== 'Concluída' && o.Status !== 'Cancelada' && (matchNome(t.tecnico_nome, o.Os_Tecnico) || matchNome(t.tecnico_nome, o.Os_Tecnico2))) })
     return m
   }, [tecs, ordens])
 
-  useEffect(() => {
-    fetch('/api/pos/clientes').then(r => r.ok ? r.json() : []).then(setClientes).catch(() => {})
-  }, [])
-
+  useEffect(() => { fetch('/api/pos/clientes').then(r => r.ok ? r.json() : []).then(setClientes).catch(() => {}) }, [])
   const clientesFiltrados = useMemo(() => {
-    if (!clienteFilter) return []
-    const terms = clienteFilter.toLowerCase().split(/\s+/).filter(Boolean)
+    if (!clienteFilter) return []; const terms = clienteFilter.toLowerCase().split(/\s+/).filter(Boolean)
     return clientes.filter(c => { const d = c.display.toLowerCase(); return terms.every(t => d.includes(t)) }).slice(0, 12)
   }, [clienteFilter, clientes])
 
-  // Fetch agenda dos 12 dias
   const carregarSemana = useCallback(async () => {
     setLoading(true)
-    try {
-      const results = await Promise.all(
-        dias.map(d => fetch(`/api/pos/agenda-visao?data=${d}`).then(r => r.ok ? r.json() : []))
-      )
-      setAgendaSemana(results.flat())
-    } catch { }
+    try { const results = await Promise.all(dias.map(d => fetch(`/api/pos/agenda-visao?data=${d}`).then(r => r.ok ? r.json() : []))); setAgendaSemana(results.flat()) } catch { }
     setLoading(false)
   }, [dias])
 
-  useEffect(() => { carregarSemana() }, [carregarSemana])
+  const carregarNotas = useCallback(async () => {
+    try {
+      const r = await fetch(`/api/pos/agenda-notas?datas=${dias.join(',')}`)
+      if (r.ok) { const rows = await r.json() as { tecnico_nome: string; data: string; nota: string }[]; const map: Record<string, string> = {}; rows.forEach(n => { if (n.nota) map[`${n.tecnico_nome}|${n.data}`] = n.nota }); setNotas(map) }
+    } catch { }
+  }, [dias])
+
+  useEffect(() => { carregarSemana(); carregarNotas() }, [carregarSemana, carregarNotas])
 
   const salvarObs = async (id: number, obs: string) => {
-    setSalvando(p => ({ ...p, [id]: true }))
-    try {
-      await fetch('/api/pos/agenda-visao', {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, observacoes: obs }),
-      })
-      setAgendaSemana(p => p.map(a => a.id === id ? { ...a, observacoes: obs } : a))
-    } catch { }
-    setSalvando(p => ({ ...p, [id]: false }))
-    setObsEditando(null)
+    try { await fetch('/api/pos/agenda-visao', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, observacoes: obs }) }); setAgendaSemana(p => p.map(a => a.id === id ? { ...a, observacoes: obs } : a)) } catch { }
+    setEditingNote(null)
   }
 
-  const remover = async (id: number) => {
-    const r = await fetch('/api/pos/agenda-visao', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
-    if (r.ok) setAgendaSemana(p => p.filter(a => a.id !== id))
+  const salvarNota = async (tecNome: string, dia: string, nota: string) => {
+    const key = `${tecNome}|${dia}`; setNotaSalvando(key)
+    try { const r = await fetch('/api/pos/agenda-notas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tecnico_nome: tecNome, data: dia, nota }) }); if (r.ok) setNotas(p => nota ? { ...p, [key]: nota } : (() => { const n = { ...p }; delete n[key]; return n })()) } catch { }
+    setNotaSalvando(null); setEditingNote(null)
   }
+
+  const remover = async (id: number) => { const r = await fetch('/api/pos/agenda-visao', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) }); if (r.ok) setAgendaSemana(p => p.filter(a => a.id !== id)) }
 
   const selecionarCliente = async (c: ClienteOption) => {
-    setCarregandoCliente(true)
-    setClienteFilter(c.display.split('[')[0].trim())
-    try {
-      const r = await fetch(`/api/pos/clientes?id=${encodeURIComponent(c.chave)}`)
-      if (r.ok) {
-        const data = await r.json()
-        setClienteSelecionado({ chave: c.chave, nome: data.nome, endereco: data.endereco || '', cidade: data.cidade || '' })
-      }
-    } catch { }
+    setCarregandoCliente(true); setClienteFilter(c.display.split('[')[0].trim())
+    try { const r = await fetch(`/api/pos/clientes?id=${encodeURIComponent(c.chave)}`); if (r.ok) { const data = await r.json(); setClienteSelecionado({ chave: c.chave, nome: data.nome, endereco: data.endereco || '', cidade: data.cidade || '' }) } } catch { }
     setCarregandoCliente(false)
   }
 
   const getUltimaLocalizacao = (tecNome: string, dia: string) => {
-    const itemsDia = agendaSemana
-      .filter(a => a.data === dia && a.tecnico_nome === tecNome && a.coordenadas)
-      .sort((a, b) => a.ordem_sequencia - b.ordem_sequencia)
+    const itemsDia = agendaSemana.filter(a => a.data === dia && a.tecnico_nome === tecNome && a.coordenadas).sort((a, b) => a.ordem_sequencia - b.ordem_sequencia)
     return itemsDia[itemsDia.length - 1] || null
   }
 
-  // Adicionar OS — distribui automaticamente pelos dias de execução
   const adicionarOS = async (tecNome: string, diaInicial: string, os: OrdemServico) => {
     setAddSalvando(true)
     try {
-      const horasPorDia = 8
-      const totalHoras = parseFloat(String(os.Qtd_HR || 0)) || 2
-      const diasExec = calcDiasExecucao(os.Qtd_HR)
-      const diasParaAgendar = proximosDiasUteis(diaInicial, diasExec, dias)
-
-      for (let d = 0; d < diasParaAgendar.length; d++) {
-        const diaAtual = diasParaAgendar[d]
-        const horasDoDia = d < diasParaAgendar.length - 1 ? horasPorDia : Math.min(horasPorDia, totalHoras - d * horasPorDia)
-        const ultimoItem = getUltimaLocalizacao(tecNome, diaAtual)
-
-        const r = await fetch('/api/pos/agenda-visao', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            data: diaAtual,
-            tecnicos: [{
-              nome: tecNome,
-              ordens: [{
-                id: os.Id_Ordem, cliente: os.Os_Cliente, cnpj: os.Cnpj_Cliente,
-                endereco: os.Endereco_Cliente, cidade: os.Cidade_Cliente,
-                servico: os.Serv_Solicitado, qtdHoras: Math.max(1, horasDoDia),
-                observacoes: diasExec > 1
-                  ? `Dia ${d + 1}/${diasExec} · ${extrairSolicitacao(os.Serv_Solicitado || '')}`
-                  : extrairSolicitacao(os.Serv_Solicitado || ''),
-              }],
-            }],
-          }),
-        })
-
+      const totalHoras = parseFloat(String(os.Qtd_HR || 0)) || 2; const diasExec = calcDiasExecucao(os.Qtd_HR); const diasP = proximosDiasUteis(diaInicial, diasExec, dias)
+      for (let d = 0; d < diasP.length; d++) {
+        const diaA = diasP[d]; const hDia = d < diasP.length - 1 ? 8 : Math.min(8, totalHoras - d * 8); const ultimo = getUltimaLocalizacao(tecNome, diaA)
+        const r = await fetch('/api/pos/agenda-visao', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: diaA, tecnicos: [{ nome: tecNome, ordens: [{ id: os.Id_Ordem, cliente: os.Os_Cliente, cnpj: os.Cnpj_Cliente, endereco: os.Endereco_Cliente, cidade: os.Cidade_Cliente, servico: os.Serv_Solicitado, qtdHoras: Math.max(1, hDia), observacoes: diasExec > 1 ? `Dia ${d + 1}/${diasExec} · ${extrairSolicitacao(os.Serv_Solicitado || '')}` : extrairSolicitacao(os.Serv_Solicitado || '') }] }] }) })
         if (r.ok) {
-          const rows = await r.json() as AgendaRow[]
-          const outrosDias = agendaSemana.filter(a => a.data !== diaAtual)
-          setAgendaSemana(prev => [...prev.filter(a => a.data !== diaAtual), ...rows])
-
-          // Abrir caminho apenas no primeiro dia
-          if (d === 0) {
-            await fetch('/api/pos/agenda-visao/caminho', {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                tecnico_nome: tecNome,
-                destino: os.Os_Cliente,
-                cidade: os.Cidade_Cliente || '',
-                motivo: os.Id_Ordem,
-              }),
-            }).catch(() => {})
-          }
-
-          // Calcular rota
-          const novoItem = rows.find(row =>
-            row.tecnico_nome === tecNome && row.id_ordem === os.Id_Ordem && row.tempo_ida_min === 0
-          )
-          if (novoItem) {
-            const calcBody: Record<string, any> = { id: novoItem.id, calcular: true }
-            if (ultimoItem?.coordenadas) {
-              calcBody.origemLat = ultimoItem.coordenadas.lat
-              calcBody.origemLng = ultimoItem.coordenadas.lng
-            }
-            fetch('/api/pos/agenda-visao', {
-              method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(calcBody),
-            }).then(async r2 => {
-              if (r2.ok) {
-                const updated = await r2.json()
-                setAgendaSemana(p => p.map(a => a.id === updated.id ? updated : a))
-              }
-            })
-          }
+          const rows = await r.json() as AgendaRow[]; setAgendaSemana(prev => [...prev.filter(a => a.data !== diaA), ...rows])
+          if (d === 0) await fetch('/api/pos/agenda-visao/caminho', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tecnico_nome: tecNome, destino: os.Os_Cliente, cidade: os.Cidade_Cliente || '', motivo: os.Id_Ordem }) }).catch(() => {})
+          const ni = rows.find(row => row.tecnico_nome === tecNome && row.id_ordem === os.Id_Ordem && row.tempo_ida_min === 0)
+          if (ni) { const cb: Record<string, any> = { id: ni.id, calcular: true }; if (ultimo?.coordenadas) { cb.origemLat = ultimo.coordenadas.lat; cb.origemLng = ultimo.coordenadas.lng }; fetch('/api/pos/agenda-visao', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cb) }).then(async r2 => { if (r2.ok) { const u = await r2.json(); setAgendaSemana(p => p.map(a => a.id === u.id ? u : a)) } }) }
         }
       }
     } catch { }
-    fecharAdd()
-    setAddSalvando(false)
-    carregarSemana()
+    fecharAdd(); setAddSalvando(false); carregarSemana()
   }
 
   const adicionarManual = async (tecNome: string, dia: string) => {
-    if (!clienteSelecionado) return
-    setAddSalvando(true)
+    if (!clienteSelecionado) return; setAddSalvando(true)
     try {
-      const ultimoItem = getUltimaLocalizacao(tecNome, dia)
-      const r = await fetch('/api/pos/agenda-visao', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          data: dia,
-          tecnicos: [{
-            nome: tecNome,
-            ordens: [{
-              id: `AG-${Date.now()}`, cliente: clienteSelecionado.nome, cnpj: '',
-              endereco: clienteSelecionado.endereco, cidade: clienteSelecionado.cidade,
-              servico: '', qtdHoras: addHoras, observacoes: addObs,
-            }],
-          }],
-        }),
-      })
-
+      const ultimo = getUltimaLocalizacao(tecNome, dia)
+      const r = await fetch('/api/pos/agenda-visao', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: dia, tecnicos: [{ nome: tecNome, ordens: [{ id: `AG-${Date.now()}`, cliente: clienteSelecionado.nome, cnpj: '', endereco: clienteSelecionado.endereco, cidade: clienteSelecionado.cidade, servico: '', qtdHoras: addHoras, observacoes: addObs }] }] }) })
       if (r.ok) {
-        const rows = await r.json() as AgendaRow[]
-        setAgendaSemana(prev => [...prev.filter(a => a.data !== dia), ...rows])
-
-        await fetch('/api/pos/agenda-visao/caminho', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            tecnico_nome: tecNome, destino: clienteSelecionado.nome,
-            cidade: clienteSelecionado.cidade, motivo: addObs || 'Serviço agendado',
-          }),
-        }).catch(() => {})
-
-        const novoItem = rows.find(row =>
-          row.tecnico_nome === tecNome && row.tempo_ida_min === 0 && row.endereco &&
-          !agendaSemana.some(exist => exist.id === row.id)
-        )
-        if (novoItem) {
-          const calcBody: Record<string, any> = { id: novoItem.id, calcular: true }
-          if (ultimoItem?.coordenadas) {
-            calcBody.origemLat = ultimoItem.coordenadas.lat
-            calcBody.origemLng = ultimoItem.coordenadas.lng
-          }
-          fetch('/api/pos/agenda-visao', {
-            method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(calcBody),
-          }).then(async r2 => {
-            if (r2.ok) {
-              const updated = await r2.json()
-              setAgendaSemana(p => p.map(a => a.id === updated.id ? updated : a))
-            }
-          })
-        }
+        const rows = await r.json() as AgendaRow[]; setAgendaSemana(prev => [...prev.filter(a => a.data !== dia), ...rows])
+        await fetch('/api/pos/agenda-visao/caminho', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tecnico_nome: tecNome, destino: clienteSelecionado.nome, cidade: clienteSelecionado.cidade, motivo: addObs || 'Serviço agendado' }) }).catch(() => {})
+        const ni = rows.find(row => row.tecnico_nome === tecNome && row.tempo_ida_min === 0 && row.endereco && !agendaSemana.some(exist => exist.id === row.id))
+        if (ni) { const cb: Record<string, any> = { id: ni.id, calcular: true }; if (ultimo?.coordenadas) { cb.origemLat = ultimo.coordenadas.lat; cb.origemLng = ultimo.coordenadas.lng }; fetch('/api/pos/agenda-visao', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cb) }).then(async r2 => { if (r2.ok) { const u = await r2.json(); setAgendaSemana(p => p.map(a => a.id === u.id ? u : a)) } }) }
       }
     } catch { }
-    fecharAdd()
-    setAddSalvando(false)
+    fecharAdd(); setAddSalvando(false)
   }
 
-  const abrirAdd = (tecNome: string, dia: string) => {
-    setAddKey(`${tecNome}|${dia}`)
-    setAddMode('os')
-    setBuscaOS('')
-    setClienteFilter('')
-    setClienteSelecionado(null)
-    setAddHoras(2)
-    setAddObs('')
-  }
+  const abrirAdd = (tecNome: string, dia: string) => { setAddKey(`${tecNome}|${dia}`); setAddMode('os'); setBuscaOS(''); setClienteFilter(''); setClienteSelecionado(null); setAddHoras(2); setAddObs('') }
+  const fecharAdd = () => { setAddKey(null); setBuscaOS(''); setClienteFilter(''); setClienteSelecionado(null); setAddHoras(2); setAddObs('') }
 
-  const fecharAdd = () => {
-    setAddKey(null)
-    setBuscaOS('')
-    setClienteFilter('')
-    setClienteSelecionado(null)
-    setAddHoras(2)
-    setAddObs('')
-  }
+  // Contadores por dia
+  const countByDay = useMemo(() => {
+    const m: Record<string, number> = {}
+    dias.forEach(d => { m[d] = agendaSemana.filter(a => a.data === d).length })
+    return m
+  }, [dias, agendaSemana])
 
-  // Labels
-  const segStr = formatDia(dias[0])
-  const sabStr2 = formatDia(dias[11])
-  const isSemanaAtual = semanaOffset === 0
+  if (!diaSel) return null
 
-  // IDs de ordens já agendadas em qualquer dia visível
-  const idsAgendados = useMemo(() => {
-    const set = new Set<string>()
-    agendaSemana.forEach(a => { if (a.id_ordem) set.add(a.id_ordem) })
-    return set
-  }, [agendaSemana])
+  const diaObj = new Date(diaSel + 'T12:00:00')
+  const isHoje = diaSel === hoje
+  const diaPassado = diaSel < hoje
 
   return (
     <div>
-      {/* Header com navegação */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => setSemanaOffset(p => p - 1)} style={{
-            width: 32, height: 32, borderRadius: 8, border: '1px solid #E4E4E7', background: '#fff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-          }}>
-            <ChevronLeft size={16} color="#71717A" />
+      <style>{CSS}</style>
+
+      {/* ── HEADER ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button onClick={() => setSemanaOffset(p => p - 1)} style={{ width: 38, height: 38, borderRadius: 10, border: '1px solid #E0E0E0', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <ChevronLeft size={18} color="#555" />
           </button>
-          <div style={{ minWidth: 200, textAlign: 'center' }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#18181B' }}>{segStr} — {sabStr2}</div>
-            <div style={{ fontSize: 12, color: '#A1A1AA' }}>
-              {isSemanaAtual ? '2 semanas a partir de hoje' : semanaOffset > 0 ? `+${semanaOffset * 2} semanas` : `${semanaOffset * 2} semanas`}
-            </div>
-          </div>
-          <button onClick={() => setSemanaOffset(p => p + 1)} style={{
-            width: 32, height: 32, borderRadius: 8, border: '1px solid #E4E4E7', background: '#fff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-          }}>
-            <ChevronRight size={16} color="#71717A" />
+          <button onClick={() => setSemanaOffset(p => p + 1)} style={{ width: 38, height: 38, borderRadius: 10, border: '1px solid #E0E0E0', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <ChevronRight size={18} color="#555" />
           </button>
-          {!isSemanaAtual && (
-            <button onClick={() => setSemanaOffset(0)} style={{
-              fontSize: 12, fontWeight: 500, color: '#6366F1', background: '#EEF2FF', border: '1px solid #C7D2FE',
-              borderRadius: 6, padding: '4px 12px', cursor: 'pointer',
-            }}>
-              Hoje
-            </button>
+          {!semanaOffset ? null : (
+            <button onClick={() => setSemanaOffset(0)} style={{ fontSize: 13, fontWeight: 600, color: '#B22222', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '7px 16px', cursor: 'pointer' }}>Hoje</button>
           )}
         </div>
-        {loading && <Loader2 size={16} color="#71717A" className="animate-spin" />}
+        {loading && <Loader2 size={18} color="#999" className="animate-spin" />}
       </div>
 
-      {/* Grid do calendário - 2 semanas */}
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: 1400 }}>
-          <thead>
-            <tr>
-              <th style={{
-                width: 140, padding: '10px 12px', fontSize: 12, fontWeight: 700, color: '#71717A',
-                textAlign: 'left', background: '#FAFAFA', borderBottom: '2px solid #E4E4E7',
-                position: 'sticky', left: 0, zIndex: 2,
-              }}>
-                Técnico
-              </th>
-              {dias.map((dia, i) => {
-                const isHoje = dia === hoje
-                const weekIdx = Math.floor(i / 6)
-                const dayIdx = i % 6
-                const isWeek2Start = i === 6
-                return (
-                  <th key={dia} style={{
-                    padding: '8px 6px', fontSize: 11, fontWeight: 700,
-                    color: isHoje ? '#6366F1' : '#71717A', textAlign: 'center',
-                    background: isHoje ? '#EEF2FF' : weekIdx === 1 ? '#F9FAFB' : '#FAFAFA',
-                    borderBottom: isHoje ? '2px solid #6366F1' : '2px solid #E4E4E7',
-                    borderLeft: isWeek2Start ? '3px solid #E4E4E7' : '1px solid #F4F4F5',
-                  }}>
-                    <div style={{ fontSize: 10, color: weekIdx === 1 ? '#A1A1AA' : '#71717A' }}>
-                      {weekIdx === 0 ? 'Sem 1' : 'Sem 2'} · {DIAS_SEMANA[dayIdx]}
-                    </div>
-                    <div style={{ fontSize: 13, fontWeight: 800, marginTop: 2 }}>{formatDia(dia)}</div>
-                  </th>
-                )
-              })}
-            </tr>
-          </thead>
-          <tbody>
-            {tecs.map((tec, tecIdx) => {
-              const tecColor = COLORS[tecIdx % COLORS.length]
-              const ordsAtivas = ordensPorTec[tec.tecnico_nome] || []
+      {/* ── TABS DOS DIAS ── */}
+      <div style={{ display: 'flex', gap: 4, background: '#F5F5F3', borderRadius: '14px 14px 0 0', padding: '4px 4px 0' }}>
+        {dias.map(dia => {
+          const d = new Date(dia + 'T12:00:00')
+          const isActive = dia === diaSel
+          const isH = dia === hoje
+          const cnt = countByDay[dia] || 0
+          return (
+            <button key={dia} className={`ag-tab${isActive ? ' active' : ''}`} onClick={() => setDiaSel(dia)}
+              style={{ opacity: dia < hoje && !isActive ? 0.6 : 1 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: isH ? '#B22222' : isActive ? '#555' : '#AAA', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                {DIAS_SEMANA[d.getDay()]}
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 900, color: isH ? '#B22222' : isActive ? '#111' : '#999', margin: '2px 0' }}>
+                {d.getDate()}
+              </div>
+              {cnt > 0 && (
+                <div style={{ fontSize: 11, fontWeight: 700, color: isActive ? '#111' : '#BBB' }}>{cnt} serv.</div>
+              )}
+              {isH && !isActive && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#B22222', margin: '4px auto 0' }} />}
+            </button>
+          )
+        })}
+      </div>
 
-              return (
-                <tr key={tec.user_id}>
-                  <td style={{
-                    padding: '12px', borderBottom: '1px solid #F4F4F5', verticalAlign: 'top',
-                    position: 'sticky', left: 0, background: '#fff', zIndex: 1,
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{
-                        width: 32, height: 32, borderRadius: 8, background: tecColor,
-                        color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 14, fontWeight: 700, flexShrink: 0,
-                      }}>
-                        {tec.tecnico_nome.charAt(0)}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: '#18181B', lineHeight: 1.2 }}>
-                          {tec.tecnico_nome.split(' ').slice(0, 2).join(' ')}
-                        </div>
-                        <div style={{ fontSize: 11, color: '#A1A1AA' }}>
-                          {ordsAtivas.length} ordem(s)
-                        </div>
-                      </div>
-                    </div>
-                  </td>
+      {/* ── CONTEÚDO DO DIA ── */}
+      <div key={diaSel} className="ag-fade-in" style={{ background: '#fff', borderRadius: '0 0 14px 14px', border: '1px solid #EFEFEF', borderTop: 'none', padding: '20px 24px', minHeight: 300 }}>
 
-                  {dias.map((dia, diaIdx) => {
-                    const isHoje = dia === hoje
-                    const cellKey = `${tec.tecnico_nome}|${dia}`
-                    const isAdding = addKey === cellKey
-                    const weekIdx = Math.floor(diaIdx / 6)
-                    const isWeek2Start = diaIdx === 6
-                    const items = agendaSemana.filter(a => a.data === dia && a.tecnico_nome === tec.tecnico_nome)
-                      .sort((a, b) => a.ordem_sequencia - b.ordem_sequencia)
+        {/* Técnicos */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 16 }}>
+          {tecs.map((tec, tecIdx) => {
+            const tecColor = COLORS[tecIdx % COLORS.length]
+            const items = agendaSemana.filter(a => a.data === diaSel && a.tecnico_nome === tec.tecnico_nome).sort((a, b) => a.ordem_sequencia - b.ordem_sequencia)
+            const ordsAtivas = ordensPorTec[tec.tecnico_nome] || []
+            const cellKey = `${tec.tecnico_nome}|${diaSel}`
+            const isAdding = addKey === cellKey
+            const notaKey = cellKey
+            const notaValue = notas[notaKey] || ''
+            const isEditingNote = editingNote === notaKey
+            const primeiroNome = tec.tecnico_nome.split(' ')[0]
 
-                    const idsNaAgenda = new Set(items.map(a => a.id_ordem).filter(Boolean))
-                    const ordsTec = ordsAtivas.filter(o => !idsNaAgenda.has(o.Id_Ordem))
+            const idsNaAgenda = new Set(items.map(a => a.id_ordem).filter(Boolean))
+            const ordsTec = ordsAtivas.filter(o => !idsNaAgenda.has(o.Id_Ordem))
+            const buscaLower = buscaOS.toLowerCase()
+            const ordsFiltradas = isAdding && addMode === 'os'
+              ? (buscaOS ? ordensExecucao.filter(o => !idsNaAgenda.has(o.Id_Ordem) && (o.Id_Ordem.toLowerCase().includes(buscaLower) || o.Os_Cliente.toLowerCase().includes(buscaLower) || (o.Cidade_Cliente || '').toLowerCase().includes(buscaLower))) : ordsTec)
+              : []
 
-                    const buscaLower = buscaOS.toLowerCase()
-                    const ordsFiltradas = isAdding && addMode === 'os'
-                      ? (buscaOS
-                          ? ordensExecucao.filter(o =>
-                              !idsNaAgenda.has(o.Id_Ordem) && (
-                                o.Id_Ordem.toLowerCase().includes(buscaLower) ||
-                                o.Os_Cliente.toLowerCase().includes(buscaLower) ||
-                                (o.Cidade_Cliente || '').toLowerCase().includes(buscaLower) ||
-                                (o.Tipo_Servico || '').toLowerCase().includes(buscaLower)
-                              )
-                            )
-                          : ordsTec
-                        )
-                      : []
+            return (
+              <div key={tec.user_id} className="ag-tec-card" style={{ background: '#FAFAFA' }}>
+                {/* Tec header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: tecColor }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,.15)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800 }}>
+                    {primeiroNome.charAt(0)}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{tec.tecnico_nome.split(' ').slice(0, 2).join(' ')}</div>
+                  </div>
+                  {items.length > 0 && <span style={{ fontSize: 24, fontWeight: 900, color: 'rgba(255,255,255,.4)' }}>{items.length}</span>}
+                </div>
 
+                {/* Ordens */}
+                <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {items.length === 0 && !isAdding && !isEditingNote && !notaValue && (
+                    <div style={{ textAlign: 'center', padding: '16px 0', color: '#CCC', fontSize: 14 }}>Sem serviço agendado</div>
+                  )}
+
+                  {items.map(row => {
+                    const isEditObs = editingNote === `obs-${row.id}`
                     return (
-                      <td key={dia} style={{
-                        padding: '4px', borderBottom: '1px solid #F4F4F5', verticalAlign: 'top',
-                        background: isHoje ? '#FAFAFF' : '#fff',
-                        borderLeft: isWeek2Start ? '3px solid #E4E4E7' : '1px solid #F4F4F5',
-                        position: 'relative', minWidth: 100,
-                      }}>
-                        {items.length === 0 && !isAdding ? (
-                          <div
-                            onClick={() => abrirAdd(tec.tecnico_nome, dia)}
-                            style={{
-                              textAlign: 'center', padding: '10px 0', color: '#E4E4E7', fontSize: 11,
-                              cursor: 'pointer', borderRadius: 6, transition: 'all 0.15s',
-                            }}
-                            onMouseEnter={e => { e.currentTarget.style.background = '#F4F4F5'; e.currentTarget.style.color = '#A1A1AA' }}
-                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#E4E4E7' }}
-                          >
-                            <Plus size={14} style={{ display: 'inline' }} />
+                      <div key={row.id} className="ag-os-item" style={{ borderLeft: `4px solid ${tecColor}` }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', background: tecColor, padding: '2px 8px', borderRadius: 5 }}>
+                              {row.id_ordem?.startsWith('AG-') ? 'Manual' : (row.id_ordem || 'Manual')}
+                            </span>
+                            <span style={{ fontSize: 13, color: '#AAA', fontWeight: 600 }}>{row.qtd_horas}h</span>
                           </div>
+                          <button onClick={() => remover(row.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#DDD', padding: 2 }}
+                            onMouseEnter={e => (e.currentTarget.style.color = '#EF4444')} onMouseLeave={e => (e.currentTarget.style.color = '#DDD')}>
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: '#111', lineHeight: 1.3, marginBottom: 4 }}>{row.cliente || '—'}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
+                          {row.cidade && <span style={{ fontSize: 13, color: '#777', display: 'flex', alignItems: 'center', gap: 3 }}><MapPin size={12} /> {row.cidade}</span>}
+                          {row.tempo_ida_min > 0 && <span style={{ fontSize: 12, color: '#AAA', display: 'flex', alignItems: 'center', gap: 3 }}><Truck size={12} /> {Math.round(row.tempo_ida_min)}min · {row.distancia_ida_km}km</span>}
+                        </div>
+
+                        {/* Anotação da OS */}
+                        {isEditObs ? (
+                          <textarea ref={noteRef} autoFocus defaultValue={row.observacoes || ''} placeholder="Anotação..."
+                            onBlur={e => salvarObs(row.id, e.target.value.trim())}
+                            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); salvarObs(row.id, (e.target as HTMLTextAreaElement).value.trim()) } if (e.key === 'Escape') setEditingNote(null) }}
+                            style={{ width: '100%', fontSize: 14, padding: '8px 12px', borderRadius: 8, border: '1px solid #C7D2FE', background: '#EEF2FF', outline: 'none', resize: 'vertical', minHeight: 44, boxSizing: 'border-box', color: '#111', lineHeight: 1.4 }}
+                          />
                         ) : (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                            {items.map(row => (
-                              <div key={row.id} style={{
-                                padding: '6px 8px', borderRadius: 6,
-                                background: '#F9FAFB', border: '1px solid #F4F4F5',
-                                borderLeft: `3px solid ${tecColor}`,
-                              }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                                  <span style={{
-                                    fontSize: 10, fontWeight: 700, color: '#fff', background: tecColor,
-                                    padding: '1px 5px', borderRadius: 3,
-                                  }}>
-                                    {row.id_ordem?.startsWith('AG-') ? 'Manual' : (row.id_ordem || 'Manual')}
-                                  </span>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                                    <span style={{ fontSize: 9, color: '#A1A1AA', fontWeight: 600 }}>{row.qtd_horas}h</span>
-                                    <button onClick={() => remover(row.id)} style={{
-                                      background: 'none', border: 'none', cursor: 'pointer', color: '#D4D4D8', padding: 1,
-                                    }}
-                                      onMouseEnter={e => (e.currentTarget.style.color = '#EF4444')}
-                                      onMouseLeave={e => (e.currentTarget.style.color = '#D4D4D8')}
-                                    >
-                                      <Trash2 size={9} />
-                                    </button>
-                                  </div>
-                                </div>
-
-                                <div style={{ fontSize: 11, fontWeight: 600, color: '#374151', lineHeight: 1.2 }}>
-                                  {row.cliente ? row.cliente.split(' ').slice(0, 2).join(' ') : '—'}
-                                </div>
-
-                                {row.cidade && (
-                                  <div style={{ fontSize: 9, color: '#A1A1AA', marginTop: 1 }}>{row.cidade}</div>
-                                )}
-
-                                {row.tempo_ida_min > 0 && (
-                                  <div style={{ fontSize: 9, color: '#71717A', marginTop: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <Truck size={8} />
-                                    {Math.round(row.tempo_ida_min)}min · {row.distancia_ida_km}km
-                                  </div>
-                                )}
-
-                                {obsEditando === row.id ? (
-                                  <div style={{ marginTop: 3 }}>
-                                    <textarea
-                                      autoFocus
-                                      defaultValue={row.observacoes || ''}
-                                      onBlur={e => salvarObs(row.id, e.target.value)}
-                                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); salvarObs(row.id, (e.target as HTMLTextAreaElement).value) } }}
-                                      style={{
-                                        width: '100%', fontSize: 10, padding: '3px 5px', borderRadius: 3,
-                                        border: '1px solid #C7D2FE', background: '#EEF2FF', outline: 'none',
-                                        resize: 'vertical', minHeight: 24, boxSizing: 'border-box', color: '#18181B',
-                                      }}
-                                      placeholder="Obs..."
-                                    />
-                                  </div>
-                                ) : (
-                                  <div
-                                    onClick={() => setObsEditando(row.id)}
-                                    style={{
-                                      marginTop: 2, fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'flex-start', gap: 2,
-                                      color: row.observacoes ? '#4F46E5' : '#D4D4D8',
-                                      background: row.observacoes ? '#EEF2FF' : 'transparent',
-                                      padding: row.observacoes ? '2px 4px' : '1px 0', borderRadius: 3,
-                                    }}
-                                  >
-                                    <MessageSquare size={9} style={{ marginTop: 1, flexShrink: 0 }} />
-                                    <span style={{ lineHeight: 1.2, fontSize: 9 }}>
-                                      {row.observacoes ? (row.observacoes.length > 40 ? row.observacoes.substring(0, 40) + '...' : row.observacoes) : 'Obs...'}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-
-                            {!isAdding && (
-                              <div
-                                onClick={() => abrirAdd(tec.tecnico_nome, dia)}
-                                style={{
-                                  textAlign: 'center', padding: '2px 0', color: '#D4D4D8', fontSize: 9,
-                                  cursor: 'pointer', borderRadius: 3, transition: 'all 0.15s',
-                                }}
-                                onMouseEnter={e => { e.currentTarget.style.background = '#F4F4F5'; e.currentTarget.style.color = '#71717A' }}
-                                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#D4D4D8' }}
-                              >
-                                <Plus size={10} style={{ display: 'inline' }} />
-                              </div>
-                            )}
-                          </div>
+                          <button className={`ag-note-btn${row.observacoes ? ' has' : ''}`} onClick={() => setEditingNote(`obs-${row.id}`)}>
+                            <Edit3 size={12} />
+                            {row.observacoes || 'Adicionar anotação...'}
+                          </button>
                         )}
-
-                        {/* Popup de adicionar */}
-                        {isAdding && (
-                          <div style={{
-                            position: 'absolute', top: 0, left: -10, zIndex: 100, width: 360,
-                            background: '#fff', borderRadius: 14, border: '1px solid #E4E4E7',
-                            boxShadow: '0 12px 40px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.04)',
-                          }}>
-                            <div style={{
-                              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                              padding: '14px 16px', borderBottom: `2px solid ${tecColor}`,
-                            }}>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: '#18181B' }}>
-                                {tec.tecnico_nome.split(' ')[0]} · {formatDia(dia)}
-                              </div>
-                              <button onClick={fecharAdd} style={{
-                                background: '#F4F4F5', border: 'none', borderRadius: 6, cursor: 'pointer',
-                                width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              }}>
-                                <X size={12} color="#71717A" />
-                              </button>
-                            </div>
-
-                            <div style={{ display: 'flex', borderBottom: '1px solid #E4E4E7' }}>
-                              <button onClick={() => setAddMode('os')} style={{
-                                flex: 1, padding: '10px 0', fontSize: 12, fontWeight: addMode === 'os' ? 700 : 400,
-                                border: 'none', cursor: 'pointer', background: 'transparent',
-                                color: addMode === 'os' ? '#18181B' : '#A1A1AA',
-                                borderBottom: addMode === 'os' ? `2px solid ${tecColor}` : '2px solid transparent',
-                                marginBottom: -1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                              }}>
-                                <FileText size={12} /> Ordens
-                                {ordsTec.length > 0 && (
-                                  <span style={{ fontSize: 10, fontWeight: 600, background: tecColor, color: '#fff', padding: '1px 6px', borderRadius: 8 }}>
-                                    {ordsTec.length}
-                                  </span>
-                                )}
-                              </button>
-                              <button onClick={() => setAddMode('manual')} style={{
-                                flex: 1, padding: '10px 0', fontSize: 12, fontWeight: addMode === 'manual' ? 700 : 400,
-                                border: 'none', cursor: 'pointer', background: 'transparent',
-                                color: addMode === 'manual' ? '#18181B' : '#A1A1AA',
-                                borderBottom: addMode === 'manual' ? `2px solid ${tecColor}` : '2px solid transparent',
-                                marginBottom: -1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                              }}>
-                                <Plus size={12} /> Cliente
-                              </button>
-                            </div>
-
-                            {/* Tab: Ordens de Serviço */}
-                            {addMode === 'os' && (
-                              <div style={{ padding: '12px 14px' }}>
-                                <div style={{ position: 'relative', marginBottom: 10 }}>
-                                  <Search size={13} color="#A1A1AA" style={{ position: 'absolute', left: 10, top: 9 }} />
-                                  <input
-                                    value={buscaOS}
-                                    onChange={e => setBuscaOS(e.target.value)}
-                                    placeholder="Buscar OS, cliente, cidade..."
-                                    style={{
-                                      fontSize: 12, padding: '8px 10px 8px 30px', border: '1px solid #E4E4E7', borderRadius: 8,
-                                      outline: 'none', width: '100%', background: '#FAFAFA', boxSizing: 'border-box', color: '#18181B',
-                                    }}
-                                  />
-                                </div>
-
-                                <div style={{ maxHeight: 280, overflowY: 'auto' }}>
-                                  {ordsFiltradas.length === 0 ? (
-                                    <div style={{ textAlign: 'center', padding: '20px 0', color: '#D4D4D8', fontSize: 12 }}>
-                                      {buscaOS ? 'Nenhuma OS encontrada' : 'Todas as ordens já estão na agenda'}
-                                    </div>
-                                  ) : (
-                                    ordsFiltradas.map(os => {
-                                      const horas = parseFloat(String(os.Qtd_HR || 0)) || 2
-                                      const diasExec = calcDiasExecucao(os.Qtd_HR)
-                                      const isTecPrimario = match(tec.tecnico_nome, os.Os_Tecnico)
-                                      return (
-                                        <div key={os.Id_Ordem} style={{
-                                          padding: '10px 12px', marginBottom: 6, borderRadius: 10,
-                                          border: '1px solid #F0F0F2', background: '#fff', cursor: 'pointer',
-                                          transition: 'all 0.15s',
-                                        }}
-                                          onMouseEnter={e => { e.currentTarget.style.borderColor = '#D4D4D8'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.05)' }}
-                                          onMouseLeave={e => { e.currentTarget.style.borderColor = '#F0F0F2'; e.currentTarget.style.boxShadow = 'none' }}
-                                        >
-                                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                                              <span style={{ fontSize: 11, fontWeight: 700, color: '#18181B' }}>{os.Id_Ordem}</span>
-                                              {os.Tipo_Servico && (
-                                                <span style={{ fontSize: 9, fontWeight: 500, color: '#71717A', background: '#F4F4F5', padding: '1px 5px', borderRadius: 4 }}>
-                                                  {os.Tipo_Servico}
-                                                </span>
-                                              )}
-                                              {!isTecPrimario && (
-                                                <span style={{ fontSize: 9, fontWeight: 500, color: '#A1A1AA', background: '#FAFAFA', padding: '1px 4px', borderRadius: 3 }}>
-                                                  2o téc.
-                                                </span>
-                                              )}
-                                            </div>
-                                            <button
-                                              onClick={(e) => { e.stopPropagation(); adicionarOS(tec.tecnico_nome, dia, os) }}
-                                              disabled={addSalvando}
-                                              style={{
-                                                display: 'flex', alignItems: 'center', gap: 4,
-                                                background: tecColor, color: '#fff', border: 'none', borderRadius: 6,
-                                                padding: '4px 10px', fontSize: 10, fontWeight: 600, cursor: 'pointer',
-                                                boxShadow: `0 1px 4px ${tecColor}30`,
-                                              }}
-                                            >
-                                              {addSalvando ? <Loader2 size={9} className="animate-spin" /> : <Plus size={9} />} Adicionar
-                                            </button>
-                                          </div>
-                                          <div style={{ fontSize: 12, fontWeight: 500, color: '#3F3F46', marginBottom: 2 }}>
-                                            {os.Os_Cliente}
-                                          </div>
-                                          <div style={{ fontSize: 10, color: '#A1A1AA', display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                                            {os.Cidade_Cliente && <span>{os.Cidade_Cliente}</span>}
-                                            {os.Cidade_Cliente && <span style={{ color: '#E4E4E7' }}>·</span>}
-                                            <span>{horas}h</span>
-                                            {diasExec > 1 && (
-                                              <>
-                                                <span style={{ color: '#E4E4E7' }}>·</span>
-                                                <span style={{ fontWeight: 600, color: '#6366F1' }}>{diasExec} dias</span>
-                                              </>
-                                            )}
-                                          </div>
-                                        </div>
-                                      )
-                                    })
-                                  )}
-                                </div>
-
-                                <div style={{ textAlign: 'center', marginTop: 8 }}>
-                                  <button onClick={fecharAdd} style={{
-                                    background: '#fff', border: '1px solid #E4E4E7', borderRadius: 8, cursor: 'pointer',
-                                    color: '#71717A', fontSize: 11, fontWeight: 500, padding: '5px 14px',
-                                    display: 'inline-flex', alignItems: 'center', gap: 4,
-                                  }}>
-                                    <X size={10} /> Fechar
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Tab: Cliente manual */}
-                            {addMode === 'manual' && (
-                              <div style={{ padding: '14px 16px' }}>
-                                <div style={{ marginBottom: 10, position: 'relative' }}>
-                                  <label style={{ fontSize: 11, fontWeight: 600, color: '#71717A', marginBottom: 4, display: 'block', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                                    Cliente
-                                  </label>
-                                  <div style={{ position: 'relative' }}>
-                                    <Search size={13} color="#A1A1AA" style={{ position: 'absolute', left: 10, top: 10 }} />
-                                    <input
-                                      value={clienteFilter}
-                                      onChange={e => { setClienteFilter(e.target.value); setClienteSelecionado(null) }}
-                                      placeholder="Buscar cliente..."
-                                      style={{
-                                        fontSize: 12, padding: '8px 12px 8px 32px', border: '1px solid #E4E4E7', borderRadius: 8,
-                                        outline: 'none', width: '100%', background: '#FAFAFA', boxSizing: 'border-box', color: '#18181B',
-                                      }}
-                                    />
-                                  </div>
-                                  {clienteFilter && !clienteSelecionado && clientesFiltrados.length > 0 && (
-                                    <div style={{
-                                      position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 110,
-                                      background: '#fff', border: '1px solid #E4E4E7', borderRadius: 10,
-                                      boxShadow: '0 8px 24px rgba(0,0,0,0.12)', maxHeight: 180, overflowY: 'auto', marginTop: 4,
-                                    }}>
-                                      {clientesFiltrados.map(c => (
-                                        <div key={c.chave}
-                                          onClick={() => selecionarCliente(c)}
-                                          style={{
-                                            padding: '8px 12px', cursor: 'pointer', fontSize: 12, borderBottom: '1px solid #F4F4F5',
-                                          }}
-                                          onMouseEnter={e => (e.currentTarget.style.background = '#F4F4F5')}
-                                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                                        >
-                                          <div style={{ fontWeight: 600, color: '#18181B' }}>{c.display.split('[')[0].trim()}</div>
-                                          {c.display.includes('[') && (
-                                            <div style={{ fontSize: 10, color: '#A1A1AA' }}>{c.display.substring(c.display.indexOf('['))}</div>
-                                          )}
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-
-                                {carregandoCliente && (
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#71717A', fontSize: 11, marginBottom: 10 }}>
-                                    <Loader2 size={12} className="animate-spin" /> Carregando...
-                                  </div>
-                                )}
-
-                                {clienteSelecionado && (
-                                  <div style={{ marginBottom: 10, padding: '10px 12px', background: '#F0FDF4', borderRadius: 10, border: '1px solid #BBF7D0' }}>
-                                    <div style={{ fontSize: 10, fontWeight: 600, color: '#16A34A', marginBottom: 3, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                      <MapPin size={10} /> Endereço vinculado
-                                    </div>
-                                    <div style={{ fontSize: 12, color: '#18181B', fontWeight: 500 }}>
-                                      {clienteSelecionado.endereco || 'Sem endereço cadastrado'}
-                                    </div>
-                                    {clienteSelecionado.cidade && (
-                                      <div style={{ fontSize: 11, color: '#71717A', marginTop: 1 }}>{clienteSelecionado.cidade}</div>
-                                    )}
-                                  </div>
-                                )}
-
-                                <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: 8, marginBottom: 10 }}>
-                                  <div>
-                                    <label style={{ fontSize: 11, fontWeight: 600, color: '#71717A', marginBottom: 4, display: 'block', textTransform: 'uppercase' }}>Horas</label>
-                                    <input type="number" step="0.5" min="0.5" value={addHoras}
-                                      onChange={e => setAddHoras(parseFloat(e.target.value) || 1)}
-                                      style={{
-                                        fontSize: 12, padding: '8px 10px', border: '1px solid #E4E4E7', borderRadius: 8,
-                                        outline: 'none', width: '100%', background: '#FAFAFA', boxSizing: 'border-box', color: '#18181B',
-                                      }}
-                                    />
-                                  </div>
-                                  <div>
-                                    <label style={{ fontSize: 11, fontWeight: 600, color: '#71717A', marginBottom: 4, display: 'block', textTransform: 'uppercase' }}>Observação</label>
-                                    <input value={addObs} onChange={e => setAddObs(e.target.value)}
-                                      placeholder="Ex: Levar peças..."
-                                      style={{
-                                        fontSize: 12, padding: '8px 10px', border: '1px solid #E4E4E7', borderRadius: 8,
-                                        outline: 'none', width: '100%', background: '#FAFAFA', boxSizing: 'border-box', color: '#18181B',
-                                      }}
-                                    />
-                                  </div>
-                                </div>
-
-                                <div style={{ display: 'flex', gap: 8 }}>
-                                  <button onClick={() => adicionarManual(tec.tecnico_nome, dia)}
-                                    disabled={!clienteSelecionado || addSalvando}
-                                    style={{
-                                      flex: 1, padding: '9px 0', fontSize: 12, fontWeight: 600, borderRadius: 8, border: 'none', cursor: 'pointer',
-                                      background: clienteSelecionado ? tecColor : '#E4E4E7',
-                                      color: clienteSelecionado ? '#fff' : '#A1A1AA',
-                                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                                    }}>
-                                    {addSalvando ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
-                                    Adicionar
-                                  </button>
-                                  <button onClick={fecharAdd} style={{
-                                    padding: '9px 14px', borderRadius: 8, border: '1px solid #E4E4E7', background: '#fff',
-                                    cursor: 'pointer', color: '#71717A', fontSize: 12, fontWeight: 500,
-                                  }}>
-                                    Cancelar
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </td>
+                      </div>
                     )
                   })}
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+
+                  {/* Nota do dia do técnico */}
+                  {isEditingNote ? (
+                    <textarea ref={noteRef} autoFocus defaultValue={notaValue} placeholder={`Nota para ${primeiroNome}...`}
+                      onBlur={e => { const v = e.target.value.trim(); if (v !== notaValue) salvarNota(tec.tecnico_nome, diaSel, v); else setEditingNote(null) }}
+                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); const v = (e.target as HTMLTextAreaElement).value.trim(); salvarNota(tec.tecnico_nome, diaSel, v) } if (e.key === 'Escape') setEditingNote(null) }}
+                      style={{ width: '100%', fontSize: 14, padding: '10px 12px', borderRadius: 10, border: '1px solid #C7D2FE', background: '#EEF2FF', outline: 'none', resize: 'vertical', minHeight: 48, boxSizing: 'border-box', color: '#111', lineHeight: 1.4, opacity: notaSalvando === notaKey ? 0.5 : 1 }}
+                    />
+                  ) : notaValue ? (
+                    <div onClick={() => setEditingNote(notaKey)} style={{ cursor: 'pointer', padding: '10px 12px', borderRadius: 10, background: '#EEF2FF', border: '1px solid #DDD6FE', fontSize: 14, color: '#4338CA', lineHeight: 1.4, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                      <StickyNote size={14} style={{ flexShrink: 0, marginTop: 2 }} />
+                      <span>{notaValue}</span>
+                    </div>
+                  ) : (
+                    <button className="ag-note-btn" onClick={() => setEditingNote(notaKey)} style={{ width: '100%', justifyContent: 'center' }}>
+                      <StickyNote size={13} /> Nota do dia...
+                    </button>
+                  )}
+
+                  {/* Botão adicionar */}
+                  {!isAdding && (
+                    <button className="ag-add-btn" onClick={() => abrirAdd(tec.tecnico_nome, diaSel)}>
+                      <Plus size={16} /> Adicionar serviço
+                    </button>
+                  )}
+
+                  {/* ── POPUP ADICIONAR ── */}
+                  {isAdding && (
+                    <div className="ag-fade-in" style={{ background: '#fff', borderRadius: 14, border: '1px solid #E4E4E7', boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: `3px solid ${tecColor}` }}>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: '#111' }}>{primeiroNome}</div>
+                        <button onClick={fecharAdd} style={{ background: '#F4F4F5', border: 'none', borderRadius: 8, cursor: 'pointer', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color="#777" /></button>
+                      </div>
+                      <div style={{ display: 'flex', borderBottom: '1px solid #E4E4E7' }}>
+                        {(['os', 'manual'] as const).map(mode => (
+                          <button key={mode} onClick={() => setAddMode(mode)} style={{
+                            flex: 1, padding: '12px 0', fontSize: 14, fontWeight: addMode === mode ? 700 : 400,
+                            border: 'none', cursor: 'pointer', background: 'transparent',
+                            color: addMode === mode ? '#111' : '#AAA',
+                            borderBottom: addMode === mode ? `3px solid ${tecColor}` : '3px solid transparent', marginBottom: -1,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                          }}>
+                            {mode === 'os' ? <><FileText size={14} /> Ordens {ordsTec.length > 0 && <span style={{ fontSize: 11, fontWeight: 600, background: tecColor, color: '#fff', padding: '2px 8px', borderRadius: 8 }}>{ordsTec.length}</span>}</> : <><Plus size={14} /> Cliente</>}
+                          </button>
+                        ))}
+                      </div>
+
+                      {addMode === 'os' && (
+                        <div style={{ padding: '14px 16px' }}>
+                          <div style={{ position: 'relative', marginBottom: 12 }}>
+                            <Search size={15} color="#AAA" style={{ position: 'absolute', left: 12, top: 11 }} />
+                            <input value={buscaOS} onChange={e => setBuscaOS(e.target.value)} placeholder="Buscar OS, cliente..." style={{ fontSize: 14, padding: '10px 14px 10px 36px', border: '1px solid #E4E4E7', borderRadius: 10, outline: 'none', width: '100%', background: '#FAFAFA', boxSizing: 'border-box', color: '#111' }} />
+                          </div>
+                          <div style={{ maxHeight: 260, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {ordsFiltradas.length === 0 ? (
+                              <div style={{ textAlign: 'center', padding: '20px 0', color: '#CCC', fontSize: 14 }}>{buscaOS ? 'Nenhuma OS' : 'Todas já na agenda'}</div>
+                            ) : ordsFiltradas.map(os => (
+                              <div key={os.Id_Ordem} className="ag-os-item" style={{ cursor: 'pointer' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                                  <span style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>{os.Id_Ordem}</span>
+                                  <button onClick={e => { e.stopPropagation(); adicionarOS(tec.tecnico_nome, diaSel, os) }} disabled={addSalvando}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 4, background: tecColor, color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                                    {addSalvando ? <Loader2 size={11} className="animate-spin" /> : <Plus size={11} />} Adicionar
+                                  </button>
+                                </div>
+                                <div style={{ fontSize: 15, fontWeight: 600, color: '#333' }}>{os.Os_Cliente}</div>
+                                <div style={{ fontSize: 13, color: '#999', display: 'flex', gap: 8, marginTop: 2 }}>
+                                  {os.Cidade_Cliente && <span>{os.Cidade_Cliente}</span>}
+                                  <span>{parseFloat(String(os.Qtd_HR || 0)) || 2}h</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {addMode === 'manual' && (
+                        <div style={{ padding: '14px 16px' }}>
+                          <div style={{ marginBottom: 12, position: 'relative' }}>
+                            <label style={{ fontSize: 12, fontWeight: 600, color: '#999', marginBottom: 6, display: 'block', textTransform: 'uppercase' }}>Cliente</label>
+                            <div style={{ position: 'relative' }}>
+                              <Search size={15} color="#AAA" style={{ position: 'absolute', left: 12, top: 11 }} />
+                              <input value={clienteFilter} onChange={e => { setClienteFilter(e.target.value); setClienteSelecionado(null) }} placeholder="Buscar cliente..."
+                                style={{ fontSize: 14, padding: '10px 14px 10px 36px', border: '1px solid #E4E4E7', borderRadius: 10, outline: 'none', width: '100%', background: '#FAFAFA', boxSizing: 'border-box', color: '#111' }} />
+                            </div>
+                            {clienteFilter && !clienteSelecionado && clientesFiltrados.length > 0 && (
+                              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 110, background: '#fff', border: '1px solid #E4E4E7', borderRadius: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', maxHeight: 200, overflowY: 'auto', marginTop: 4 }}>
+                                {clientesFiltrados.map(c => (
+                                  <div key={c.chave} onClick={() => selecionarCliente(c)} style={{ padding: '10px 14px', cursor: 'pointer', fontSize: 14, borderBottom: '1px solid #F4F4F5' }}
+                                    onMouseEnter={e => (e.currentTarget.style.background = '#F4F4F5')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                                    <div style={{ fontWeight: 600, color: '#111' }}>{c.display.split('[')[0].trim()}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          {carregandoCliente && <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#999', fontSize: 13, marginBottom: 10 }}><Loader2 size={14} className="animate-spin" /> Carregando...</div>}
+                          {clienteSelecionado && (
+                            <div style={{ marginBottom: 12, padding: '10px 14px', background: '#F0FDF4', borderRadius: 12, border: '1px solid #BBF7D0' }}>
+                              <div style={{ fontSize: 14, color: '#111', fontWeight: 600 }}>{clienteSelecionado.endereco || 'Sem endereço'}</div>
+                              {clienteSelecionado.cidade && <div style={{ fontSize: 13, color: '#777', marginTop: 2 }}>{clienteSelecionado.cidade}</div>}
+                            </div>
+                          )}
+                          <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: 10, marginBottom: 12 }}>
+                            <div>
+                              <label style={{ fontSize: 12, fontWeight: 600, color: '#999', marginBottom: 4, display: 'block', textTransform: 'uppercase' }}>Horas</label>
+                              <input type="number" step="0.5" min="0.5" value={addHoras} onChange={e => setAddHoras(parseFloat(e.target.value) || 1)}
+                                style={{ fontSize: 14, padding: '10px 12px', border: '1px solid #E4E4E7', borderRadius: 10, outline: 'none', width: '100%', background: '#FAFAFA', boxSizing: 'border-box', color: '#111' }} />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 12, fontWeight: 600, color: '#999', marginBottom: 4, display: 'block', textTransform: 'uppercase' }}>Observação</label>
+                              <input value={addObs} onChange={e => setAddObs(e.target.value)} placeholder="Ex: Levar peças..."
+                                style={{ fontSize: 14, padding: '10px 12px', border: '1px solid #E4E4E7', borderRadius: 10, outline: 'none', width: '100%', background: '#FAFAFA', boxSizing: 'border-box', color: '#111' }} />
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button onClick={() => adicionarManual(tec.tecnico_nome, diaSel)} disabled={!clienteSelecionado || addSalvando}
+                              style={{ flex: 1, padding: '11px 0', fontSize: 14, fontWeight: 700, borderRadius: 10, border: 'none', cursor: 'pointer', background: clienteSelecionado ? tecColor : '#E4E4E7', color: clienteSelecionado ? '#fff' : '#AAA', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                              {addSalvando ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Adicionar
+                            </button>
+                            <button onClick={fecharAdd} style={{ padding: '11px 18px', borderRadius: 10, border: '1px solid #E4E4E7', background: '#fff', cursor: 'pointer', color: '#777', fontSize: 14 }}>Cancelar</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
       </div>
     </div>
   )

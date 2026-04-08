@@ -16,7 +16,7 @@ const COLUMNS = [
   { key: "Orçamento", title: "Orçamento" },
   { key: "Orçamento enviado para o cliente e aguardando", title: "Orç. Enviado" },
   { key: "Execução", title: "Execução" },
-  { key: "Execução Procurando peças", title: "Proc. Peças" },
+  { key: "Execução (Realizando Diagnóstico)", title: "Diagnóstico" },
   { key: "Execução aguardando peças (em transporte)", title: "Aguar. Peças" },
   { key: "Executada aguardando comercial", title: "Aguar. Comercial" },
   { key: "Aguardando outros", title: "Aguar. Outros" },

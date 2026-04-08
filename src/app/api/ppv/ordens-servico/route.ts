@@ -9,7 +9,7 @@ const STATUS_ABERTOS = [
   "Orçamento enviado para o cliente e aguardando",
   "Aguardando ordem Técnico",
   "Execução",
-  "Execução Procurando peças",
+  "Execução (Realizando Diagnóstico)",
   "Execução aguardando peças (em transporte)",
   "Aguardando outros",
   "Executada",

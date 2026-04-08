@@ -19,7 +19,7 @@ export default function FormReq({ onSave }: { onSave: (data: any) => void }) {
   const [formData, setFormData] = useState({
     titulo: '', tipo: '', solicitante: '', setor: '',
     data: new Date().toISOString().split('T')[0],
-    empresa: '', endereco_empr: '', veiculo: '', hodometro: '',
+    empresa: EMPRESAS.NOVA.nome, endereco_empr: EMPRESAS.NOVA.endereco, veiculo: '', hodometro: '',
     cliente: '', ordem_servico: '', fornecedor: '', obs: '',
     valor_cobrado_cliente: '', quem_ferramenta: '', Chassis_Modelo: '', litros_combustivel: '', status: 'pedido'
   });
@@ -47,9 +47,7 @@ export default function FormReq({ onSave }: { onSave: (data: any) => void }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    setFormData(p => ({ ...p, empresa: EMPRESAS.NOVA.nome, endereco_empr: EMPRESAS.NOVA.endereco }));
-  }, [formData.tipo]);
+  // Empresa já inicializada no estado — sem useEffect loop
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

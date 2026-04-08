@@ -124,6 +124,16 @@ function RequisicoesPageInner() {
   const refreshSilencioso = useCallback(() => carregarDados(true), [carregarDados]);
   useRefreshOnFocus(refreshSilencioso);
 
+  const handleUpdateReq = useCallback(async (id: number, dados: Record<string, unknown>) => {
+    setRequisicoes(prev => prev.map(r => r.id === id ? { ...r, ...dados } : r));
+    const { error } = await supabase.from('Requisicao').update(dados).eq('id', id);
+    if (error) { console.error('[Requisições] Erro ao atualizar:', error); carregarDados(true); return }
+    auditLog({ sistema: 'requisicoes', acao: 'editar', entidade: 'requisicao', entidade_id: String(id), detalhes: dados });
+    const req = requisicoes.find(r => r.id === id);
+    const desc = dados.status ? `Status: ${String(dados.status)}` : (req?.titulo || `Requisição #${id}`);
+    notificarUsuariosReq('requisicao', `${userName} alterou requisição #${id}`, desc, '/requisicoes');
+  }, [carregarDados, requisicoes, userName])
+
   // Notificar usuários com acesso a requisições via portal_notificacoes (bell icon)
   const notificarUsuariosReq = async (tipo: string, titulo: string, descricao?: string, link?: string) => {
     try {
@@ -132,7 +142,7 @@ function RequisicoesPageInner() {
         .select('user_id, is_admin, modulos_permitidos');
       if (!permissoes || permissoes.length === 0) return;
       const usuariosComAcesso = permissoes.filter(
-        (p: any) => p.is_admin || (p.modulos_permitidos && p.modulos_permitidos.includes('requisicoes'))
+        (p: any) => p.is_admin
       );
       if (usuariosComAcesso.length === 0) return;
       await supabase.from('portal_notificacoes').insert(
@@ -175,7 +185,6 @@ function RequisicoesPageInner() {
         );
 
         carregarDados(true);
-        setTimeout(() => carregarDados(true), 2500);
         setTimeout(() => setToasts(prev => prev.filter(t => t.id !== info.id)), 10000);
 
         const buscarEImprimir = async () => {
@@ -265,7 +274,6 @@ function RequisicoesPageInner() {
         }
 
         carregarDados(true);
-        setTimeout(() => carregarDados(true), 2500);
         setTimeout(() => setToasts(prev => prev.filter(t => t.id !== info.id)), 10000);
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'Requisicao' }, () => {
@@ -439,19 +447,7 @@ function RequisicoesPageInner() {
           {abaAtiva === 'kanban' && (
             <Kanban
               requisicoes={requisicoes}
-              onUpdate={async (id: number, dados: Record<string, unknown>) => {
-                setRequisicoes(prev => prev.map(r => r.id === id ? { ...r, ...dados } : r));
-                const { error } = await supabase.from('Requisicao').update(dados).eq('id', id);
-                if (error) {
-                  console.error('[Requisições] Erro ao atualizar:', error);
-                  carregarDados(true); // Recarrega para reverter estado local
-                  return;
-                }
-                auditLog({ sistema: 'requisicoes', acao: 'editar', entidade: 'requisicao', entidade_id: String(id), detalhes: dados });
-                const req = requisicoes.find(r => r.id === id);
-                const desc = dados.status ? `Status: ${String(dados.status)}` : (req?.titulo || `Requisição #${id}`);
-                notificarUsuariosReq('requisicao', `${userName} alterou requisição #${id}`, desc, '/requisicoes');
-              }}
+              onUpdate={handleUpdateReq}
               onPrint={dispararImpressao}
               idDestaque={idDestaque}
             />

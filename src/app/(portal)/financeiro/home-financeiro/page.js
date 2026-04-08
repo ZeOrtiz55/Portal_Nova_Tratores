@@ -421,10 +421,13 @@ function HomeFinanceiroContent() {
          <div key={`pag-${t.id}-${idx}`} onClick={() => setTarefaSelecionada(t)} className="task-card-grid">
           <div style={{ background: '#f1f5f9', padding: '24px', borderBottom: '0.5px solid #dcdde1' }}>
             <h4 style={{ margin: 0, fontSize: '18px', fontWeight:'500', color: '#1e293b' }}>{t.fornecedor?.toUpperCase()}</h4>
-            {getRequisicoes(t).filter(r => r.numero).length > 0 && (
+            {(getRequisicoes(t).filter(r => r.numero).length > 0 || t.anexo_requisicao) && (
               <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                 {getRequisicoes(t).filter(r => r.numero).map((req, i) => (
                   <span key={i} style={{ background: '#e0f2fe', color: '#0369a1', fontSize: '10px', fontWeight: '600', padding: '4px 8px', border: '1px solid #7dd3fc', borderRadius: '4px' }}>#{req.numero}</span>
+                ))}
+                {t.anexo_requisicao && t.anexo_requisicao.split(',').filter(u => u.trim()).map((_, i) => (
+                  <span key={`old-${i}`} style={{ background: '#fef3c7', color: '#92400e', fontSize: '10px', fontWeight: '600', padding: '4px 8px', border: '1px solid #fcd34d', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><Paperclip size={10}/> Req {i + 1}</span>
                 ))}
               </div>
             )}
@@ -569,9 +572,25 @@ function HomeFinanceiroContent() {
         {/* REQUISIÇÕES */}
         {tarefaSelecionada.gTipo === 'pagar' && (
             <div style={{ border:'1px solid #e5e7eb', padding:'35px', background:'#f8fafc', marginBottom:'45px' }}>
-                <div style={{ marginBottom:'20px' }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px' }}>
                     <label style={labelMStyle}>REQUISIÇÕES</label>
+                    <button onClick={() => handleAddRequisicao(tarefaSelecionada)} style={{ background:'#dc2626', color:'#fff', border:'none', padding:'8px 16px', borderRadius:'8px', cursor:'pointer', fontSize:'12px', fontWeight:'600', display:'flex', alignItems:'center', gap:'6px' }}><PlusCircle size={14}/> Adicionar</button>
                 </div>
+                {/* Anexos do formato antigo (anexo_requisicao) */}
+                {tarefaSelecionada.anexo_requisicao && tarefaSelecionada.anexo_requisicao.split(',').filter(u => u.trim()).map((url, i) => (
+                    <div key={`old-${i}`} style={{ display:'grid', gridTemplateColumns:'180px 1fr', gap:'20px', alignItems:'center', background:'#ffffff', padding:'18px', borderBottom:'1px solid #e5e7eb', marginBottom:'4px' }}>
+                        <div>
+                            <label style={{ ...labelMStyle, fontSize:'14px', display:'block', marginBottom:'6px' }}>REQUISIÇÃO {i + 1}</label>
+                        </div>
+                        <AttachmentTag
+                            icon={<Paperclip size={18} />}
+                            label={`ANEXO REQUISIÇÃO ${i + 1}`}
+                            fileUrl={url.trim()}
+                            disabled
+                        />
+                    </div>
+                ))}
+                {/* Anexos do formato novo (requisicoes_json) */}
                 {getRequisicoes(tarefaSelecionada).map((req, i) => (
                     <div key={i} style={{ display:'grid', gridTemplateColumns:'180px 1fr auto', gap:'20px', alignItems:'center', background:'#ffffff', padding:'18px', borderBottom:'1px solid #e5e7eb', marginBottom:'4px' }}>
                         <div>

@@ -21,7 +21,7 @@ const CORES_FASE: Record<string, string> = {
   "Orçamento": "#3B82F6",
   "Orçamento enviado para o cliente e aguardando": "#60A5FA",
   "Execução": "#F59E0B",
-  "Execução Procurando peças": "#F97316",
+  "Execução (Realizando Diagnóstico)": "#F97316",
   "Execução aguardando peças (em transporte)": "#FB923C",
   "Executada aguardando comercial": "#C084FC",
   "Aguardando outros": "#A855F7",
@@ -31,7 +31,7 @@ const CORES_FASE: Record<string, string> = {
 
 // Fases consideradas "atrasadas" por natureza (ordem parada esperando algo)
 const FASES_ATRASO = new Set([
-  "Execução Procurando peças",
+  "Execução (Realizando Diagnóstico)",
   "Execução aguardando peças (em transporte)",
   "Executada aguardando comercial",
   "Aguardando outros",

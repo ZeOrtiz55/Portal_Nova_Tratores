@@ -29,7 +29,7 @@ const STATUS_ICON: Record<string, string> = {
   "Orçamento": "fa-file-alt",
   "Orçamento enviado para o cliente e aguardando": "fa-paper-plane",
   "Execução": "fa-play-circle",
-  "Execução Procurando peças": "fa-search",
+  "Execução (Realizando Diagnóstico)": "fa-search",
   "Execução aguardando peças (em transporte)": "fa-truck",
   "Executada aguardando comercial": "fa-file-invoice-dollar",
   "Aguardando outros": "fa-clock",

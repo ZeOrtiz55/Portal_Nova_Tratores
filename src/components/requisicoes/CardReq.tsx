@@ -119,13 +119,15 @@ export default function CardReq({ req, onUpdate, onPrint, dadosCompartilhados, a
   }, [modalAberto, modalCotacaoAberto, cotacaoCarregada, req.id]);
 
   // Data automática financeiro
+  const onUpdateRef = useRef(onUpdate);
+  onUpdateRef.current = onUpdate;
   useEffect(() => {
     if (req.status === 'financeiro' && !req.enviado_financeiro_data) {
       const hoje = new Date().toISOString().split('T')[0];
       setLocalData((prev: any) => ({ ...prev, enviado_financeiro_data: hoje }));
-      onUpdate(req.id, { enviado_financeiro_data: hoje });
+      onUpdateRef.current(req.id, { enviado_financeiro_data: hoje });
     }
-  }, [req.status, req.enviado_financeiro_data, req.id, onUpdate]);
+  }, [req.status, req.enviado_financeiro_data, req.id]);
 
   const persist = useCallback((name: string, value: any) => {
     setLocalData((prev: any) => ({ ...prev, [name]: value }));

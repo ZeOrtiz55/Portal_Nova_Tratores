@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/pos/supabase";
-import { TBL_OS, TBL_LOGS_PPO } from "@/lib/pos/constants";
+import { TBL_OS, TBL_LOGS_PPO, TBL_METRICAS, FASES_CONTADOR_PARADO } from "@/lib/pos/constants";
 import { safeGet } from "@/lib/pos/utils";
 import { sincronizarStatusPPV } from "@/lib/pos/sync-ppv";
 import { logAndNotify } from "@/lib/server/audit-notify";
@@ -38,6 +38,48 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     Status_Anterior: statusAnterior, Status_Atual: newStatus,
     Dias_Na_Fase: 0, Total_Dias_Aberto: 0,
   });
+
+  // ── Métricas de atraso ──
+  // Volta pra Execução → fecha métrica aberta (some os dias em atraso)
+  if (newStatus === "Execução") {
+    const { data: abertas } = await supabase.from(TBL_METRICAS).select("id, data_inicio").eq("id_ordem", idOs).is("data_fim", null);
+    if (abertas && abertas.length > 0) {
+      const agr = new Date();
+      for (const m of abertas) {
+        const dias = Math.floor((agr.getTime() - new Date(m.data_inicio).getTime()) / 86400000);
+        await supabase.from(TBL_METRICAS).update({ data_fim: agr.toISOString(), dias }).eq("id", m.id);
+      }
+    }
+  }
+  // Vai pra Aguardando Técnico → fecha antiga (se tiver) e cria nova (zera contador)
+  if (newStatus === "Aguardando ordem Técnico") {
+    const { data: abertas } = await supabase.from(TBL_METRICAS).select("id, data_inicio").eq("id_ordem", idOs).is("data_fim", null);
+    if (abertas && abertas.length > 0) {
+      const agr = new Date();
+      for (const m of abertas) {
+        const dias = Math.floor((agr.getTime() - new Date(m.data_inicio).getTime()) / 86400000);
+        await supabase.from(TBL_METRICAS).update({ data_fim: agr.toISOString(), dias }).eq("id", m.id);
+      }
+    }
+    const { data: osData } = await supabase.from(TBL_OS).select("Os_Tecnico").eq("Id_Ordem", idOs).limit(1);
+    await supabase.from(TBL_METRICAS).insert({
+      id_ordem: idOs,
+      tecnico: osData?.[0]?.Os_Tecnico || "N/A",
+      tipo: "atraso_execucao",
+      data_inicio: new Date().toISOString(),
+    });
+  }
+  // Fase que para o contador (Concluída, Cancelada, etc) → fecha métrica
+  if (FASES_CONTADOR_PARADO.has(newStatus)) {
+    const { data: abertas } = await supabase.from(TBL_METRICAS).select("id, data_inicio").eq("id_ordem", idOs).is("data_fim", null);
+    if (abertas && abertas.length > 0) {
+      const agr = new Date();
+      for (const m of abertas) {
+        const dias = Math.floor((agr.getTime() - new Date(m.data_inicio).getTime()) / 86400000);
+        await supabase.from(TBL_METRICAS).update({ data_fim: agr.toISOString(), dias }).eq("id", m.id);
+      }
+    }
+  }
 
   // Sincroniza status do PPV vinculado
   await sincronizarStatusPPV(idOs, newStatus);

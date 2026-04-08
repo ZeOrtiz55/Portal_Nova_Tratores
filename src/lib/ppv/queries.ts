@@ -267,7 +267,7 @@ function mapearStatusOS(statusOS: string): string | null {
   const s = (statusOS || "").trim();
   const fasesValidas = [
     "Orçamento", "Orçamento enviado para o cliente e aguardando",
-    "Execução", "Execução Procurando peças", "Execução aguardando peças (em transporte)",
+    "Execução", "Execução (Realizando Diagnóstico)", "Execução aguardando peças (em transporte)",
     "Executada aguardando comercial", "Aguardando outros", "Aguardando ordem Técnico",
     "Executada aguardando cliente", "Concluída", "Cancelada",
   ];

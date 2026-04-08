@@ -11,7 +11,7 @@ export function normalizarStatus(st: string | null | undefined): string {
     "Orçamento",
     "Orçamento enviado para o cliente e aguardando",
     "Execução",
-    "Execução Procurando peças",
+    "Execução (Realizando Diagnóstico)",
     "Execução aguardando peças (em transporte)",
     "Executada aguardando comercial",
     "Aguardando outros",
