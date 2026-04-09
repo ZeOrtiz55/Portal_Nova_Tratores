@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseFetch, formatarDataBR } from "@/lib/ppv/supabase";
-import { TBL_ITENS } from "@/lib/ppv/constants";
+import { TBL_ITENS, TBL_PRODUTOS } from "@/lib/ppv/constants";
 import { buscarPPVPorId, atualizarValorTotal, registrarLog } from "@/lib/ppv/queries";
 import { movimentacaoSchema, editarPrecoItemSchema } from "@/lib/ppv/schemas";
 import { logAndNotify } from "@/lib/server/audit-notify";
@@ -63,14 +63,26 @@ export async function PATCH(req: NextRequest) {
     }
     const { id, codigo, preco, userName } = parsed.data;
 
+    // 1. Atualiza o preço de todas as movimentações desse item neste PPV
     await supabaseFetch(
       `${TBL_ITENS}?Id_PPV=eq.${encodeURIComponent(id)}&CodProduto=eq.${encodeURIComponent(codigo)}`,
       "PATCH",
       { Preco: preco }
     );
 
+    // 2. Atualiza também o cadastro (Produtos_Completos) — será sobrescrito no próximo sync com o Omie
+    try {
+      await supabaseFetch(
+        `${TBL_PRODUTOS}?Codigo_Produto=eq.${encodeURIComponent(codigo)}`,
+        "PATCH",
+        { Preco_Venda: preco }
+      );
+    } catch (e) {
+      console.error("Erro ao atualizar preço no cadastro:", e);
+    }
+
     await atualizarValorTotal(id);
-    await registrarLog(id, `Preço do item ${codigo} alterado para R$ ${preco.toFixed(2)}`, userName || "Sistema");
+    await registrarLog(id, `Preço do item ${codigo} alterado para R$ ${preco.toFixed(2)} (cadastro atualizado)`, userName || "Sistema");
 
     const detalhes = await buscarPPVPorId(id);
     return NextResponse.json(detalhes);
