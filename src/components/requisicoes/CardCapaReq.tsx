@@ -10,7 +10,7 @@ import {
 // Carrega CardReq completo só quando o modal abre
 const CardReq = dynamic(() => import('./CardReq'), { ssr: false });
 
-export default function CardCapaReq({ req, onUpdate, onPrint, dadosCompartilhados }: any) {
+export default function CardCapaReq({ req, onUpdate, onPrint, dadosCompartilhados, onCardFechado }: any) {
   const [modalAberto, setModalAberto] = useState(false);
 
   const veioDoApp = req.origem === 'app_tecnico' || req.obs?.includes('[APPSHEET_ID:');
@@ -144,7 +144,7 @@ export default function CardCapaReq({ req, onUpdate, onPrint, dadosCompartilhado
           onPrint={onPrint}
           dadosCompartilhados={dadosCompartilhados}
           aberto={true}
-          onFechar={() => setModalAberto(false)}
+          onFechar={() => { setModalAberto(false); onCardFechado?.(req.id); }}
         />
       )}
     </>

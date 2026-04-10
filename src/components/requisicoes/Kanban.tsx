@@ -6,7 +6,7 @@ import { Search, Calendar, Building2, X, Layout, UserCircle, Layers, SlidersHori
 
 const LISTA_FORNECEDORES_CADASTRADOS = ["Rodrigo Torneiro (Panda)"];
 
-export default function Kanban({ requisicoes, onUpdate, onPrint }: any) {
+export default function Kanban({ requisicoes, onUpdate, onPrint, onCardFechado }: any) {
   // Dados compartilhados - buscados UMA vez, passados para todos os cards
   const [dadosCompartilhados, setDadosCompartilhados] = useState<{ fornecedores: any[], usuarios: any[], veiculos: any[] }>({ fornecedores: [], usuarios: [], veiculos: [] });
 
@@ -27,6 +27,8 @@ export default function Kanban({ requisicoes, onUpdate, onPrint }: any) {
   const [filtroMes, setFiltroMes] = useState('');
   const [filtroSolicitante, setFiltroSolicitante] = useState('');
   const [filtroTipo, setFiltroTipo] = useState('');
+  const [filtroFornAguardando, setFiltroFornAguardando] = useState('');
+  const [filtroTecnicoPedido, setFiltroTecnicoPedido] = useState('');
   const [colunaArrastando, setColunaArrastando] = useState<string | null>(null);
   const [limitesPorColuna, setLimitesPorColuna] = useState<Record<string, number>>({});
   const CARDS_POR_VEZ = 20;
@@ -68,6 +70,31 @@ export default function Kanban({ requisicoes, onUpdate, onPrint }: any) {
     return Array.from(new Set([...LISTA_FORNECEDORES_CADASTRADOS, ...doBanco])).sort();
   }, [requisicoes]);
 
+  // Fornecedores por coluna de status (agrupa + conta)
+  const contarFornecedoresPorStatus = (status: string) => {
+    const lista = requisicoes
+      .filter((r: any) => r.status === status && r.fornecedor)
+      .map((r: any) => r.fornecedor);
+    const contagem: Record<string, number> = {};
+    lista.forEach((f: string) => { contagem[f] = (contagem[f] || 0) + 1; });
+    return Object.entries(contagem)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([nome, qtd]) => ({ nome, qtd }));
+  };
+  const fornecedoresAguardando = useMemo(() => contarFornecedoresPorStatus('aguardando'), [requisicoes]);
+
+  // Técnicos (solicitantes) que têm requisições na coluna "Pedido Realizado"
+  const tecnicosPedido = useMemo(() => {
+    const lista = requisicoes
+      .filter((r: any) => r.status === 'pedido' && r.solicitante)
+      .map((r: any) => r.solicitante);
+    const contagem: Record<string, number> = {};
+    lista.forEach((s: string) => { contagem[s] = (contagem[s] || 0) + 1; });
+    return Object.entries(contagem)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([nome, qtd]) => ({ nome, qtd }));
+  }, [requisicoes]);
+
   const mesesDisponiveis = useMemo(() => {
     const lista = requisicoes.map((r: any) => {
       if (!r.data) return null;
@@ -93,7 +120,7 @@ export default function Kanban({ requisicoes, onUpdate, onPrint }: any) {
   }, [requisicoes, filtroID, filtroTitulo, filtroFornecedor, filtroMes, filtroSolicitante, filtroTipo]);
 
   const temFiltroAtivo = filtroID || filtroTitulo || filtroFornecedor || filtroMes || filtroSolicitante || filtroTipo;
-  const limparFiltros = () => { setFiltroID(''); setFiltroTitulo(''); setFiltroFornecedor(''); setFiltroMes(''); setFiltroSolicitante(''); setFiltroTipo(''); };
+  const limparFiltros = () => { setFiltroID(''); setFiltroTitulo(''); setFiltroFornecedor(''); setFiltroMes(''); setFiltroSolicitante(''); setFiltroTipo(''); setFiltroFornAguardando(''); setFiltroTecnicoPedido(''); };
   const resultCount = filtradas.filter((r: any) => r.status !== 'lixeira').length;
 
   const pillBase = "px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap";
@@ -176,7 +203,13 @@ export default function Kanban({ requisicoes, onUpdate, onPrint }: any) {
       <div className="px-6 mt-2">
         <div className="flex gap-4 overflow-x-auto pb-8 scrollbar-hide justify-center">
           {colunas.map((col) => {
-            const items = filtradas.filter((r: any) => r.status === col.id);
+            let items = filtradas.filter((r: any) => r.status === col.id);
+            if (col.id === 'aguardando' && filtroFornAguardando) {
+              items = items.filter((r: any) => r.fornecedor === filtroFornAguardando);
+            }
+            if (col.id === 'pedido' && filtroTecnicoPedido) {
+              items = items.filter((r: any) => r.solicitante === filtroTecnicoPedido);
+            }
             const isOver = colunaArrastando === col.id;
 
             return (
@@ -200,6 +233,62 @@ export default function Kanban({ requisicoes, onUpdate, onPrint }: any) {
                       <div className={`w-2 h-2 rounded-full ${col.cor}`}></div>
                     </div>
                   </div>
+                  {col.id === 'pedido' && tecnicosPedido.length > 0 && (
+                    <div className="mt-3 relative">
+                      <UserCircle size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none"/>
+                      <select
+                        value={filtroTecnicoPedido}
+                        onChange={e => setFiltroTecnicoPedido(e.target.value)}
+                        className={`w-full text-[11px] rounded-full pl-7 pr-7 py-1 outline-none border transition-all appearance-none cursor-pointer ${
+                          filtroTecnicoPedido
+                            ? 'border-red-300 bg-red-50/60 text-red-600 font-medium'
+                            : 'border-zinc-100 bg-zinc-50/60 text-zinc-500 hover:border-zinc-200'
+                        }`}
+                      >
+                        <option value="">Todos os técnicos ({tecnicosPedido.length})</option>
+                        {tecnicosPedido.map((t) => (
+                          <option key={t.nome} value={t.nome}>{t.nome} ({t.qtd})</option>
+                        ))}
+                      </select>
+                      {filtroTecnicoPedido && (
+                        <button
+                          onClick={() => setFiltroTecnicoPedido('')}
+                          className="absolute right-7 top-1/2 -translate-y-1/2 text-red-400 hover:text-red-600"
+                          title="Limpar"
+                        >
+                          <X size={11} />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  {col.id === 'aguardando' && fornecedoresAguardando.length > 0 && (
+                    <div className="mt-3 relative">
+                      <Building2 size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-orange-500 pointer-events-none"/>
+                      <select
+                        value={filtroFornAguardando}
+                        onChange={e => setFiltroFornAguardando(e.target.value)}
+                        className={`w-full text-[12px] rounded-full pl-7 pr-7 py-1.5 outline-none border transition-all appearance-none cursor-pointer ${
+                          filtroFornAguardando
+                            ? 'border-orange-400 bg-orange-50 text-orange-700 font-semibold'
+                            : 'border-zinc-200 bg-white text-zinc-600 hover:border-orange-300'
+                        }`}
+                      >
+                        <option value="">Todos os fornecedores ({fornecedoresAguardando.length})</option>
+                        {fornecedoresAguardando.map((f) => (
+                          <option key={f.nome} value={f.nome}>{f.nome} ({f.qtd})</option>
+                        ))}
+                      </select>
+                      {filtroFornAguardando && (
+                        <button
+                          onClick={() => setFiltroFornAguardando('')}
+                          className="absolute right-7 top-1/2 -translate-y-1/2 text-orange-500 hover:text-orange-700"
+                          title="Limpar"
+                        >
+                          <X size={12} />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* ÁREA DOS CARDS */}
@@ -213,6 +302,7 @@ export default function Kanban({ requisicoes, onUpdate, onPrint }: any) {
                           onUpdate={onUpdate}
                           onPrint={onPrint}
                           dadosCompartilhados={dadosCompartilhados}
+                          onCardFechado={onCardFechado}
                         />
                       ))}
                       {items.length > (limitesPorColuna[col.id] || CARDS_POR_VEZ) && (

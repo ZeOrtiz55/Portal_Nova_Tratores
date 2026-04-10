@@ -1,6 +1,6 @@
 'use client';
 export const dynamic = 'force-dynamic';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { usePermissoes } from '@/hooks/usePermissoes';
@@ -124,15 +124,25 @@ function RequisicoesPageInner() {
   const refreshSilencioso = useCallback(() => carregarDados(true), [carregarDados]);
   useRefreshOnFocus(refreshSilencioso);
 
+  // Rastreia quais cards foram editados enquanto estavam abertos
+  const cardsEditadosRef = useRef<Set<number>>(new Set());
+
   const handleUpdateReq = useCallback(async (id: number, dados: Record<string, unknown>) => {
     setRequisicoes(prev => prev.map(r => r.id === id ? { ...r, ...dados } : r));
     const { error } = await supabase.from('Requisicao').update(dados).eq('id', id);
     if (error) { console.error('[Requisições] Erro ao atualizar:', error); carregarDados(true); return }
     auditLog({ sistema: 'requisicoes', acao: 'editar', entidade: 'requisicao', entidade_id: String(id), detalhes: dados });
-    const req = requisicoes.find(r => r.id === id);
-    const desc = dados.status ? `Status: ${String(dados.status)}` : (req?.titulo || `Requisição #${id}`);
-    notificarUsuariosReq('requisicao', `${userName} alterou requisição #${id}`, desc, '/requisicoes');
-  }, [carregarDados, requisicoes, userName])
+    // Marca que esse card foi editado (notificação só ao fechar)
+    cardsEditadosRef.current.add(id);
+  }, [carregarDados])
+
+  const handleCardFechado = useCallback((id: number) => {
+    if (cardsEditadosRef.current.has(id)) {
+      cardsEditadosRef.current.delete(id);
+      const req = requisicoes.find(r => r.id === id);
+      notificarUsuariosReq('requisicao', `${userName} alterou requisição #${id}`, req?.titulo || `Requisição #${id}`, '/requisicoes');
+    }
+  }, [requisicoes, userName]);
 
   // Notificar usuários com acesso a requisições via portal_notificacoes (bell icon)
   const notificarUsuariosReq = async (tipo: string, titulo: string, descricao?: string, link?: string) => {
@@ -450,6 +460,7 @@ function RequisicoesPageInner() {
               onUpdate={handleUpdateReq}
               onPrint={dispararImpressao}
               idDestaque={idDestaque}
+              onCardFechado={handleCardFechado}
             />
           )}
 
