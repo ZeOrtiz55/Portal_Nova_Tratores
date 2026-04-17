@@ -9,7 +9,7 @@ import {
   LogOut, Settings, ClipboardList, Wrench, FileText,
   DollarSign, Package, Menu, X, User as UserIcon,
   LayoutDashboard, Bell, ChevronRight, Activity, Lock, MessageCircle,
-  CheckCheck, Trash2, ExternalLink, Calendar, Users, Calculator
+  CheckCheck, Trash2, ExternalLink, Calendar, Users, Calculator, BarChart3
 } from 'lucide-react'
 import Link from 'next/link'
 import ChatPanel from './chat/ChatPanel'
@@ -23,6 +23,7 @@ interface NavItem {
   icon: React.ReactNode
   tag: string
   gradient: string
+  external?: boolean
 }
 
 const navItems: NavItem[] = [
@@ -105,6 +106,15 @@ const navItems: NavItem[] = [
     icon: <Users size={18} />,
     tag: 'CAMPO',
     gradient: 'linear-gradient(135deg, #1E3A5F, #1d4ed8)'
+  },
+  {
+    id: 'consulta-estoque',
+    name: 'Consulta Estoque',
+    href: 'http://localhost:3000',
+    icon: <BarChart3 size={18} />,
+    tag: 'ESTOQUE',
+    gradient: 'linear-gradient(135deg, #ef4444, #991b1b)',
+    external: true
   }
 ]
 
@@ -657,6 +667,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               <Link
                 key={item.id}
                 href={item.href}
+                target={item.external ? '_blank' : undefined}
+                rel={item.external ? 'noopener noreferrer' : undefined}
                 onClick={() => setSidebarOpen(false)}
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: '10px',

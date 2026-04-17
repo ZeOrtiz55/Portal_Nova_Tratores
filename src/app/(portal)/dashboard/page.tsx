@@ -125,6 +125,17 @@ const systems: SystemCard[] = [
     href: 'https://mapa-geral-production.up.railway.app/',
     tag: 'MAPA',
     external: true
+  },
+  {
+    id: 'consulta-estoque',
+    name: 'Consulta Estoque',
+    description: 'Estoque Omie, CMC, curva ABC, dashboard de vendas e comissões',
+    icon: <BarChart3 size={28} />,
+    color: '#dc2626',
+    gradient: 'linear-gradient(135deg, #ef4444, #991b1b)',
+    href: 'http://localhost:3000',
+    tag: 'ESTOQUE',
+    external: true
   }
 ]
 
@@ -147,6 +158,7 @@ const systemToModulo: Record<string, string> = {
   'tarefas': 'tarefas',
   'painel-mecanicos': 'painel-mecanicos',
   'mapa-geral': 'mapa',
+  'consulta-estoque': 'estoque',
 }
 
 export default function DashboardPage() {

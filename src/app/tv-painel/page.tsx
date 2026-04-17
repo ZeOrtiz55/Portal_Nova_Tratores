@@ -25,6 +25,13 @@ function fHora(iso: string | null): string { if (!iso) return '--:--'; const d =
 function isoToMin(iso: string): number { const d = new Date(iso); return d.getHours() * 60 + d.getMinutes() }
 function agora(): number { const d = new Date(); return d.getHours() * 60 + d.getMinutes() }
 
+function distanciaKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371; const toRad = (d: number) => d * Math.PI / 180
+  const dLat = toRad(lat2 - lat1); const dLng = toRad(lng2 - lng1)
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
 function isEnderecoOficina(endereco: string, cliente: string, servicoOficina?: boolean): boolean {
   if (servicoOficina) return true
   const low = (endereco + ' ' + cliente).toLowerCase()
@@ -251,7 +258,25 @@ export default function TVPainel() {
       const foraLoja = !!(ultimaVisita && ultimaVisita.saida && !ultimaVisita.retorno)
       const completedVisits = visitasReais(visitasGPS).filter(v => v.saidaCliente).length
       const pos = viagem?.ultima_posicao || null
-      const curIdx = ordsTec.length > 0 ? osAtualIdx(visitasGPS, estimados, ordsTec.length) : -1
+      let curIdx = ordsTec.length > 0 ? osAtualIdx(visitasGPS, estimados, ordsTec.length) : -1
+
+      // Se está a caminho e ainda não chegou em nenhum cliente, detecta pelo mais próximo
+      const reaisTv = visitasReais(visitasGPS)
+      if (pos && foraLoja && ext.length > 1 && reaisTv.filter(v => v.chegada).length === 0) {
+        let melhorIdx = curIdx, melhorDist = Infinity
+        for (let ei = 0; ei < ext.length; ei++) {
+          const coord = ext[ei].coordenadas
+          if (!coord) continue
+          const dist = distanciaKm(pos.lat, pos.lng, coord.lat, coord.lng)
+          if (dist < melhorDist) {
+            melhorDist = dist
+            const osMatch = ordsTec.findIndex(o => o.Id_Ordem === ext[ei].id_ordem)
+            if (osMatch >= 0) melhorIdx = osMatch
+          }
+        }
+        if (melhorIdx !== curIdx) curIdx = melhorIdx
+      }
+
       const curOS = curIdx >= 0 ? ordsTec[curIdx] : null
       const curAgItem = curOS ? items.find(a => a.id_ordem === curOS.Id_Ordem) : null
       const curEst = curIdx >= 0 ? estimados[curIdx] : null
