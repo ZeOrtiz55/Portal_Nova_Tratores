@@ -133,7 +133,7 @@ const systems: SystemCard[] = [
     icon: <BarChart3 size={28} />,
     color: '#dc2626',
     gradient: 'linear-gradient(135deg, #ef4444, #991b1b)',
-    href: 'http://localhost:3000',
+    href: 'http://localhost:3002',
     tag: 'ESTOQUE',
     external: true
   }

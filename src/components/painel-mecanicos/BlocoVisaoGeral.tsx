@@ -189,17 +189,14 @@ function osAtualIdx(visitasGPS: VisitaGPS[], estimados: EstimadoCliente[], total
 // Reverse geocode
 const geoCache: Record<string, string> = {}
 async function reverseGeocode(lat: number, lng: number): Promise<string> {
-  const key = `${lat.toFixed(4)},${lng.toFixed(4)}`
+  const key = `${lat.toFixed(5)},${lng.toFixed(5)}`
   if (geoCache[key]) return geoCache[key]
   try {
-    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=16&addressdetails=1`, { headers: { 'Accept-Language': 'pt-BR' } })
+    const r = await fetch(`/api/pos/geocode?lat=${lat}&lng=${lng}`)
     if (!r.ok) return ''
-    const data = await r.json()
-    const addr = data.address || {}
-    const parts = [addr.road, addr.suburb || addr.neighbourhood, addr.city || addr.town || addr.village].filter(Boolean)
-    const result = parts.join(', ') || data.display_name?.split(',').slice(0, 3).join(',') || ''
-    geoCache[key] = result
-    return result
+    const { endereco } = await r.json()
+    if (endereco) geoCache[key] = endereco
+    return endereco || ''
   } catch { return '' }
 }
 
@@ -302,14 +299,17 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
           if (addr) setCarAddr(p => ({ ...p, [nome]: addr }))
         })
       }
-      // Reverse geocode each chegada_cliente and saida_cliente event
-      let ci = 0, si = 0
-      viagem.eventos.filter(ev => ev.tipo === 'chegada_cliente' || ev.tipo === 'saida_cliente').forEach(ev => {
+      // Reverse geocode all events
+      let ci = 0, si = 0, li = 0
+      viagem.eventos.filter(ev => ev.tipo === 'chegada_cliente' || ev.tipo === 'saida_cliente' || ev.tipo === 'saida_loja' || ev.tipo === 'retorno_loja').forEach(ev => {
         if (ev.tipo === 'chegada_cliente') {
           const key = `${nome}_cheg_${ci}`; ci++
           reverseGeocode(ev.lat, ev.lng).then(addr => { if (addr) setEventAddrs(p => ({ ...p, [key]: addr })) })
-        } else {
+        } else if (ev.tipo === 'saida_cliente') {
           const key = `${nome}_said_${si}`; si++
+          reverseGeocode(ev.lat, ev.lng).then(addr => { if (addr) setEventAddrs(p => ({ ...p, [key]: addr })) })
+        } else {
+          const key = `${nome}_loja_${li}`; li++
           reverseGeocode(ev.lat, ev.lng).then(addr => { if (addr) setEventAddrs(p => ({ ...p, [key]: addr })) })
         }
       })
@@ -361,7 +361,6 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
 
       const items = agenda.filter(a => a.tecnico_nome === nome).sort((a, b) => a.ordem_sequencia - b.ordem_sequencia)
       const ordsTec = ordens.filter(o => o.Status === 'Execução' && (match(nome, o.Os_Tecnico) || match(nome, o.Os_Tecnico2)))
-      // Only external items (not oficina)
       const ext = items.filter(a => {
         const os = a.id_ordem ? ordsTec.find(o => o.Id_Ordem === a.id_ordem) : null
         if (os?.Servico_Oficina) return false
@@ -373,58 +372,64 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
       const reais = visitasReais(visitasGPS)
       if (reais.length < 1) continue
 
-      // Build GPS→agenda mapping: for each real GPS visit, find which agenda item it matches
-      const usados = new Set<number>()
-      const gpsOrder: { agendaItem: AgendaRow; gpsIdx: number }[] = []
-      for (let gi = 0; gi < reais.length; gi++) {
-        const vis = reais[gi]
-        if (!vis.chegada) continue
-        // Find which agenda item this GPS visit matches (by destino/CNPJ/name/city)
-        let matched: AgendaRow | null = null
+      // Pega a primeira visita GPS real com chegada
+      const primeiraVisita = reais.find(v => v.chegada)
+      if (!primeiraVisita) continue
+
+      // Acha qual item da agenda corresponde a essa visita GPS
+      let matchedIdx = -1
+      // Coordenadas da chegada GPS
+      const evChegada = viagem.eventos.find(e => e.tipo === 'chegada_cliente' && e.horario === primeiraVisita.chegada)
+      for (let ai = 0; ai < ext.length; ai++) {
+        const item = ext[ai]
+        const os = item.id_ordem ? ordsTec.find(o => o.Id_Ordem === item.id_ordem) : null
+        const cnpjOS = os?.Cnpj_Cliente || ''
+        // 1. Match por CNPJ
+        if (cnpjOS && primeiraVisita.destino_cnpj && cnpjOS === primeiraVisita.destino_cnpj) { matchedIdx = ai; break }
+        // 2. Match por nome destino vs cliente
+        if (primeiraVisita.destino_nome && item.cliente && match(primeiraVisita.destino_nome, item.cliente)) { matchedIdx = ai; break }
+        // 3. Match por cidade
+        const cidadeGPS = (primeiraVisita.destino_nome || '').toLowerCase()
+        const cidadeAgenda = (item.cidade || os?.Cidade_Cliente || '').toLowerCase()
+        if (cidadeAgenda && cidadeGPS && (cidadeGPS.includes(cidadeAgenda) || cidadeAgenda.includes(cidadeGPS))) { matchedIdx = ai; break }
+      }
+      // 4. Fallback: match por proximidade GPS vs coordenadas da agenda
+      if (matchedIdx < 0 && evChegada) {
+        let melhorDist = Infinity
         for (let ai = 0; ai < ext.length; ai++) {
-          if (usados.has(ai)) continue
-          const item = ext[ai]
-          const os = item.id_ordem ? ordsTec.find(o => o.Id_Ordem === item.id_ordem) : null
-          const cnpjOS = os?.Cnpj_Cliente || ''
-          // Match by CNPJ
-          if (cnpjOS && vis.destino_cnpj && vis.destino_cnpj === cnpjOS) { matched = item; usados.add(ai); break }
-          // Match by name
-          if (vis.destino_nome && item.cliente && match(vis.destino_nome, item.cliente)) { matched = item; usados.add(ai); break }
-          // Match by city
-          const cidadeGPS = vis.destino_nome?.toLowerCase() || ''
-          const cidadeAgenda = (item.cidade || os?.Cidade_Cliente || '').toLowerCase()
-          if (cidadeAgenda && cidadeGPS && cidadeGPS.includes(cidadeAgenda)) { matched = item; usados.add(ai); break }
-          if (cidadeAgenda && cidadeGPS && cidadeAgenda.includes(cidadeGPS)) { matched = item; usados.add(ai); break }
+          const coord = ext[ai].coordenadas
+          if (!coord) continue
+          const dist = distanciaKm(evChegada.lat, evChegada.lng, coord.lat, coord.lng)
+          if (dist < melhorDist && dist < 5) { melhorDist = dist; matchedIdx = ai }
         }
-        if (matched) gpsOrder.push({ agendaItem: matched, gpsIdx: gi })
       }
 
-      if (gpsOrder.length < 2) continue
+      // Se a primeira visita GPS NÃO é o primeiro item da agenda → precisa trocar
+      if (matchedIdx <= 0) continue // já é o primeiro ou não deu match
 
-      // Check if GPS order differs from agenda order
-      const agendaSeqs = gpsOrder.map(g => g.agendaItem.ordem_sequencia)
-      const isSorted = agendaSeqs.every((v, i) => i === 0 || v >= agendaSeqs[i - 1])
-      if (isSorted) continue
-
-      // Build reorder key to avoid repeat updates
-      const reorderKey = `${nome}_${gpsOrder.map(g => g.agendaItem.id).join('_')}`
+      const reorderKey = `${nome}_${ext[matchedIdx].id}_to_first`
       if (reorderAppliedRef.current.has(reorderKey)) continue
       reorderAppliedRef.current.add(reorderKey)
 
-      // Swap ordem_sequencia to match GPS visit order
-      // Collect the original sequence numbers, then assign them in GPS order
-      const originalSeqs = gpsOrder.map(g => g.agendaItem.ordem_sequencia).sort((a, b) => a - b)
+      // Troca: o item que o GPS visitou primeiro recebe a menor sequencia,
+      // e os outros sobem
+      const seqs = ext.map(e => e.ordem_sequencia).sort((a, b) => a - b)
+      const novaOrdem = [...ext]
+      // Move o matched para a posição 0, empurra os demais
+      const matched = novaOrdem.splice(matchedIdx, 1)[0]
+      novaOrdem.unshift(matched)
+
       const updates: { id: number; ordem_sequencia: number }[] = []
-      for (let i = 0; i < gpsOrder.length; i++) {
-        if (gpsOrder[i].agendaItem.ordem_sequencia !== originalSeqs[i]) {
-          updates.push({ id: gpsOrder[i].agendaItem.id, ordem_sequencia: originalSeqs[i] })
+      for (let i = 0; i < novaOrdem.length; i++) {
+        if (novaOrdem[i].ordem_sequencia !== seqs[i]) {
+          updates.push({ id: novaOrdem[i].id, ordem_sequencia: seqs[i] })
         }
       }
 
       if (updates.length === 0) continue
 
-      // Apply updates
       ;(async () => {
+        // 1. Atualiza ordem_sequencia
         for (const upd of updates) {
           try {
             const r = await fetch('/api/pos/agenda-visao', {
@@ -437,6 +442,29 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
               setAgenda(p => p.map(a => a.id === upd.id ? updated : a))
             }
           } catch { }
+        }
+        // 2. Recalcula rotas na nova ordem: cada item usa as coordenadas do anterior como origem
+        for (let i = 1; i < novaOrdem.length; i++) {
+          const anterior = novaOrdem[i - 1]
+          const atual = novaOrdem[i]
+          if (anterior.coordenadas && atual.endereco) {
+            try {
+              const r = await fetch('/api/pos/agenda-visao', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  id: atual.id,
+                  calcular: true,
+                  origemLat: anterior.coordenadas.lat,
+                  origemLng: anterior.coordenadas.lng
+                })
+              })
+              if (r.ok) {
+                const updated = await r.json()
+                setAgenda(p => p.map(a => a.id === atual.id ? updated : a))
+              }
+            } catch { }
+          }
         }
       })()
     }
@@ -472,7 +500,12 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
     return tecsSorted.map(tec => {
       const items = porTec[tec.tecnico_nome] || []
       const cam = camPorTec[tec.tecnico_nome]
-      const ordsTec = ordensPorTec[tec.tecnico_nome] || []
+      // Ordena OS pela ordem_sequencia da agenda (respeita reorder GPS)
+      const ordsTec = [...(ordensPorTec[tec.tecnico_nome] || [])].sort((a, b) => {
+        const agA = items.find(it => it.id_ordem === a.Id_Ordem)
+        const agB = items.find(it => it.id_ordem === b.Id_Ordem)
+        return (agA?.ordem_sequencia ?? 999) - (agB?.ordem_sequencia ?? 999)
+      })
       const naOfi = !cam && oficina(items, ordsTec)
       const ext = items.filter(a => {
         const os = a.id_ordem ? ordsTec.find(o => o.Id_Ordem === a.id_ordem) : null
@@ -492,7 +525,29 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
       const completedVisits = visitasReais(visitasGPS).filter(v => v.saidaCliente).length
       const pos = viagem?.ultima_posicao || null
       const reais = visitasReais(visitasGPS)
-      let curIdx = ordsTec.length > 0 ? osAtualIdx(visitasGPS, estimados, ordsTec.length) : -1
+      const visitaIdx = ordsTec.length > 0 ? osAtualIdx(visitasGPS, estimados, ordsTec.length) : -1
+
+      // Mapeia a visita GPS atual para o OS correto (por destino/CNPJ, não por índice)
+      const visitaAtual = visitaIdx >= 0 ? reais[visitaIdx] : null
+      let curIdx = visitaIdx
+      if (visitaAtual && ext.length > 1 && ordsTec.length > 1) {
+        // Tenta achar qual OS corresponde à visita GPS atual pelo destino
+        for (let ei = 0; ei < ext.length; ei++) {
+          const agIt = ext[ei]
+          const osItem = agIt.id_ordem ? ordsTec.find(o => o.Id_Ordem === agIt.id_ordem) : null
+          const cnpjOS = osItem?.Cnpj_Cliente || ''
+          // Match por CNPJ
+          if (cnpjOS && visitaAtual.destino_cnpj && visitaAtual.destino_cnpj === cnpjOS) {
+            const oi = ordsTec.findIndex(o => o.Id_Ordem === agIt.id_ordem)
+            if (oi >= 0) { curIdx = oi; break }
+          }
+          // Match por nome
+          if (visitaAtual.destino_nome && agIt.cliente && match(visitaAtual.destino_nome, agIt.cliente)) {
+            const oi = ordsTec.findIndex(o => o.Id_Ordem === agIt.id_ordem)
+            if (oi >= 0) { curIdx = oi; break }
+          }
+        }
+      }
 
       // Se está a caminho e ainda não chegou em nenhum cliente, detecta pelo mais próximo
       if (pos && foraLoja && ext.length > 1 && reais.filter(v => v.chegada).length === 0) {
@@ -503,7 +558,6 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
           const dist = distanciaKm(pos.lat, pos.lng, coord.lat, coord.lng)
           if (dist < melhorDist) {
             melhorDist = dist
-            // Mapear ext[ei] de volta para ordsTec index
             const osMatch = ordsTec.findIndex(o => o.Id_Ordem === ext[ei].id_ordem)
             if (osMatch >= 0) melhorIdx = osMatch
           }
@@ -514,7 +568,14 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
       const curOS = curIdx >= 0 ? ordsTec[curIdx] : null
       const curAgItem = curOS ? items.find(a => a.id_ordem === curOS.Id_Ordem) : null
       const curEst = curIdx >= 0 ? estimados[curIdx] : null
-      const curGPS = curIdx >= 0 ? reais[curIdx] : null
+      // curGPS: busca a visita que corresponde ao curOS (por destino), não por índice
+      let curGPS: VisitaGPS | null = null
+      if (curOS && curAgItem) {
+        const _u = new Set<number>()
+        curGPS = matchVisitaGPS(reais, curAgItem, ordsTec, _u) || null
+      } else if (visitaIdx >= 0) {
+        curGPS = reais[visitaIdx] || null
+      }
 
       let status: 'oficina' | 'caminho' | 'cliente' | 'retornando' | 'retornou' = 'oficina'
       // Usa última visita para status — se saiu de novo após retorno, não marca como "retornou"
@@ -555,17 +616,21 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
 
   // ── Resumo: carregar do DB quando modal abre, auto-gerar se vazio ──
   function gerarResumoAuto(d: typeof cardData[number]): string {
-    const { ordsTec, viagem, visitasGPS } = d
+    const { ordsTec, items, viagem, visitasGPS } = d
     const reais = visitasReais(visitasGPS)
     const partes: string[] = []
     if (viagem?.saida_loja) partes.push(`Técnico saiu da oficina às ${fHora(viagem.saida_loja)}`)
-    reais.forEach((v, i) => {
-      const os = ordsTec[i]
-      if (!os) return
+    // Itera na ordem da agenda (ordsTec já sorted por ordem_sequencia)
+    const _usadosResumo = new Set<number>()
+    for (let oi = 0; oi < ordsTec.length; oi++) {
+      const os = ordsTec[oi]
+      const agItem = items.find(a => a.id_ordem === os.Id_Ordem)
+      const v = agItem ? matchVisitaGPS(reais, agItem, ordsTec, _usadosResumo) : reais[oi]
+      if (!v) continue
       const cli = os.Os_Cliente?.split(' ').slice(0, 3).join(' ') || 'cliente'
       if (v.chegada) partes.push(`Chegou em ${cli} (${os.Cidade_Cliente || ''}) às ${fHora(v.chegada)}`)
       if (v.saidaCliente) partes.push(`Saiu de ${cli} às ${fHora(v.saidaCliente)}`)
-    })
+    }
     if (viagem?.retorno_loja) partes.push(`Retornou à oficina às ${fHora(viagem.retorno_loja)}`)
     return partes.join('. ') + (partes.length ? '.' : '')
   }
@@ -909,24 +974,29 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
                             )
                           }
 
-                          // 2 dias ou menos → mostra data + horários sequenciais (sem sobreposição)
-                          let cursorCard = 0
-                          let horaInicioAdj = '08:00', horaFimAdj = ''
+                          // 2 dias ou menos → mostra previsão com deslocamento + GPS real
+                          let cursorCard = S
+                          let almocoCard = false
+                          let horaInicioAdj = fh(S), horaFimAdj = ''
+                          const reaisCard = visitasReais(d.visitasGPS)
+                          const _usadosCard = new Set<number>()
                           for (let oi = 0; oi <= d.curIdx; oi++) {
                             const osI = ordsTec[oi]
-                            const hiStr = osI?.Hora_Inicio_Exec || '08:00'
-                            const [hh2, mm2] = hiStr.split(':').map(Number)
-                            let iniMin = (hh2 || 8) * 60 + (mm2 || 0)
-                            if (iniMin < cursorCard) iniMin = cursorCard
-                            const hrsI = parseFloat(String(osI?.Qtd_HR || 0)) || 2
-                            let fimI = 0
-                            if (osI?.Hora_Fim_Exec) { const [fh2, fm2] = osI.Hora_Fim_Exec.split(':').map(Number); fimI = (fh2 || 0) * 60 + (fm2 || 0) }
-                            if (!fimI || fimI <= iniMin) fimI = iniMin + hrsI * 60
-                            if (fimI < cursorCard) fimI = cursorCard + hrsI * 60
+                            const agI = d.items.find(a => a.id_ordem === osI?.Id_Ordem)
+                            const gpsCard = agI ? matchVisitaGPS(reaisCard, agI, ordsTec, _usadosCard) : undefined
+                            const idaI = agI?.tempo_ida_min || 0
+                            const hrsI = (agI?.qtd_horas || parseFloat(String(osI?.Qtd_HR || 0)) || 2) * 60
+                            const saidaI = gpsCard?.saida ? isoToMin(gpsCard.saida) : cursorCard
+                            cursorCard = saidaI
+                            const chegadaI = gpsCard?.chegada ? isoToMin(gpsCard.chegada) : cursorCard + idaI
+                            cursorCard = chegadaI
+                            if (!almocoCard && cursorCard >= AI && cursorCard < AI + 120) { cursorCard += AD; almocoCard = true }
+                            const fimI = gpsCard?.saidaCliente ? isoToMin(gpsCard.saidaCliente) : cursorCard + hrsI
                             cursorCard = fimI
-                            if (oi === d.curIdx) { horaInicioAdj = fh(iniMin); horaFimAdj = fh(fimI) }
+                            if (!almocoCard && cursorCard >= AI && cursorCard < AI + 120) { cursorCard += AD; almocoCard = true }
+                            if (oi === d.curIdx) { horaInicioAdj = fh(chegadaI); horaFimAdj = fh(fimI) }
                           }
-                          if (!horaFimAdj) { const totalMin2 = 8 * 60 + h * 60; horaFimAdj = fh(totalMin2) }
+                          if (!horaFimAdj) horaFimAdj = fh(cursorCard)
                           return (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, fontSize: 13, flexWrap: 'wrap' }}>
                               <span style={{ fontWeight: 800, color: '#065F46', background: '#D1FAE5', padding: '3px 10px', borderRadius: 6 }}>
@@ -1065,7 +1135,7 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
 
               {/* ── JORNADA GPS ── */}
               {viagem && viagem.eventos.filter(ev => EVENTO_LABEL[ev.tipo]).length > 0 && (() => {
-                let ci = 0, si = 0
+                let ci = 0, si = 0, li = 0
                 // Cidades dos destinos agendados pra comparar com GPS
                 const cidadesDestino = items.map(a => (a.cidade || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()).filter(Boolean)
                 const enderecoDestino = items.map(a => (a.endereco || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()).filter(Boolean)
@@ -1141,6 +1211,8 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
                         let evAddr: string | null = null
                         if (isChegada) { evAddr = eventAddrs[`${modalTec}_cheg_${ci}`] || null; ci++ }
                         else if (isSaida) { evAddr = eventAddrs[`${modalTec}_said_${si}`] || null; si++ }
+                        else if (isLoja) { evAddr = eventAddrs[`${modalTec}_loja_${li}`] || null; li++ }
+                        const addrDisplay = evAddr || `${ev.lat.toFixed(4)}, ${ev.lng.toFixed(4)}`
 
                         // Usa destino_nome da Rota Exata quando disponível
                         const destinoLabel = ev.destino_nome || null
@@ -1164,18 +1236,20 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
                           } else if (!evAddr || !isPertoDestino(evAddr)) {
                             label = 'Parada'
                             isParada = true
+                          } else {
+                            label = 'Chegou no cliente'
                           }
                         }
                         if (isSaida) {
                           if (destinoLabel) {
                             label = `Saiu — ${destinoLabel}`
                           } else {
-                            label = evAddr ? `Saiu → ${evAddr}` : 'Saiu'
+                            label = evAddr ? `Saiu do cliente` : 'Saiu'
                           }
                         }
 
                         return (
-                          <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '6px 0', position: 'relative', borderBottom: '1px solid #F0F0F0' }}>
+                          <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '8px 0', position: 'relative', borderBottom: '1px solid #F0F0F0' }}>
                             <span style={{ fontSize: 17, fontWeight: 800, color: '#111', fontVariantNumeric: 'tabular-nums', minWidth: 48 }}>{fHora(ev.horario)}</span>
                             <div style={{
                               width: 12, height: 12, borderRadius: '50%', marginTop: 4, flexShrink: 0, position: 'relative', zIndex: 1,
@@ -1185,22 +1259,19 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
                             <div style={{ flex: 1 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                                 <span style={{ fontSize: 16, fontWeight: 700, color: isParada ? '#B45309' : isSaida ? '#991B1B' : isChegada ? '#065F46' : '#111' }}>{label}</span>
-                                {permanencia && <span style={{ fontSize: 13, fontWeight: 800, color: '#111', background: '#F0F0F0', padding: '2px 8px', borderRadius: 4 }}>{permanencia}</span>}
+                                {permanencia && <span style={{ fontSize: 16, fontWeight: 800, color: '#fff', background: isParada ? '#F59E0B' : '#111', padding: '4px 14px', borderRadius: 6 }}>Parou {permanencia}</span>}
                               </div>
-                              {evAddr && !destinoLabel && !isSaida && (
+                              {/* Endereço + link mapa em todos os eventos */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
+                                <span style={{ fontSize: isChegada || isParada ? 14 : 13, color: '#555', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                  <MapPin size={12} style={{ flexShrink: 0, color: '#888' }} /> {addrDisplay}
+                                </span>
                                 <a href={`https://www.google.com/maps?q=${ev.lat},${ev.lng}`} target="_blank" rel="noopener noreferrer"
-                                  style={{ fontSize: 14, color: '#2563EB', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', fontWeight: 600 }}
+                                  style={{ fontSize: 13, color: '#2563EB', display: 'inline-flex', alignItems: 'center', gap: 3, textDecoration: 'none', fontWeight: 600 }}
                                   onClick={e => e.stopPropagation()}>
-                                  <MapPin size={12} style={{ flexShrink: 0 }} /> {evAddr} <ExternalLink size={11} style={{ flexShrink: 0 }} />
+                                  <ExternalLink size={11} style={{ flexShrink: 0 }} /> Ver no mapa
                                 </a>
-                              )}
-                              {(isSaida || (isChegada && destinoLabel)) && (
-                                <a href={`https://www.google.com/maps?q=${ev.lat},${ev.lng}`} target="_blank" rel="noopener noreferrer"
-                                  style={{ fontSize: 13, color: '#2563EB', marginTop: 2, display: 'inline-flex', alignItems: 'center', gap: 3, textDecoration: 'none', fontWeight: 600 }}
-                                  onClick={e => e.stopPropagation()}>
-                                  <ExternalLink size={11} /> Ver no mapa
-                                </a>
-                              )}
+                              </div>
                             </div>
                           </div>
                         )
@@ -1218,28 +1289,40 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
               )}
 
               {(() => { const _usadosModal = new Set<number>()
-                // Calcula horários previstos sequenciais (sem sobreposição)
-                const prevAjustados: { inicio: string; fim: string }[] = []
-                let cursorPrev = 0
-                for (const osP of ordsTec) {
-                  const hi = osP.Hora_Inicio_Exec || '08:00'
-                  const hf = osP.Hora_Fim_Exec || ''
-                  const [hh, mm] = hi.split(':').map(Number)
-                  let inicioMin = (hh || 8) * 60 + (mm || 0)
-                  if (inicioMin < cursorPrev) inicioMin = cursorPrev
-                  const horas = parseFloat(String(osP.Qtd_HR || 0)) || 2
-                  let fimMin = 0
-                  if (hf) { const [fh2, fm2] = hf.split(':').map(Number); fimMin = (fh2 || 0) * 60 + (fm2 || 0) }
-                  if (!fimMin || fimMin <= inicioMin) fimMin = inicioMin + horas * 60
-                  if (fimMin < cursorPrev) fimMin = cursorPrev + horas * 60
-                  cursorPrev = fimMin
-                  prevAjustados.push({ inicio: fh(inicioMin), fim: fh(fimMin) })
+                const _usadosPrev = new Set<number>()
+                const reaisModalPrev = visitasReais(visitasGPS)
+                // Calcula previsões com deslocamento + GPS real (ordsTec já vem ordenado pela agenda)
+                const prevAjustados: { saida: number; chegada: number; fim: number; retorno: number | null }[] = []
+                let cursorPrev = S
+                let almocoPrev = false
+                for (let pi = 0; pi < ordsTec.length; pi++) {
+                  const osP = ordsTec[pi]
+                  const agP = items.find(a => a.id_ordem === osP.Id_Ordem)
+                  const gpsPrev = agP ? matchVisitaGPS(reaisModalPrev, agP, ordsTec, _usadosPrev) : undefined
+                  const ida = agP?.tempo_ida_min || 0
+                  const sv = (agP?.qtd_horas || parseFloat(String(osP.Qtd_HR || 0)) || 2) * 60
+                  const volta = agP?.tempo_volta_min || 0
+                  const saida = gpsPrev?.saida ? isoToMin(gpsPrev.saida) : cursorPrev
+                  cursorPrev = saida
+                  const chegada = gpsPrev?.chegada ? isoToMin(gpsPrev.chegada) : cursorPrev + ida
+                  cursorPrev = chegada
+                  if (!almocoPrev && cursorPrev >= AI && cursorPrev < AI + 120) { cursorPrev += AD; almocoPrev = true }
+                  const fim = gpsPrev?.saidaCliente ? isoToMin(gpsPrev.saidaCliente) : cursorPrev + sv
+                  cursorPrev = fim
+                  if (!almocoPrev && cursorPrev >= AI && cursorPrev < AI + 120) { cursorPrev += AD; almocoPrev = true }
+                  let retorno: number | null = null
+                  if (pi === ordsTec.length - 1) {
+                    retorno = gpsPrev?.retorno ? isoToMin(gpsPrev.retorno) : cursorPrev + volta
+                    cursorPrev = retorno
+                  }
+                  prevAjustados.push({ saida, chegada, fim, retorno })
                 }
                 return ordsTec.map((os, osIdx) => {
                 const agItem = items.find(a => a.id_ordem === os.Id_Ordem)
-                const est = estimados[osIdx] || null
+                // estimados mapeia 1:1 com ext (items externos na ordem da agenda)
+                const extIdx = d.ext.findIndex(e => e.id_ordem === os.Id_Ordem)
+                const est = extIdx >= 0 ? estimados[extIdx] : null
                 const reaisModal = visitasReais(visitasGPS)
-                // Match por destino (CNPJ/nome) em vez de índice
                 const gps = agItem ? matchVisitaGPS(reaisModal, agItem, ordsTec, _usadosModal) || null : reaisModal[osIdx] || null
                 const prevAdj = prevAjustados[osIdx]
                 const isEditing = editingAddr !== null && editingAddr.id === agItem?.id
@@ -1321,57 +1404,88 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
                     )}
 
                     {/* Times */}
+                    {(() => {
+                      // Determinar nomes para os headers
+                      const origemNome = osIdx === 0 ? 'oficina' : (() => {
+                        const prevOS = ordsTec[osIdx - 1]
+                        const prevCli = prevOS?.Os_Cliente?.split(' ').slice(0, 3).join(' ') || ''
+                        return prevCli || 'anterior'
+                      })()
+                      const clienteNome = os.Os_Cliente?.split(' ').slice(0, 3).join(' ') || 'cliente'
+                      const temRetorno = (prevAdj?.retorno != null) || est?.retorno != null || !!gps?.retorno
+                      return (
                     <div style={{ marginLeft: 15, background: '#F5F5F5', borderRadius: 8, padding: '12px 14px', border: '1px solid #DDD' }}>
+                      {/* Header colunas */}
+                      <div style={{ display: 'flex', alignItems: 'center', fontSize: 10, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 6, paddingBottom: 4, borderBottom: '1px solid #E5E5E5' }}>
+                        <span style={{ width: 72 }}></span>
+                        <span style={{ width: 52, textAlign: 'center', lineHeight: 1.2 }}>Saída de<br /><span style={{ color: '#555', fontWeight: 800 }}>{origemNome}</span></span>
+                        <span style={{ width: 20 }}></span>
+                        <span style={{ width: 62, textAlign: 'center', lineHeight: 1.2 }}>Chegada em<br /><span style={{ color: '#555', fontWeight: 800 }}>{clienteNome}</span></span>
+                        <span style={{ width: 20 }}></span>
+                        <span style={{ width: 52, textAlign: 'center', lineHeight: 1.2 }}>Final do<br /><span style={{ color: '#555', fontWeight: 800 }}>serviço</span></span>
+                        {temRetorno && <>
+                          <span style={{ width: 20 }}></span>
+                          <span style={{ width: 52, textAlign: 'center', lineHeight: 1.2 }}>Retorno<br /><span style={{ color: '#555', fontWeight: 800 }}>oficina</span></span>
+                        </>}
+                      </div>
+                      {/* Previsão */}
                       {prevAdj && (
-                        <div style={{ display: 'flex', alignItems: 'center', fontSize: 16, fontVariantNumeric: 'tabular-nums', marginBottom: 6, paddingBottom: 6, borderBottom: '1px solid #E0E0E0' }}>
-                          <span style={{ width: 48, fontSize: 14, fontWeight: 800, color: '#1E3A5F' }}>Prev.</span>
-                          <span style={{ fontWeight: 800, color: '#1E3A5F', background: '#DBEAFE', padding: '3px 10px', borderRadius: 5, fontSize: 16 }}>
-                            {prevAdj.inicio} → {prevAdj.fim}
-                          </span>
-                          {os.Qtd_HR && <span style={{ fontSize: 15, fontWeight: 700, color: '#111', marginLeft: 10 }}>{os.Qtd_HR}h</span>}
+                        <div style={{ display: 'flex', alignItems: 'center', fontSize: 16, fontVariantNumeric: 'tabular-nums', marginBottom: 6, background: '#DBEAFE', padding: '6px 10px', borderRadius: 5, border: '2px solid #93C5FD' }}>
+                          <span style={{ width: 72, fontSize: 12, fontWeight: 800, color: '#1E3A5F' }}>Previsão</span>
+                          <span style={{ width: 52, fontWeight: 800, color: '#1E3A5F', textAlign: 'center' }}>{fh(prevAdj.saida)}</span>
+                          <span style={{ width: 20, textAlign: 'center', color: '#1E3A5F' }}>&rarr;</span>
+                          <span style={{ width: 52, fontWeight: 800, color: '#1E3A5F', textAlign: 'center' }}>{fh(prevAdj.chegada)}</span>
+                          <span style={{ width: 20, textAlign: 'center', color: '#1E3A5F' }}>&rarr;</span>
+                          <span style={{ width: 52, fontWeight: 800, color: '#1E3A5F', textAlign: 'center' }}>{fh(prevAdj.fim)}</span>
+                          {prevAdj.retorno != null && <><span style={{ width: 20, textAlign: 'center', color: '#1E3A5F' }}>&rarr;</span><span style={{ width: 52, fontWeight: 800, color: '#1E3A5F', textAlign: 'center' }}>{fh(prevAdj.retorno)}</span></>}
+                          {os.Qtd_HR && <span style={{ fontSize: 13, fontWeight: 700, color: '#1E3A5F', marginLeft: 8 }}>{os.Qtd_HR}h</span>}
                         </div>
                       )}
+                      {/* Estimativa */}
                       {est && (
                         <div style={{ display: 'flex', alignItems: 'center', fontSize: 16, fontVariantNumeric: 'tabular-nums', marginBottom: 6, background: '#FEF9C3', padding: '6px 10px', borderRadius: 5, border: '2px solid #FDE68A' }}>
-                          <span style={{ width: 48, fontSize: 14, fontWeight: 800, color: '#92400E' }}>Est.</span>
-                          <span style={{ width: 52, fontWeight: 800, color: '#92400E' }}>{fh(est.saida)}</span>
+                          <span style={{ width: 72, fontSize: 12, fontWeight: 800, color: '#92400E' }}>Estimativa</span>
+                          <span style={{ width: 52, fontWeight: 800, color: '#92400E', textAlign: 'center' }}>{fh(est.saida)}</span>
                           <span style={{ width: 20, textAlign: 'center', color: '#92400E' }}>&rarr;</span>
-                          <span style={{ width: 52, fontWeight: 800, color: '#92400E' }}>{fh(est.chegada)}</span>
+                          <span style={{ width: 52, fontWeight: 800, color: '#92400E', textAlign: 'center' }}>{fh(est.chegada)}</span>
                           <span style={{ width: 20, textAlign: 'center', color: '#92400E' }}>&rarr;</span>
-                          <span style={{ width: 52, fontWeight: 800, color: '#92400E' }}>{fh(est.fimServico)}</span>
-                          {est.retorno && <><span style={{ width: 20, textAlign: 'center', color: '#92400E' }}>&rarr;</span><span style={{ fontWeight: 800, color: '#92400E' }}>{fh(est.retorno)}</span></>}
+                          <span style={{ width: 52, fontWeight: 800, color: '#92400E', textAlign: 'center' }}>{fh(est.fimServico)}</span>
+                          {est.retorno != null && <><span style={{ width: 20, textAlign: 'center', color: '#92400E' }}>&rarr;</span><span style={{ width: 52, fontWeight: 800, color: '#92400E', textAlign: 'center' }}>{fh(est.retorno)}</span></>}
                         </div>
                       )}
+                      {/* GPS Real */}
                       {gps && (gps.saida || gps.chegada) && (
                         <div style={{ display: 'flex', alignItems: 'center', fontSize: 16, fontVariantNumeric: 'tabular-nums', marginBottom: 6, background: '#ECFDF5', padding: '6px 10px', borderRadius: 5, border: '2px solid #A7F3D0' }}>
-                          <span style={{ width: 48, fontSize: 14, fontWeight: 800, color: '#065F46' }}>GPS</span>
-                          <span style={{ width: 52, fontWeight: 800, color: '#065F46' }}>{fHora(gps.saida)}</span>
+                          <span style={{ width: 72, fontSize: 12, fontWeight: 800, color: '#065F46' }}>GPS Real</span>
+                          <span style={{ width: 52, fontWeight: 800, color: '#065F46', textAlign: 'center' }}>{fHora(gps.saida)}</span>
                           <span style={{ width: 20, textAlign: 'center', color: '#065F46' }}>&rarr;</span>
-                          <span style={{ width: 52, fontWeight: 800, color: chegouAtrasado ? '#DC2626' : '#065F46' }}>{fHora(gps.chegada)}</span>
+                          <span style={{ width: 52, fontWeight: 800, color: chegouAtrasado ? '#DC2626' : '#065F46', textAlign: 'center' }}>{fHora(gps.chegada)}</span>
                           <span style={{ width: 20, textAlign: 'center', color: '#065F46' }}>&rarr;</span>
-                          <span style={{ width: 52, fontWeight: 800, color: temAtraso ? '#DC2626' : '#065F46' }}>{fHora(gps.saidaCliente)}</span>
-                          {gps.retorno && <><span style={{ width: 20, textAlign: 'center', color: '#065F46' }}>&rarr;</span><span style={{ fontWeight: 800, color: '#065F46' }}>{fHora(gps.retorno)}</span></>}
+                          <span style={{ width: 52, fontWeight: 800, color: temAtraso ? '#DC2626' : '#065F46', textAlign: 'center' }}>{fHora(gps.saidaCliente)}</span>
+                          {gps.retorno && <><span style={{ width: 20, textAlign: 'center', color: '#065F46' }}>&rarr;</span><span style={{ width: 52, fontWeight: 800, color: '#065F46', textAlign: 'center' }}>{fHora(gps.retorno)}</span></>}
                         </div>
                       )}
                       {agItem && agItem.tempo_ida_min > 0 && !gps && (
                         <div style={{ fontSize: 15, fontWeight: 600, color: '#111', marginTop: 2 }}>{fm(agItem.tempo_ida_min)} / {agItem.distancia_ida_km}km</div>
                       )}
-                      {est && gps && (gps.saida || gps.chegada) && (
-                        <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 14 }}>
+                      {/* Diferenças prev vs GPS */}
+                      {prevAdj && gps && (gps.saida || gps.chegada) && (
+                        <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 13, flexWrap: 'wrap' }}>
                           {[
-                            { label: 'Saida', e: est.saida, r: gps.saida },
-                            { label: 'Chegada', e: est.chegada, r: gps.chegada },
-                            { label: 'Saiu', e: est.fimServico, r: gps.saidaCliente },
-                            ...(est.retorno && gps.retorno ? [{ label: 'Ret', e: est.retorno, r: gps.retorno }] : []),
+                            { label: 'Saída', p: prevAdj.saida, r: gps.saida },
+                            { label: 'Chegada', p: prevAdj.chegada, r: gps.chegada },
+                            { label: 'Fim', p: prevAdj.fim, r: gps.saidaCliente },
+                            ...(prevAdj.retorno != null && gps.retorno ? [{ label: 'Retorno', p: prevAdj.retorno, r: gps.retorno }] : []),
                           ].map((dd, di) => {
                             if (!dd.r) return null
-                            const diff = isoToMin(dd.r) - dd.e
+                            const diff = isoToMin(dd.r) - dd.p
                             if (Math.abs(diff) <= 5) return null
-                            return <span key={di} style={{ fontWeight: 800, color: diff > 0 ? '#DC2626' : '#059669' }}>{dd.label} {diff > 0 ? '+' : '-'}{fm(Math.abs(diff))}</span>
+                            return <span key={di} style={{ fontWeight: 800, color: diff > 0 ? '#DC2626' : '#059669' }}>{dd.label} {diff > 0 ? '+' : ''}{diff > 0 ? fm(diff) : '-' + fm(Math.abs(diff))}</span>
                           })}
                         </div>
                       )}
                     </div>
+                      )})()}
                   </div>
                 )
               }) })()}

@@ -88,7 +88,6 @@ export async function syncClientes(): Promise<{ total: number; novos: number; at
         const endereco = [c.endereco, c.endereco_numero].filter(Boolean).join(", ");
         return {
           id_omie: String(c.codigo_cliente_omie),
-          id_cliente: c.codigo_cliente_integracao || String(c.codigo_cliente_omie),
           cnpj_cpf: c.cnpj_cpf || "",
           razao_social: c.razao_social || "",
           nome_fantasia: c.nome_fantasia || "",

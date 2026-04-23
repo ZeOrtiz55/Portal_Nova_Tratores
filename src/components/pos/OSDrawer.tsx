@@ -78,7 +78,9 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
   const [relatorioTecnico, setRelatorioTecnico] = useState("");
   const [previsaoExecucao, setPrevisaoExecucao] = useState("");
   const [previsaoFaturamento, setPrevisaoFaturamento] = useState("");
+  const [diasExecucao, setDiasExecucao] = useState<string[]>([]);
   const [horaInicioExec, setHoraInicioExec] = useState("08:00");
+  const [horaChegada, setHoraChegada] = useState("");
   const [horaFimExec, setHoraFimExec] = useState("");
   const [agendaTecnico, setAgendaTecnico] = useState<Array<{ id_ordem: string; cliente: string; hora_inicio: string; hora_fim: string; qtd_horas: number }>>([]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
@@ -116,15 +118,23 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
   const [enderecoEstimativa, setEnderecoEstimativa] = useState("");
   const [enderecosDisponiveis, setEnderecosDisponiveis] = useState<{ label: string; fonte: string; endereco: string }[]>([]);
 
-  // Auto-calcular hora fim quando muda hora início ou qtdHoras
+  // Auto-calcular hora chegada (início + tempo_ida) e hora fim (chegada + qtdHoras)
   useEffect(() => {
-    if (!horaInicioExec || !qtdHoras || qtdHoras <= 0) return;
+    if (!horaInicioExec) return;
     const [h, m] = horaInicioExec.split(':').map(Number);
-    const totalMin = h * 60 + m + qtdHoras * 60;
-    const fh = Math.floor(totalMin / 60);
-    const fm = Math.round(totalMin % 60);
-    setHoraFimExec(`${String(fh).padStart(2, '0')}:${String(fm).padStart(2, '0')}`);
-  }, [horaInicioExec, qtdHoras]);
+    const inicioMin = h * 60 + m;
+    const idaMin = estimativa?.ida?.tempo_min || 0;
+    const chegadaMin = inicioMin + idaMin;
+    const ch = Math.floor(chegadaMin / 60);
+    const cm = Math.round(chegadaMin % 60);
+    setHoraChegada(`${String(ch).padStart(2, '0')}:${String(cm).padStart(2, '0')}`);
+    if (qtdHoras && qtdHoras > 0) {
+      const fimMin = chegadaMin + qtdHoras * 60;
+      const fh = Math.floor(fimMin / 60);
+      const fm = Math.round(fimMin % 60);
+      setHoraFimExec(`${String(fh).padStart(2, '0')}:${String(fm).padStart(2, '0')}`);
+    }
+  }, [horaInicioExec, qtdHoras, estimativa]);
 
   // Buscar agenda do técnico quando muda técnico + data de execução
   useEffect(() => {
@@ -337,7 +347,13 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
       substitutoTipo: temSubstituto ? substitutoTipo : null,
       substitutoId: temSubstituto ? substitutoId : null,
       descontoValor: descValor, descontoHora: descHoraValor, descontoKm: descKmValor,
-      relatorioTecnico, previsaoExecucao, previsaoFaturamento, horaInicioExec, horaFimExec,
+      relatorioTecnico,
+      diasExecucao: diasExecucao.sort().join(','),
+      previsaoExecucao,
+      previsaoFaturamento,
+      horaInicioExec,
+      horaFimExec,
+      horaChegada,
       gerarPPV: mode === "create" && tipoServico === "Revisão" && gerarPPV,
       servicoOficina,
       userName,
@@ -364,7 +380,7 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
   }, [mode, osId, clienteChave, clienteInfo, tecnico1, tecnico2, tipoServico, revisao, projeto,
       servSolicitado, qtdHoras, qtdKm, ppv, status, ordemOmie, motivoCancel, descValor,
       descHoraValor, descKmValor, relatorioTecnico, previsaoExecucao, previsaoFaturamento,
-      gerarPPV, servicoOficina, horaInicioExec, horaFimExec, onClose, onSaved]);
+      gerarPPV, servicoOficina, horaInicioExec, horaChegada, horaFimExec, onClose, onSaved]);
 
   // ── Reset form to defaults ──
   const resetForm = useCallback(() => {
@@ -374,7 +390,11 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
     setPpv(""); setQtdHoras(1); setQtdKm(0); setDescPorc(0); setDescValor(0); setDescHoraValor(0); setDescKmValor(0);
     setOrdemOmie(""); setMotivoCancel(""); setTemSubstituto(false); setSubstitutoTipo("POS"); setSubstitutoId("");
     setRelatorioTecnico("");
-    setPrevisaoExecucao(""); setPrevisaoFaturamento(""); setHoraInicioExec("08:00"); setHoraFimExec(""); setAgendaTecnico([]);
+    const agora = new Date()
+    const hojeStr = agora.toISOString().slice(0, 10)
+    const horaStr = `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`
+    setPrevisaoExecucao(hojeStr)
+    setPrevisaoFaturamento(""); setDiasExecucao([]); setHoraInicioExec(horaStr); setHoraChegada(""); setHoraFimExec(""); setAgendaTecnico([]);
     setEstimativa(null); setErroEstimativa(""); setLoadingEstimativa(false); setEnderecoEstimativa(""); setEnderecosDisponiveis([]);
     setProdutos([]); setTotalPecas(0); setShowLogs(false); setRequisicoes([]);
     setGerarPPV(false); setShowDescontos(false); setLoadingData(false);
@@ -426,7 +446,9 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
           setRelatorioTecnico(d.relatorioTecnico || "");
           setPrevisaoExecucao(d.previsaoExecucao || "");
           setPrevisaoFaturamento(d.previsaoFaturamento || "");
+          setDiasExecucao(d.diasExecucao ? d.diasExecucao.split(',').filter(Boolean) : []);
           setHoraInicioExec(d.horaInicioExec || "08:00");
+          setHoraChegada(d.horaChegada || "");
           setHoraFimExec(d.horaFimExec || "");
           setRequisicoes(d.infoRequisicoes || []);
           setServicoOficina(!!d.servicoOficina);
@@ -958,55 +980,92 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
                     )}
                   </div>
 
-                  {/* ── Previsões ── */}
+                  {/* ── Dias de Execução ── */}
                   <div className="os-card">
-                    <div className="os-card-title"><i className="fas fa-calendar-alt" /> Previsões</div>
-                    <div className="os-row">
-                      <div style={S_FLEX1}>
-                        <label>Início da Execução</label>
-                        <input type="date" value={previsaoExecucao} onChange={(e) => setPrevisaoExecucao(e.target.value)} style={S_MB0} />
+                    <div className="os-card-title"><i className="fas fa-calendar-alt" /> Dias de Execução</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <div>
+                        <label style={{ fontSize: 11, color: '#6B7280', margin: 0 }}>Data Início</label>
+                        <input type="date" value={previsaoExecucao} onChange={(e) => {
+                          setPrevisaoExecucao(e.target.value)
+                          if (!e.target.value || !previsaoFaturamento) return
+                          const start = new Date(e.target.value + 'T12:00:00')
+                          const end = new Date(previsaoFaturamento + 'T12:00:00')
+                          if (start > end) return
+                          const days: string[] = []
+                          const cur = new Date(start)
+                          while (cur <= end) { const d = cur.toISOString().slice(0, 10); if (cur.getDay() !== 0) days.push(d); cur.setDate(cur.getDate() + 1) }
+                          setDiasExecucao(days)
+                        }} style={{ padding: '6px 8px', border: '1px solid #D1D5DB', borderRadius: 6, fontSize: 13, width: '100%' }} />
                       </div>
-                      <div style={S_FLEX1}>
-                        <label>Previsão de Faturamento</label>
-                        <input type="date" value={previsaoFaturamento} onChange={(e) => setPrevisaoFaturamento(e.target.value)} style={S_MB0} />
+                      <div>
+                        <label style={{ fontSize: 11, color: '#6B7280', margin: 0 }}>Data Fim</label>
+                        <input type="date" value={previsaoFaturamento} onChange={(e) => {
+                          setPrevisaoFaturamento(e.target.value)
+                          if (!e.target.value || !previsaoExecucao) return
+                          const start = new Date(previsaoExecucao + 'T12:00:00')
+                          const end = new Date(e.target.value + 'T12:00:00')
+                          if (start > end) return
+                          const days: string[] = []
+                          const cur = new Date(start)
+                          while (cur <= end) { const d = cur.toISOString().slice(0, 10); if (cur.getDay() !== 0) days.push(d); cur.setDate(cur.getDate() + 1) }
+                          setDiasExecucao(days)
+                        }} style={{ padding: '6px 8px', border: '1px solid #D1D5DB', borderRadius: 6, fontSize: 13, width: '100%' }} />
                       </div>
                     </div>
-                    <div className="os-row" style={{ marginTop: 8 }}>
-                      <div style={S_FLEX1}>
-                        <label>Hora Início</label>
-                        <input type="time" value={horaInicioExec} onChange={(e) => setHoraInicioExec(e.target.value)} style={S_MB0} />
-                      </div>
-                      <div style={S_FLEX1}>
-                        <label>Hora Fim <span style={{ fontSize: 10, color: '#999', fontWeight: 400 }}>(auto)</span></label>
-                        <input type="time" value={horaFimExec} onChange={(e) => setHoraFimExec(e.target.value)} style={S_MB0} />
-                      </div>
-                    </div>
-                    {agendaTecnico.length > 0 && (
-                      <div style={{ marginTop: 8, padding: '10px 12px', background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 8 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#92400E', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <i className="fas fa-exclamation-triangle" /> {tecnico1} já tem {agendaTecnico.length} serviço{agendaTecnico.length > 1 ? 's' : ''} em {new Date(previsaoExecucao + 'T12:00:00').toLocaleDateString('pt-BR')}:
+                    {diasExecucao.length > 0 && (
+                      <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <div style={{ fontSize: 11, color: '#6B7280', fontWeight: 600, marginBottom: 2 }}>Confirme os dias de execução:</div>
+                        {diasExecucao.map((dia) => {
+                          const diaDate = /^\d{4}-\d{2}-\d{2}$/.test(dia) ? new Date(dia + 'T12:00:00') : null
+                          const diaLabel = diaDate && !isNaN(diaDate.getTime()) ? diaDate.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' }) : dia
+                          return (
+                            <label key={dia} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: '#F1F5F9', borderRadius: 6, border: '1px solid #E2E8F0', cursor: 'pointer', fontSize: 13 }}>
+                              <input type="checkbox" checked style={{ accentColor: '#1E3A5F', width: 16, height: 16, cursor: 'pointer' }} onChange={(e) => {
+                                if (!e.target.checked) setDiasExecucao(prev => prev.filter(d => d !== dia))
+                              }} />
+                              <span style={{ fontWeight: 600, color: '#1E3A5F' }}>{diaLabel}</span>
+                            </label>
+                          )
+                        })}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginTop: 4, padding: '4px 10px', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 6 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: '#15803D' }}>
+                            <i className="fas fa-calendar-check" style={{ fontSize: 11, marginRight: 4 }} />
+                            {diasExecucao.length} dia{diasExecucao.length > 1 ? 's' : ''} selecionado{diasExecucao.length > 1 ? 's' : ''}
+                          </span>
                         </div>
-                        {agendaTecnico.map((ag, i) => (
-                          <div key={i} style={{ fontSize: 12, color: '#78350F', padding: '4px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ fontWeight: 700 }}>{ag.id_ordem}</span>
-                            <span>{ag.cliente}</span>
-                            {ag.hora_inicio && <span style={{ fontWeight: 600, color: '#B45309' }}>{ag.hora_inicio}–{ag.hora_fim || '?'}</span>}
-                            <span style={{ color: '#92400E' }}>{ag.qtd_horas}h</span>
-                          </div>
-                        ))}
                       </div>
                     )}
-                    {previsaoExecucao && previsaoFaturamento && previsaoFaturamento >= previsaoExecucao && (() => {
-                      const d1 = new Date(previsaoExecucao + 'T00:00:00');
-                      const d2 = new Date(previsaoFaturamento + 'T00:00:00');
-                      const dias = Math.round((d2.getTime() - d1.getTime()) / 86400000) + 1;
-                      return (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, padding: '6px 10px', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 6 }}>
-                          <i className="fas fa-calendar-check" style={{ color: '#16A34A', fontSize: 12 }} />
-                          <span style={{ fontSize: 12, color: '#15803D', fontWeight: 600 }}>{dias} dia{dias > 1 ? 's' : ''} de execução</span>
+                    {/* Deslocamento total */}
+                    {estimativa && diasExecucao.length > 0 && (
+                      <div style={{ marginTop: 8, padding: '8px 12px', background: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: 8 }}>
+                        <div style={{ fontSize: 10, color: '#6B7280', textTransform: 'uppercase' as const, fontWeight: 600, letterSpacing: '0.5px', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <i className="fas fa-route" /> Deslocamento total ({diasExecucao.length} dia{diasExecucao.length > 1 ? 's' : ''})
                         </div>
-                      );
-                    })()}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8 }}>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: 10, color: '#6B7280' }}>Ida/dia</div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: '#1E3A5F' }}>{estimativa.ida.tempo_min} min</div>
+                            <div style={{ fontSize: 10, color: '#9CA3AF' }}>{estimativa.ida.distancia_km} km</div>
+                          </div>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: 10, color: '#6B7280' }}>Volta/dia</div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: '#1E3A5F' }}>{estimativa.volta.tempo_min} min</div>
+                            <div style={{ fontSize: 10, color: '#9CA3AF' }}>{estimativa.volta.distancia_km} km</div>
+                          </div>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: 10, color: '#6B7280' }}>KM Total</div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: '#1E3A5F' }}>{(estimativa.total.distancia_total_km * diasExecucao.length).toFixed(0)} km</div>
+                            <div style={{ fontSize: 10, color: '#9CA3AF' }}>{estimativa.total.distancia_total_km} km/dia</div>
+                          </div>
+                          <div style={{ textAlign: 'center', background: '#1E3A5F', borderRadius: 6, padding: '6px 4px', color: '#fff' }}>
+                            <div style={{ fontSize: 10, opacity: 0.8 }}>Tempo Fora</div>
+                            <div style={{ fontSize: 14, fontWeight: 700 }}>{(estimativa.total.tempo_horas * diasExecucao.length).toFixed(1)}h</div>
+                            <div style={{ fontSize: 10, opacity: 0.7 }}>{estimativa.total.tempo_horas}h/dia</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
 
@@ -1102,8 +1161,6 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
                   {/* ── Financeiro ── */}
                   <div className="os-card os-card-financial">
                     <div className="os-card-title"><i className="fas fa-calculator" /> Financeiro</div>
-
-                    {/* Valores principais */}
                     <div className="os-financial-grid">
                       <div>
                         <label>Qtd. Horas</label>

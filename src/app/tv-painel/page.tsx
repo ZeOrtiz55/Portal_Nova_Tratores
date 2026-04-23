@@ -234,7 +234,11 @@ export default function TVPainel() {
   const cardData = useMemo(() => {
     return tecAtivos.map(tec => {
       const items = agenda.filter(a => a.tecnico_nome === tec.tecnico_nome).sort((a, b) => a.ordem_sequencia - b.ordem_sequencia)
-      const ordsTec = ordens.filter(o => match(tec.tecnico_nome, o.Os_Tecnico) || match(tec.tecnico_nome, o.Os_Tecnico2))
+      const ordsTec = ordens.filter(o => match(tec.tecnico_nome, o.Os_Tecnico) || match(tec.tecnico_nome, o.Os_Tecnico2)).sort((a, b) => {
+        const agA = items.find(it => it.id_ordem === a.Id_Ordem)
+        const agB = items.find(it => it.id_ordem === b.Id_Ordem)
+        return (agA?.ordem_sequencia ?? 999) - (agB?.ordem_sequencia ?? 999)
+      })
       const cam = caminhos.find(c => c.tecnico_nome === tec.tecnico_nome && c.status === 'em_transito') || null
       const naOfi = !cam && (items.length === 0 || items.every(a => {
         const os = a.id_ordem ? ordsTec.find(o => o.Id_Ordem === a.id_ordem) : null
@@ -258,10 +262,29 @@ export default function TVPainel() {
       const foraLoja = !!(ultimaVisita && ultimaVisita.saida && !ultimaVisita.retorno)
       const completedVisits = visitasReais(visitasGPS).filter(v => v.saidaCliente).length
       const pos = viagem?.ultima_posicao || null
-      let curIdx = ordsTec.length > 0 ? osAtualIdx(visitasGPS, estimados, ordsTec.length) : -1
+      const reaisTv = visitasReais(visitasGPS)
+      const visitaIdx = ordsTec.length > 0 ? osAtualIdx(visitasGPS, estimados, ordsTec.length) : -1
+
+      // Mapeia a visita GPS atual para o OS correto (por destino/CNPJ, não por índice)
+      const visitaAtual = visitaIdx >= 0 ? reaisTv[visitaIdx] : null
+      let curIdx = visitaIdx
+      if (visitaAtual && ext.length > 1 && ordsTec.length > 1) {
+        for (let ei = 0; ei < ext.length; ei++) {
+          const agIt = ext[ei]
+          const osItem = agIt.id_ordem ? ordsTec.find(o => o.Id_Ordem === agIt.id_ordem) : null
+          const cnpjOS = osItem?.Cnpj_Cliente || ''
+          if (cnpjOS && visitaAtual.destino_cnpj && visitaAtual.destino_cnpj === cnpjOS) {
+            const oi = ordsTec.findIndex(o => o.Id_Ordem === agIt.id_ordem)
+            if (oi >= 0) { curIdx = oi; break }
+          }
+          if (visitaAtual.destino_nome && agIt.cliente && match(visitaAtual.destino_nome, agIt.cliente)) {
+            const oi = ordsTec.findIndex(o => o.Id_Ordem === agIt.id_ordem)
+            if (oi >= 0) { curIdx = oi; break }
+          }
+        }
+      }
 
       // Se está a caminho e ainda não chegou em nenhum cliente, detecta pelo mais próximo
-      const reaisTv = visitasReais(visitasGPS)
       if (pos && foraLoja && ext.length > 1 && reaisTv.filter(v => v.chegada).length === 0) {
         let melhorIdx = curIdx, melhorDist = Infinity
         for (let ei = 0; ei < ext.length; ei++) {
@@ -280,7 +303,13 @@ export default function TVPainel() {
       const curOS = curIdx >= 0 ? ordsTec[curIdx] : null
       const curAgItem = curOS ? items.find(a => a.id_ordem === curOS.Id_Ordem) : null
       const curEst = curIdx >= 0 ? estimados[curIdx] : null
-      const curGPS = curIdx >= 0 ? visitasReais(visitasGPS)[curIdx] : null
+      let curGPS: VisitaGPS | null = null
+      if (curOS && curAgItem) {
+        const _u = new Set<number>()
+        curGPS = matchVisitaGPS(reaisTv, curAgItem, ordsTec, _u) || null
+      } else if (visitaIdx >= 0) {
+        curGPS = reaisTv[visitaIdx] || null
+      }
 
       let status: 'oficina' | 'caminho' | 'cliente' | 'retornando' | 'retornou' = 'oficina'
       if (ultimaVisita?.retorno) status = 'retornou'

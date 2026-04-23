@@ -82,8 +82,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     descontoKm: safeGet(row, "Desconto_KM"),
     previsaoExecucao: safeGet(row, "Previsao_Execucao") || "",
     previsaoFaturamento: safeGet(row, "Previsao_Faturamento") || "",
+    diasExecucao: (safeGet(row, "Dias_Execucao") as string) || "",
     servicoOficina: !!safeGet(row, "Servico_Oficina"),
     horaInicioExec: safeGet(row, "Hora_Inicio_Exec") || "",
+    horaChegada: safeGet(row, "Hora_Chegada") || "",
     horaFimExec: safeGet(row, "Hora_Fim_Exec") || "",
     dadosTecnico: tecData ? {
       tipoServico: tecData.TipoServico,
@@ -237,7 +239,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     Previsao_Faturamento: dados.previsaoFaturamento || null,
     Servico_Oficina: !!dados.servicoOficina,
     Hora_Inicio_Exec: dados.horaInicioExec || '',
+    Hora_Chegada: dados.horaChegada || '',
     Hora_Fim_Exec: dados.horaFimExec || '',
+    Dias_Execucao: dados.diasExecucao || '',
   }).eq("Id_Ordem", idOs);
 
   if (error) {
@@ -252,25 +256,22 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const tecNome = dados.tecnicoResponsavel || "";
   await supabase.from('agenda_tecnico').delete().eq('id_ordem', idOs);
 
-  if (tecNome && dados.previsaoExecucao) {
-    const inicio = new Date(dados.previsaoExecucao + 'T00:00:00');
-    const fim = dados.previsaoFaturamento ? new Date(dados.previsaoFaturamento + 'T00:00:00') : inicio;
-    const todasDatas: string[] = [];
-    const cur = new Date(inicio);
-    while (cur <= fim) {
-      todasDatas.push(cur.toISOString().slice(0, 10));
-      cur.setDate(cur.getDate() + 1);
-    }
-    if (todasDatas.length > 0) {
+  if (tecNome) {
+    const entries: string[] = dados.diasExecucao
+      ? (dados.diasExecucao as string).split(',').filter(Boolean)
+      : dados.previsaoExecucao ? [dados.previsaoExecucao] : [];
+    if (entries.length > 0) {
       await supabase.from('agenda_tecnico').insert(
-        todasDatas.map(d => ({
+        entries.map((dia: string) => ({
           tecnico_nome: tecNome,
           id_ordem: idOs,
-          data_agendada: d,
+          data_agendada: dia.split(' ')[0],
           turno: 'integral',
           cliente: dados.nomeCliente || null,
           endereco: dados.enderecoCliente || null,
           status: 'agendado',
+          hora_inicio: dados.horaInicioExec || '08:00',
+          hora_fim: dados.horaFimExec || '',
         }))
       );
     }

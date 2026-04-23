@@ -110,7 +110,7 @@ const navItems: NavItem[] = [
   {
     id: 'consulta-estoque',
     name: 'Consulta Estoque',
-    href: 'http://localhost:3000',
+    href: 'http://localhost:3002',
     icon: <BarChart3 size={18} />,
     tag: 'ESTOQUE',
     gradient: 'linear-gradient(135deg, #ef4444, #991b1b)',

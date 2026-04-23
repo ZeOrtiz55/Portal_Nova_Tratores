@@ -81,6 +81,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
   }
 
+  // Remover dia atual dos Dias_Execucao quando sai de execução ativa
+  const statusParaExecucao = ["Execução (Realizando Diagnóstico)", "Execução aguardando peças (em transporte)"];
+  if (statusParaExecucao.includes(newStatus)) {
+    const hoje = new Date().toISOString().slice(0, 10);
+    const { data: osRow } = await supabase.from(TBL_OS).select("Dias_Execucao").eq("Id_Ordem", idOs).limit(1);
+    const diasAtual = (osRow?.[0]?.Dias_Execucao as string) || "";
+    if (diasAtual.includes(hoje)) {
+      const novosDias = diasAtual.split(',').filter(d => !d.startsWith(hoje)).join(',');
+      await supabase.from(TBL_OS).update({ Dias_Execucao: novosDias }).eq("Id_Ordem", idOs);
+      await supabase.from('agenda_tecnico').delete().eq('id_ordem', idOs).eq('data_agendada', hoje);
+    }
+  }
+
   // Sincroniza status do PPV vinculado
   await sincronizarStatusPPV(idOs, newStatus);
 

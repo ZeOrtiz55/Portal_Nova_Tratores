@@ -232,6 +232,7 @@ async function getOrdensParaKanban(): Promise<KanbanCard[]> {
       servSolicitado: (safeGet(row, "Serv_Solicitado") as string) || "-",
       previsaoExecucao: (safeGet(row, "Previsao_Execucao") as string) || "",
       previsaoFaturamento: (safeGet(row, "Previsao_Faturamento") as string) || "",
+      diasExecucao: (safeGet(row, "Dias_Execucao") as string) || "",
       diasAtraso: mapaAtraso[osId] || 0,
       ultimaAcao: ultimoLog?.acao || "",
       ultimoUsuario: ultimoLog?.usuario || "",
@@ -393,7 +394,9 @@ export async function POST(req: NextRequest) {
     Previsao_Faturamento: dados.previsaoFaturamento || null,
     Servico_Oficina: !!dados.servicoOficina,
     Hora_Inicio_Exec: dados.horaInicioExec || '',
+    Hora_Chegada: dados.horaChegada || '',
     Hora_Fim_Exec: dados.horaFimExec || '',
+    Dias_Execucao: dados.diasExecucao || '',
   });
 
   if (error) {
@@ -415,26 +418,23 @@ export async function POST(req: NextRequest) {
     notifLink: `/pos?id=${newId}`,
   });
 
-  // Criar entradas na agenda_tecnico para período de execução (início → faturamento)
-  if (dados.tecnicoResponsavel && dados.previsaoExecucao) {
-    const inicio = new Date(dados.previsaoExecucao + 'T00:00:00');
-    const fim = dados.previsaoFaturamento ? new Date(dados.previsaoFaturamento + 'T00:00:00') : inicio;
-    const todasDatas: string[] = [];
-    const cur = new Date(inicio);
-    while (cur <= fim) {
-      todasDatas.push(cur.toISOString().slice(0, 10));
-      cur.setDate(cur.getDate() + 1);
-    }
-    if (todasDatas.length > 0) {
+  // Criar entradas na agenda_tecnico para dias de execução
+  if (dados.tecnicoResponsavel) {
+    const entries: string[] = dados.diasExecucao
+      ? (dados.diasExecucao as string).split(',').filter(Boolean)
+      : dados.previsaoExecucao ? [dados.previsaoExecucao] : [];
+    if (entries.length > 0) {
       await supabase.from('agenda_tecnico').insert(
-        todasDatas.map((d: string) => ({
+        entries.map((dia: string) => ({
           tecnico_nome: dados.tecnicoResponsavel,
           id_ordem: newId,
-          data_agendada: d,
+          data_agendada: dia.split(' ')[0],
           turno: 'integral',
           cliente: dados.nomeCliente || null,
           endereco: dados.enderecoCliente || null,
           status: 'agendado',
+          hora_inicio: dados.horaInicioExec || '08:00',
+          hora_fim: dados.horaFimExec || '',
         }))
       );
     }
