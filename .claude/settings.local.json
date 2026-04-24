@@ -508,7 +508,9 @@
       "Bash(node -r dotenv/config server.js)",
       "Bash(ls -la /c/projetos/portal/src/app/\\\\\\(portal\\\\\\)/admin/ 2>/dev/null)",
       "Bash(find /c/projetos/portal/src -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) | xargs grep -l \"modulos_permitidos\\\\|MODULOS\" 2>/dev/null | head -10)",
-      "Bash(grep -r \"portal_permissoes\" /c/projetos/portal --include=\"*.sql\" --include=\"*.ts\" --include=\"*.tsx\" -B 2 -A 5 2>/dev/null | head -80)"
+      "Bash(grep -r \"portal_permissoes\" /c/projetos/portal --include=\"*.sql\" --include=\"*.ts\" --include=\"*.tsx\" -B 2 -A 5 2>/dev/null | head -80)",
+      "Bash(grep -n \"PHASES\\\\|FASES\" /c/projetos/portal/src/components/pos/*.tsx | head -20)",
+      "Bash(find /c/projetos/portal/src -name \"*.ts\" -o -name \"*.tsx\" | xargs grep -l \"Ordem_Servico_Tecnicos\" | head -10)"
     ]
   }
 }
