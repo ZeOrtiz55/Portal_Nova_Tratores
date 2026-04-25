@@ -111,7 +111,7 @@ const navItems: NavItem[] = [
   {
     id: 'consulta-estoque',
     name: 'Consulta Estoque',
-    href: 'https://omie-consulta-estoque-production.up.railway.app/dashboard',
+    href: 'https://estoque.novatratores.com/dashboard',
     icon: <BarChart3 size={18} />,
     tag: 'ESTOQUE',
     gradient: 'linear-gradient(135deg, #ef4444, #991b1b)',
@@ -120,7 +120,7 @@ const navItems: NavItem[] = [
   {
     id: 'visual-estoque',
     name: 'Visual Estoque',
-    href: 'https://visual-estoque-production.up.railway.app',
+    href: 'https://produtos.novatratores.com',
     icon: <Eye size={18} />,
     tag: 'SHOWROOM',
     gradient: 'linear-gradient(135deg, #b91c1c, #7f1d1d)',

@@ -52,7 +52,7 @@ const STATUS_CORES: Record<string, { bg: string; color: string }> = {
   'Executada aguardando comercial': { bg: '#EDE9FE', color: '#5B21B6' },
   'Aguardando outros': { bg: '#F3F4F6', color: '#374151' },
   'Aguardando ordem Técnico': { bg: '#FFF7ED', color: '#9A3412' },
-  'Executada aguardando cliente': { bg: '#FEF3C7', color: '#78350F' },
+  'Relatório Concluído': { bg: '#FEF3C7', color: '#78350F' },
 }
 
 function getStatusAbreviado(status: string): string {
@@ -65,7 +65,7 @@ function getStatusAbreviado(status: string): string {
     'Executada aguardando comercial': 'Ag. Comercial',
     'Aguardando outros': 'Ag. Outros',
     'Aguardando ordem Técnico': 'Ag. Técnico',
-    'Executada aguardando cliente': 'Ag. Cliente',
+    'Relatório Concluído': 'Rel. Concluído',
   }
   return map[status] || status
 }

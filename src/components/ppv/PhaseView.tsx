@@ -24,7 +24,7 @@ export const PHASE_COLORS: Record<string, string> = {
   "Executada aguardando comercial": "#7C3AED",
   "Aguardando outros": "#CA8A04",
   "Aguardando ordem Técnico": "#D97706",
-  "Executada aguardando cliente": "#0891B2",
+  "Relatório Concluído": "#0891B2",
   "Concluída": "#047857",
   "Cancelada": "#B91C1C",
 };
@@ -40,7 +40,7 @@ export const PHASE_SHORT: Record<string, string> = {
   "Executada aguardando comercial": "Aguar. Comercial",
   "Aguardando outros": "Aguar. Outros",
   "Aguardando ordem Técnico": "Aguar. Técnico",
-  "Executada aguardando cliente": "Aguar. Cliente",
+  "Relatório Concluído": "Rel. Concluído",
   "Concluída": "Concluída",
   "Cancelada": "Cancelada",
 };

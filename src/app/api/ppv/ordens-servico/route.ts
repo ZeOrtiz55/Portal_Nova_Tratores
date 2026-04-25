@@ -13,7 +13,7 @@ const STATUS_ABERTOS = [
   "Execução aguardando peças (em transporte)",
   "Aguardando outros",
   "Executada",
-  "Executada aguardando cliente",
+  "Relatório Concluído",
   "Executada aguardando comercial",
 ];
 

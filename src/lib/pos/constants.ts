@@ -25,7 +25,7 @@ export const POS_TO_PPV_STATUS: Record<string, string> = {
   "Executada aguardando comercial": "Executada aguardando comercial",
   "Aguardando outros": "Aguardando outros",
   "Aguardando ordem Técnico": "Aguardando ordem Técnico",
-  "Executada aguardando cliente": "Executada aguardando cliente",
+  "Relatório Concluído": "Relatório Concluído",
   "Concluída": "Concluída",
   "Cancelada": "Cancelada",
 };
@@ -45,14 +45,14 @@ export const PHASES = [
   "Executada aguardando comercial",
   "Aguardando outros",
   "Aguardando ordem Técnico",
-  "Executada aguardando cliente",
+  "Relatório Concluído",
   "Concluída",
   "Cancelada",
 ];
 
 // Fases que pausam o contador de métricas do técnico
 export const FASES_CONTADOR_PARADO = new Set([
-  "Executada aguardando cliente",
+  "Relatório Concluído",
   "Concluída",
   "Cancelada",
 ]);

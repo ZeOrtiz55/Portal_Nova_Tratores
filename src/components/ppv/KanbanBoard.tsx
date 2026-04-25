@@ -21,7 +21,7 @@ const COLUMNS = [
   { key: "Executada aguardando comercial", title: "Aguar. Comercial" },
   { key: "Aguardando outros", title: "Aguar. Outros" },
   { key: "Aguardando ordem Técnico", title: "Aguar. Técnico" },
-  { key: "Executada aguardando cliente", title: "Aguar. Cliente" },
+  { key: "Relatório Concluído", title: "Rel. Concluído" },
   { key: "Concluída", title: "Concluída" },
   { key: "Cancelada", title: "Cancelada" },
 ] as const;

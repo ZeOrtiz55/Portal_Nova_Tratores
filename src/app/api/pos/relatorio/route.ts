@@ -27,7 +27,7 @@ const CORES_FASE: Record<string, string> = {
   "Executada aguardando comercial": "#C084FC",
   "Aguardando outros": "#A855F7",
   "Aguardando ordem Técnico": "#0EA5E9",
-  "Executada aguardando cliente": "#A78BFA",
+  "Relatório Concluído": "#A78BFA",
 };
 
 // Fases consideradas "atrasadas" por natureza (ordem parada esperando algo)
@@ -37,7 +37,7 @@ const FASES_ATRASO = new Set([
   "Executada aguardando comercial",
   "Aguardando outros",
   "Aguardando ordem Técnico",
-  "Executada aguardando cliente",
+  "Relatório Concluído",
 ]);
 
 export async function GET(request: NextRequest) {

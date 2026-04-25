@@ -25,6 +25,8 @@ export interface OrdemServico {
   Desconto: number;
   Previsao_Execucao: string | null;
   Previsao_Faturamento: string | null;
+  Data_Fim_Servico: string | null;
+  Servico_Numero: number | null;
 }
 
 export interface ReqResumo {
@@ -48,6 +50,7 @@ export interface KanbanCard {
   servSolicitado: string;
   previsaoExecucao: string;
   previsaoFaturamento: string;
+  dataFimServico: string;
   diasAtraso: number;
   ultimaAcao: string;
   ultimoUsuario: string;
@@ -126,6 +129,8 @@ export interface OSFormData {
   relatorioTecnico?: string;
   previsaoExecucao: string;
   previsaoFaturamento: string;
+  dataFimServico: string;
+  servicoNumero: number;
 }
 
 export interface RequisicaoInfo {

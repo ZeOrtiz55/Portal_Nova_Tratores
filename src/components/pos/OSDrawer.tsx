@@ -78,7 +78,9 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
   const [relatorioTecnico, setRelatorioTecnico] = useState("");
   const [previsaoExecucao, setPrevisaoExecucao] = useState("");
   const [previsaoFaturamento, setPrevisaoFaturamento] = useState("");
+  const [dataFimServico, setDataFimServico] = useState("");
   const [diasExecucao, setDiasExecucao] = useState<string[]>([]);
+  const [servicoNumero, setServicoNumero] = useState(0);
   const [horaInicioExec, setHoraInicioExec] = useState("08:00");
   const [horaChegada, setHoraChegada] = useState("");
   const [horaFimExec, setHoraFimExec] = useState("");
@@ -184,6 +186,17 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
       })
       .catch(() => setAgendaTecnico([]));
   }, [tecnico1, previsaoExecucao, osId]);
+
+  // Verificar quantos serviços em execução o técnico tem
+  useEffect(() => {
+    if (!tecnico1) { setServicoNumero(0); return; }
+    fetch(`/api/pos/tecnicos?contarServicos=${encodeURIComponent(tecnico1)}&osAtual=${osId || ''}`)
+      .then(r => r.ok ? r.json() : { servicosEmExecucao: 0 })
+      .then((data: any) => {
+        setServicoNumero((data.servicosEmExecucao || 0) + 1);
+      })
+      .catch(() => setServicoNumero(0));
+  }, [tecnico1, osId]);
 
   // Carregar listas para dropdown de substituto
   useEffect(() => {
@@ -386,6 +399,8 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
       diasExecucao: diasExecucao.sort().join(','),
       previsaoExecucao,
       previsaoFaturamento,
+      dataFimServico,
+      servicoNumero,
       horaInicioExec,
       horaFimExec,
       horaChegada,
@@ -414,7 +429,7 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
     }
   }, [mode, osId, clienteChave, clienteInfo, tecnico1, tecnico2, tipoServico, revisao, projeto,
       servSolicitado, qtdHoras, qtdKm, ppv, status, ordemOmie, motivoCancel, descValor,
-      descHoraValor, descKmValor, relatorioTecnico, previsaoExecucao, previsaoFaturamento,
+      descHoraValor, descKmValor, relatorioTecnico, previsaoExecucao, previsaoFaturamento, dataFimServico, servicoNumero,
       gerarPPV, servicoOficina, horaInicioExec, horaChegada, horaFimExec, onClose, onSaved]);
 
   // ── Reset form to defaults ──
@@ -429,7 +444,7 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
     const hojeStr = agora.toISOString().slice(0, 10)
     const horaStr = `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`
     setPrevisaoExecucao(hojeStr)
-    setPrevisaoFaturamento(""); setDiasExecucao([]); setHoraInicioExec(horaStr); setHoraChegada(""); setHoraFimExec(""); setAgendaTecnico([]);
+    setPrevisaoFaturamento(""); setDataFimServico(""); setDiasExecucao([]); setServicoNumero(0); setHoraInicioExec(horaStr); setHoraChegada(""); setHoraFimExec(""); setAgendaTecnico([]);
     setEstimativa(null); setErroEstimativa(""); setLoadingEstimativa(false); setEnderecoEstimativa(""); setEnderecosDisponiveis([]);
     setProdutos([]); setTotalPecas(0); setShowLogs(false); setRequisicoes([]);
     setGerarPPV(false); setShowDescontos(false); setLoadingData(false);
@@ -481,6 +496,7 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
           setRelatorioTecnico(d.relatorioTecnico || "");
           setPrevisaoExecucao(d.previsaoExecucao || "");
           setPrevisaoFaturamento(d.previsaoFaturamento || "");
+          setDataFimServico(d.dataFimServico || "");
           setDiasExecucao(d.diasExecucao ? d.diasExecucao.split(',').filter(Boolean) : []);
           setHoraInicioExec(d.horaInicioExec || "08:00");
           setHoraChegada(d.horaChegada || "");
@@ -964,6 +980,14 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
                           {tecnicos.map((t) => <option key={t} value={t}>{t}</option>)}
                         </select>
                       </div>
+                      {tecnico1 && servicoNumero > 0 && (
+                        <div style={{ gridColumn: '1 / -1', padding: '6px 10px', background: servicoNumero > 1 ? '#FEF3C7' : '#F0FDF4', border: `1px solid ${servicoNumero > 1 ? '#FCD34D' : '#BBF7D0'}`, borderRadius: 6, fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <i className={`fas ${servicoNumero > 1 ? 'fa-exclamation-triangle' : 'fa-check-circle'}`} style={{ color: servicoNumero > 1 ? '#D97706' : '#15803D' }} />
+                          <span style={{ fontWeight: 600, color: servicoNumero > 1 ? '#92400E' : '#15803D' }}>
+                            {servicoNumero === 1 ? '1º serviço deste técnico' : `${servicoNumero}º serviço deste técnico (${servicoNumero - 1} em execução)`}
+                          </span>
+                        </div>
+                      )}
                       <div style={S_FLEX1}>
                         <label>Segundo Técnico</label>
                         <select value={tecnico2} onChange={(e) => setTecnico2(e.target.value)}>
@@ -1015,17 +1039,17 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
                     )}
                   </div>
 
-                  {/* ── Dias de Execução ── */}
+                  {/* ── Datas do Serviço ── */}
                   <div className="os-card">
-                    <div className="os-card-title"><i className="fas fa-calendar-alt" /> Dias de Execução</div>
+                    <div className="os-card-title"><i className="fas fa-calendar-alt" /> Datas do Serviço</div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                       <div>
-                        <label style={{ fontSize: 11, color: '#6B7280', margin: 0 }}>Data Início</label>
+                        <label style={{ fontSize: 11, color: '#6B7280', margin: 0 }}>Data Início Serviço</label>
                         <input type="date" value={previsaoExecucao} onChange={(e) => {
                           setPrevisaoExecucao(e.target.value)
-                          if (!e.target.value || !previsaoFaturamento) return
+                          if (!e.target.value || !dataFimServico) return
                           const start = new Date(e.target.value + 'T12:00:00')
-                          const end = new Date(previsaoFaturamento + 'T12:00:00')
+                          const end = new Date(dataFimServico + 'T12:00:00')
                           if (start > end) return
                           const days: string[] = []
                           const cur = new Date(start)
@@ -1034,9 +1058,9 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
                         }} style={{ padding: '6px 8px', border: '1px solid #D1D5DB', borderRadius: 6, fontSize: 13, width: '100%' }} />
                       </div>
                       <div>
-                        <label style={{ fontSize: 11, color: '#6B7280', margin: 0 }}>Data Fim</label>
-                        <input type="date" value={previsaoFaturamento} onChange={(e) => {
-                          setPrevisaoFaturamento(e.target.value)
+                        <label style={{ fontSize: 11, color: '#6B7280', margin: 0 }}>Data Fim Serviço</label>
+                        <input type="date" value={dataFimServico} onChange={(e) => {
+                          setDataFimServico(e.target.value)
                           if (!e.target.value || !previsaoExecucao) return
                           const start = new Date(previsaoExecucao + 'T12:00:00')
                           const end = new Date(e.target.value + 'T12:00:00')
@@ -1047,6 +1071,10 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
                           setDiasExecucao(days)
                         }} style={{ padding: '6px 8px', border: '1px solid #D1D5DB', borderRadius: 6, fontSize: 13, width: '100%' }} />
                       </div>
+                    </div>
+                    <div style={{ marginTop: 8 }}>
+                      <label style={{ fontSize: 11, color: '#6B7280', margin: 0 }}>Previsão de Faturamento</label>
+                      <input type="date" value={previsaoFaturamento} onChange={(e) => setPrevisaoFaturamento(e.target.value)} style={{ padding: '6px 8px', border: '1px solid #D1D5DB', borderRadius: 6, fontSize: 13, width: '100%' }} />
                     </div>
                     {diasExecucao.length > 0 && (() => {
                       const timeOpts = Array.from({ length: 48 }, (_, i) => { const h = Math.floor(i / 2); const m = i % 2 === 0 ? '00' : '30'; return `${String(h).padStart(2, '0')}:${m}` })

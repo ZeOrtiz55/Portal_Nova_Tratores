@@ -92,7 +92,7 @@ async function autoMoveByDate() {
     });
   }
 
-  // 3. Buscar ordens que precisam ser movidas para Executada aguardando cliente
+  // 3. Buscar ordens que precisam ser movidas para Relatório Concluído
   const { data: paraFaturamento } = await supabase
     .from(TBL_OS)
     .select("Id_Ordem, Status, Previsao_Faturamento")
@@ -102,9 +102,9 @@ async function autoMoveByDate() {
 
   for (const os of paraFaturamento || []) {
     if (await autoMoveJaFoiRevertido(os.Id_Ordem, "Auto-move: Previsão de faturamento atingida")) continue;
-    await supabase.from(TBL_OS).update({ Status: "Executada aguardando cliente" }).eq("Id_Ordem", os.Id_Ordem);
-    await registrarLog(os.Id_Ordem, "Auto-move: Previsão de faturamento atingida", "Executada aguardando cliente", os.Status);
-    await sincronizarStatusPPV(os.Id_Ordem, "Executada aguardando cliente");
+    await supabase.from(TBL_OS).update({ Status: "Relatório Concluído" }).eq("Id_Ordem", os.Id_Ordem);
+    await registrarLog(os.Id_Ordem, "Auto-move: Previsão de faturamento atingida", "Relatório Concluído", os.Status);
+    await sincronizarStatusPPV(os.Id_Ordem, "Relatório Concluído");
   }
 
   // 4. Atualiza dias das métricas abertas e fecha as que chegaram em fases de parada
@@ -233,6 +233,7 @@ async function getOrdensParaKanban(): Promise<KanbanCard[]> {
       previsaoExecucao: (safeGet(row, "Previsao_Execucao") as string) || "",
       previsaoFaturamento: (safeGet(row, "Previsao_Faturamento") as string) || "",
       diasExecucao: (safeGet(row, "Dias_Execucao") as string) || "",
+      dataFimServico: (safeGet(row, "Data_Fim_Servico") as string) || "",
       diasAtraso: mapaAtraso[osId] || 0,
       ultimaAcao: ultimoLog?.acao || "",
       ultimoUsuario: ultimoLog?.usuario || "",
@@ -397,6 +398,8 @@ export async function POST(req: NextRequest) {
     Hora_Chegada: dados.horaChegada || '',
     Hora_Fim_Exec: dados.horaFimExec || '',
     Dias_Execucao: dados.diasExecucao || '',
+    Data_Fim_Servico: dados.dataFimServico || null,
+    Servico_Numero: dados.servicoNumero || null,
   });
 
   if (error) {

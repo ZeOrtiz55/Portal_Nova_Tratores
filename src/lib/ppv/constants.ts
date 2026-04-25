@@ -28,7 +28,7 @@ export const STATUS_COLORS: Record<string, { text: string; bg: string }> = {
   "Executada aguardando comercial": { text: "#7C3AED", bg: "#FAF5FF" },
   "Aguardando outros": { text: "#CA8A04", bg: "#FEFCE8" },
   "Aguardando ordem Técnico": { text: "#D97706", bg: "#FFF7ED" },
-  "Executada aguardando cliente": { text: "#0891B2", bg: "#ECFEFF" },
+  "Relatório Concluído": { text: "#0891B2", bg: "#ECFEFF" },
   "Concluída": { text: "#047857", bg: "#ECFDF5" },
   "Cancelada": { text: "#B91C1C", bg: "#FEF2F2" },
 };
@@ -57,7 +57,7 @@ export const STATUS_OPTIONS = [
   { value: "Executada aguardando comercial", label: "Aguardando comercial" },
   { value: "Aguardando outros", label: "Aguardando outros" },
   { value: "Aguardando ordem Técnico", label: "Aguardando técnico" },
-  { value: "Executada aguardando cliente", label: "Aguardando cliente" },
+  { value: "Relatório Concluído", label: "Relatório Concluído" },
   { value: "Concluída", label: "Concluída" },
   { value: "Cancelada", label: "Cancelada" },
 ];

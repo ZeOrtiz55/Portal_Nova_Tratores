@@ -16,7 +16,7 @@ export function normalizarStatus(st: string | null | undefined): string {
     "Executada aguardando comercial",
     "Aguardando outros",
     "Aguardando ordem Técnico",
-    "Executada aguardando cliente",
+    "Relatório Concluído",
     "Concluída",
     "Cancelada",
   ];

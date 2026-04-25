@@ -83,6 +83,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     previsaoExecucao: safeGet(row, "Previsao_Execucao") || "",
     previsaoFaturamento: safeGet(row, "Previsao_Faturamento") || "",
     diasExecucao: (safeGet(row, "Dias_Execucao") as string) || "",
+    dataFimServico: (safeGet(row, "Data_Fim_Servico") as string) || "",
+    servicoNumero: safeGet(row, "Servico_Numero") || 0,
     servicoOficina: !!safeGet(row, "Servico_Oficina"),
     horaInicioExec: safeGet(row, "Hora_Inicio_Exec") || "",
     horaChegada: safeGet(row, "Hora_Chegada") || "",
@@ -242,6 +244,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     Hora_Chegada: dados.horaChegada || '',
     Hora_Fim_Exec: dados.horaFimExec || '',
     Dias_Execucao: dados.diasExecucao || '',
+    Data_Fim_Servico: dados.dataFimServico || null,
+    Servico_Numero: dados.servicoNumero || null,
   }).eq("Id_Ordem", idOs);
 
   if (error) {
