@@ -510,7 +510,12 @@
       "Bash(find /c/projetos/portal/src -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) | xargs grep -l \"modulos_permitidos\\\\|MODULOS\" 2>/dev/null | head -10)",
       "Bash(grep -r \"portal_permissoes\" /c/projetos/portal --include=\"*.sql\" --include=\"*.ts\" --include=\"*.tsx\" -B 2 -A 5 2>/dev/null | head -80)",
       "Bash(grep -n \"PHASES\\\\|FASES\" /c/projetos/portal/src/components/pos/*.tsx | head -20)",
-      "Bash(find /c/projetos/portal/src -name \"*.ts\" -o -name \"*.tsx\" | xargs grep -l \"Ordem_Servico_Tecnicos\" | head -10)"
+      "Bash(find /c/projetos/portal/src -name \"*.ts\" -o -name \"*.tsx\" | xargs grep -l \"Ordem_Servico_Tecnicos\" | head -10)",
+      "Bash(cat /c/projetos/portal/src/app/api/pos/ordens/\\\\[id\\\\]/route.ts | tail -200)",
+      "Bash(find /c/projetos/portal/src -name \"middleware*\" -type f 2>/dev/null | head -10)",
+      "Bash(find /c/projetos/portal/src -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) | xargs grep -l \"http\\\\|fetch\" | head -15)",
+      "Bash(grep -r \"railway.app\\\\|vercel\\\\|netlify\\\\|nova.*tratores\\\\|portal.*url\" /c/projetos/portal --include=\"*.md\" --include=\"*.json\" --include=\"*.config.*\" 2>/dev/null | grep -v node_modules)",
+      "Bash(ls -la /c/projetos/portal/src/app/api/*/)"
     ]
   }
 }
