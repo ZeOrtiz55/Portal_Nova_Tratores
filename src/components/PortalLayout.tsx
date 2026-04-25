@@ -174,13 +174,17 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const limparNotifRef = useRef(chatData.limparNotificacao)
   limparNotifRef.current = chatData.limparNotificacao
 
-  // Abrir link externo com token de autenticação
+  // Abrir link externo com token portal (bypass auth)
   const openExternalWithAuth = useCallback(async (href: string) => {
     const { data: { session } } = await supabase.auth.getSession()
-    if (session?.access_token && session?.refresh_token) {
-      const url = new URL(href)
-      const authUrl = `${url.origin}/auth/token?access_token=${session.access_token}&refresh_token=${session.refresh_token}&redirect_to=${encodeURIComponent(url.pathname + url.search)}`
-      window.open(authUrl, '_blank')
+    if (session) {
+      const ts = Date.now().toString()
+      const encoder = new TextEncoder()
+      const key = await crypto.subtle.importKey('raw', encoder.encode('nova-tratores-portal-2024'), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+      const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(ts))
+      const hash = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('')
+      const sep = href.includes('?') ? '&' : '?'
+      window.open(`${href}${sep}portal_token=${hash}&portal_ts=${ts}&portal_user=${encodeURIComponent(session.user.email || '')}`, '_blank')
     } else {
       window.open(href, '_blank')
     }
