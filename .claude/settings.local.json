@@ -515,7 +515,11 @@
       "Bash(find /c/projetos/portal/src -name \"middleware*\" -type f 2>/dev/null | head -10)",
       "Bash(find /c/projetos/portal/src -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) | xargs grep -l \"http\\\\|fetch\" | head -15)",
       "Bash(grep -r \"railway.app\\\\|vercel\\\\|netlify\\\\|nova.*tratores\\\\|portal.*url\" /c/projetos/portal --include=\"*.md\" --include=\"*.json\" --include=\"*.config.*\" 2>/dev/null | grep -v node_modules)",
-      "Bash(ls -la /c/projetos/portal/src/app/api/*/)"
+      "Bash(ls -la /c/projetos/portal/src/app/api/*/)",
+      "Bash(cd /c/projetos/portal && ./node_modules/.bin/tsc --noEmit 2>&1 | head -20)",
+      "Bash(cd /c/projetos/portal && ./node_modules/.bin/tsc --noEmit 2>&1 | head -10)",
+      "Bash(git status:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
