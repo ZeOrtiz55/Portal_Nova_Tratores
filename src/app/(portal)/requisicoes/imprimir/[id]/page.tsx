@@ -29,6 +29,7 @@ export default function ImprimirRequisicao() {
   const [nomeSolicitante, setNomeSolicitante] = useState('---');
   const [placaVeiculo, setPlacaVeiculo] = useState('---');
   const [cotacaoData, setCotacaoData] = useState<any>(null);
+  const [mostrarCotacao, setMostrarCotacao] = useState(true);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -84,10 +85,21 @@ export default function ImprimirRequisicao() {
         }
       `}} />
 
-      <div className="print-actions" style={{ padding: '12px 20px', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: 8, alignItems: 'center', fontFamily: 'sans-serif' }}>
+      <div className="print-actions" style={{ padding: '12px 20px', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: 12, alignItems: 'center', fontFamily: 'sans-serif' }}>
         <button onClick={() => window.print()} style={{ background: '#1e293b', color: '#fff', border: 'none', padding: '8px 20px', borderRadius: 8, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
           Imprimir / Salvar PDF
         </button>
+        {cotacaoData && cotacaoData.fornecedor1 && (
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={mostrarCotacao}
+              onChange={(e) => setMostrarCotacao(e.target.checked)}
+              style={{ width: 16, height: 16, cursor: 'pointer' }}
+            />
+            Incluir cotação no PDF
+          </label>
+        )}
         <span style={{ fontSize: 12, color: '#64748b' }}>Requisição #{req.id} — {req.titulo}</span>
       </div>
 
@@ -187,7 +199,7 @@ export default function ImprimirRequisicao() {
         )}
 
         {/* COTAÇÕES */}
-        {cotacaoData && cotacaoData.fornecedor1 && (
+        {mostrarCotacao && cotacaoData && cotacaoData.fornecedor1 && (
           <div style={{ border: '2px solid #000', borderRadius: 16, overflow: 'hidden', marginBottom: 16 }}>
             <div style={{ background: '#f1f5f9', fontSize: 11, fontWeight: 900, textTransform: 'uppercase', padding: '8px 0', borderBottom: '2px solid #000', textAlign: 'center' }}>Mapa de Cotações</div>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>

@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
   X, Bell, Plus, Clock, Check, User, Calendar,
-  AlertCircle, ChevronDown, Send
+  AlertCircle, ChevronDown, Send, Repeat
 } from 'lucide-react'
 
 interface Lembrete {
@@ -16,8 +16,19 @@ interface Lembrete {
   descricao: string
   data_hora: string
   status: string
+  recorrencia?: string | null
   created_at: string
 }
+
+const RECORRENCIAS = [
+  { value: '', label: 'Sem repetição' },
+  { value: 'semanal', label: 'Semanal' },
+  { value: 'quinzenal', label: 'Quinzenal' },
+  { value: 'mensal', label: 'Mensal' },
+  { value: 'bimestral', label: 'Bimestral' },
+  { value: 'semestral', label: 'Semestral' },
+  { value: 'anual', label: 'Anual' },
+]
 
 interface Usuario {
   id: string
@@ -47,6 +58,7 @@ export default function LembretesPanel({
   const [titulo, setTitulo] = useState('')
   const [descricao, setDescricao] = useState('')
   const [dataHora, setDataHora] = useState('')
+  const [recorrencia, setRecorrencia] = useState('')
 
   const carregarLembretes = useCallback(async () => {
     if (!userId) return
@@ -79,6 +91,7 @@ export default function LembretesPanel({
         titulo,
         descricao,
         data_hora: new Date(dataHora).toISOString(),
+        ...(recorrencia ? { recorrencia } : {}),
       }),
     })
     // Notificar destinatário
@@ -92,6 +105,7 @@ export default function LembretesPanel({
     setTitulo('')
     setDescricao('')
     setDataHora('')
+    setRecorrencia('')
     setDestId('')
     setShowForm(false)
     setLoading(false)
@@ -249,6 +263,20 @@ export default function LembretesPanel({
                 }}
               />
 
+              <select
+                value={recorrencia}
+                onChange={e => setRecorrencia(e.target.value)}
+                style={{
+                  padding: '10px 14px', borderRadius: '10px', border: '1px solid #e5e5e5',
+                  fontSize: '13px', color: '#1a1a1a', background: '#fff', outline: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                {RECORRENCIAS.map(r => (
+                  <option key={r.value} value={r.value}>{r.label}</option>
+                ))}
+              </select>
+
               <button
                 onClick={criarLembrete}
                 disabled={!destId || !titulo || !dataHora || loading}
@@ -390,6 +418,15 @@ function LembreteCard({
         )}
         {isMeuProprio && (
           <span style={{ fontSize: '10px', color: '#d4d4d4', fontStyle: 'italic' }}>para mim</span>
+        )}
+        {l.recorrencia && (
+          <span style={{
+            fontSize: '10px', color: '#8b5cf6', fontWeight: '600',
+            display: 'flex', alignItems: 'center', gap: '3px',
+            background: '#f5f3ff', padding: '2px 8px', borderRadius: '6px'
+          }}>
+            <Repeat size={10} /> {l.recorrencia}
+          </span>
         )}
       </div>
     </div>

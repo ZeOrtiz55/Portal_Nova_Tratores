@@ -16,6 +16,10 @@ export default function FormReq({ onSave }: { onSave: (data: any) => void }) {
   const [osDropdownOpen, setOsDropdownOpen] = useState(false);
   const osRef = useRef<HTMLDivElement>(null);
 
+  const [solDropdownOpen, setSolDropdownOpen] = useState(false);
+  const [solBusca, setSolBusca] = useState('');
+  const solRef = useRef<HTMLDivElement>(null);
+
   const [formData, setFormData] = useState({
     titulo: '', tipo: '', solicitante: '', setor: '',
     data: new Date().toISOString().split('T')[0],
@@ -27,7 +31,7 @@ export default function FormReq({ onSave }: { onSave: (data: any) => void }) {
   useEffect(() => {
     const fetchData = async () => {
       const [{ data: users }, { data: veic }, { data: ordens }] = await Promise.all([
-        supabase.from('req_usuarios').select('nome').order('nome'),
+        supabase.from('financeiro_usu').select('id, nome, funcao').order('nome'),
         supabase.from('SupaPlacas').select('IdPlaca, NumPlaca').order('NumPlaca'),
         supabase.from('Ordem_Servico').select('Id_Ordem, Os_Cliente, Os_Tecnico, Status').not('Status', 'in', '("Concluída","Cancelada")').order('Id_Ordem', { ascending: false }),
       ]);
@@ -42,6 +46,7 @@ export default function FormReq({ onSave }: { onSave: (data: any) => void }) {
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (osRef.current && !osRef.current.contains(e.target as Node)) setOsDropdownOpen(false);
+      if (solRef.current && !solRef.current.contains(e.target as Node)) setSolDropdownOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -94,12 +99,61 @@ export default function FormReq({ onSave }: { onSave: (data: any) => void }) {
                 {["Peças", "Alimentação", "Serviço de Terceiros", "Almoxarifado", "Ferramenta", "Insumo Infra", "Veicular Abastecimento", "Veicular Manutenção", "Trator Abastecimento", "Quadri Abastecimento", "Hospedagem"].map(t => <option key={t} value={t} className="bg-white">{t}</option>)}
               </select>
             </div>
-            <div>
+            <div ref={solRef} className="relative">
               <label className={labelStyle}>Solicitante</label>
-              <select required onChange={e => setFormData({...formData, solicitante: e.target.value})} className={inputStyle}>
-                <option value="" className="bg-white">Quem pede?</option>
-                {usuarios.map(u => <option key={u.nome} value={u.nome} className="bg-white">{u.nome}</option>)}
-              </select>
+              <div
+                className={`${inputStyle} cursor-pointer flex items-center justify-between`}
+                onClick={() => setSolDropdownOpen(!solDropdownOpen)}
+              >
+                <span className={formData.solicitante ? 'text-zinc-900' : 'text-zinc-400'}>
+                  {formData.solicitante
+                    ? `${formData.solicitante}${(() => { const u = usuarios.find(u => u.nome === formData.solicitante); return u?.funcao ? ` — ${u.funcao}` : ''; })()}`
+                    : 'Quem pede?'}
+                </span>
+                <svg className="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </div>
+              {solDropdownOpen && (
+                <div className="absolute z-50 mt-1 w-full bg-white border border-zinc-200 rounded-xl shadow-xl max-h-64 overflow-auto">
+                  <div className="sticky top-0 bg-white p-2 border-b border-zinc-100">
+                    <input
+                      autoFocus
+                      placeholder="Buscar por nome ou função..."
+                      value={solBusca}
+                      onChange={e => setSolBusca(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-zinc-200 text-sm outline-none focus:border-red-400"
+                    />
+                  </div>
+                  {usuarios
+                    .filter(u => {
+                      if (!solBusca.trim()) return true;
+                      const q = solBusca.toLowerCase();
+                      return (u.nome || '').toLowerCase().includes(q) || (u.funcao || '').toLowerCase().includes(q);
+                    })
+                    .map(u => (
+                      <button
+                        type="button"
+                        key={u.id}
+                        onClick={() => {
+                          setFormData(p => ({ ...p, solicitante: u.nome }));
+                          setSolDropdownOpen(false);
+                          setSolBusca('');
+                        }}
+                        className={`w-full px-4 py-3 text-left hover:bg-zinc-50 border-b border-zinc-50 ${formData.solicitante === u.nome ? 'bg-red-50' : ''}`}
+                      >
+                        <span className="font-bold text-sm text-zinc-800">{u.nome}</span>
+                        {u.funcao && <span className="text-xs text-zinc-500 ml-2">— {u.funcao}</span>}
+                      </button>
+                    ))
+                  }
+                  {usuarios.filter(u => {
+                    if (!solBusca.trim()) return true;
+                    const q = solBusca.toLowerCase();
+                    return (u.nome || '').toLowerCase().includes(q) || (u.funcao || '').toLowerCase().includes(q);
+                  }).length === 0 && (
+                    <p className="px-4 py-3 text-sm text-zinc-400 text-center">Nenhum usuário encontrado</p>
+                  )}
+                </div>
+              )}
             </div>
             <div>
               <label className={labelStyle}>Setor Destino</label>

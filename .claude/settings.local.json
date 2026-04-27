@@ -520,7 +520,11 @@
       "Bash(cd /c/projetos/portal && ./node_modules/.bin/tsc --noEmit 2>&1 | head -10)",
       "Bash(git status:*)",
       "Bash(git commit:*)",
-      "Bash(ls \"C:/projetos/portal/src/app/\\(portal\\)/meu-painel/\" 2>/dev/null && ls \"C:/projetos/portal/src/app/\\(portal\\)/painel-mecanicos/\" 2>/dev/null)"
+      "Bash(ls \"C:/projetos/portal/src/app/\\(portal\\)/meu-painel/\" 2>/dev/null && ls \"C:/projetos/portal/src/app/\\(portal\\)/painel-mecanicos/\" 2>/dev/null)",
+      "Bash(find /c/projetos -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" -o -name \"*.js\" -o -name \"*.jsx\" -o -name \"*.json\" \\\\\\) ! -path \"*/node_modules/*\" ! -path \"*/.next/*\" 2>/dev/null | head -50)",
+      "Bash(find /c/projetos/mecanicos -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" -o -name \"*.js\" \\\\\\) ! -path \"*/node_modules/*\" ! -path \"*/.next/*\" 2>/dev/null | head -30)",
+      "Bash(grep -r \"AppSheet\\\\|app\\\\.appsheet\\\\|appsheet\" /c/projetos --include=\"*.ts\" --include=\"*.tsx\" --include=\"*.js\" --include=\"*.json\" 2>/dev/null | head -20)",
+      "Bash(grep -r \"Tecnicos_Appsheet\" /c/projetos/portal/src --include=\"*.ts\" --include=\"*.tsx\" 2>/dev/null | head -5)"
     ]
   }
 }

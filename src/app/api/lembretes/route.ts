@@ -36,29 +36,46 @@ export async function GET(req: NextRequest) {
 /** POST — criar lembrete */
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { criador_id, criador_nome, destinatario_id, destinatario_nome, titulo, descricao, data_hora } = body;
+  const { criador_id, criador_nome, destinatario_id, destinatario_nome, titulo, descricao, data_hora, recorrencia } = body;
 
   if (!criador_id || !destinatario_id || !titulo || !data_hora) {
     return NextResponse.json({ erro: "Campos obrigatórios: criador_id, destinatario_id, titulo, data_hora" }, { status: 400 });
   }
 
+  const insert: Record<string, unknown> = {
+    criador_id,
+    criador_nome,
+    destinatario_id,
+    destinatario_nome,
+    titulo,
+    descricao: descricao || "",
+    data_hora,
+    status: "pendente",
+  };
+  if (recorrencia) insert.recorrencia = recorrencia;
+
   const { data, error } = await supabase
     .from(TBL)
-    .insert({
-      criador_id,
-      criador_nome,
-      destinatario_id,
-      destinatario_nome,
-      titulo,
-      descricao: descricao || "",
-      data_hora,
-      status: "pendente",
-    })
+    .insert(insert)
     .select()
     .single();
 
   if (error) return NextResponse.json({ erro: error.message }, { status: 500 });
   return NextResponse.json(data);
+}
+
+/** Calcula próxima data com base na recorrência */
+function proximaData(dataAtual: string, recorrencia: string): string {
+  const d = new Date(dataAtual);
+  switch (recorrencia) {
+    case "semanal": d.setDate(d.getDate() + 7); break;
+    case "quinzenal": d.setDate(d.getDate() + 14); break;
+    case "mensal": d.setMonth(d.getMonth() + 1); break;
+    case "bimestral": d.setMonth(d.getMonth() + 2); break;
+    case "semestral": d.setMonth(d.getMonth() + 6); break;
+    case "anual": d.setFullYear(d.getFullYear() + 1); break;
+  }
+  return d.toISOString();
 }
 
 /** PATCH — atualizar lembrete (concluir ou adiar) */
@@ -80,5 +97,22 @@ export async function PATCH(req: NextRequest) {
     .single();
 
   if (error) return NextResponse.json({ erro: error.message }, { status: 500 });
+
+  // Se concluiu um lembrete recorrente, cria o próximo automaticamente
+  if (status === "concluido" && data?.recorrencia) {
+    const novaDataHora = proximaData(data.data_hora, data.recorrencia);
+    await supabase.from(TBL).insert({
+      criador_id: data.criador_id,
+      criador_nome: data.criador_nome,
+      destinatario_id: data.destinatario_id,
+      destinatario_nome: data.destinatario_nome,
+      titulo: data.titulo,
+      descricao: data.descricao,
+      data_hora: novaDataHora,
+      status: "pendente",
+      recorrencia: data.recorrencia,
+    });
+  }
+
   return NextResponse.json(data);
 }
