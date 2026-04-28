@@ -362,10 +362,10 @@ function montarServicos(os: Record<string, unknown>): ServicoItem[] {
 async function montarServicosComReqs(os: Record<string, unknown>, idOrdem: string): Promise<ServicoItem[]> {
   const servicos = montarServicos(os);
 
-  // Busca requisições vinculadas à OS com valor_cobrado_cliente
+  // Busca requisições vinculadas à OS
   const { data: reqs } = await supabase
     .from("Requisicao")
-    .select("id, titulo, valor_cobrado_cliente")
+    .select("id, titulo, valor_cobrado_cliente, valor_despeza")
     .eq("ordem_servico", idOrdem)
     .not("status", "in", '("lixeira","cancelada")');
 
@@ -373,7 +373,9 @@ async function montarServicosComReqs(os: Record<string, unknown>, idOrdem: strin
     const nCodDiv = await buscarNcodServDiv();
     if (nCodDiv) {
       for (const r of reqs) {
-        const valor = r.valor_cobrado_cliente ? parseFloat(r.valor_cobrado_cliente) : 0;
+        const valorCliente = r.valor_cobrado_cliente ? parseFloat(r.valor_cobrado_cliente) : 0;
+        const valorDespeza = r.valor_despeza ? parseFloat(r.valor_despeza) : 0;
+        const valor = valorCliente > 0 ? valorCliente : valorDespeza;
         if (valor > 0) {
           servicos.push({
             nCodServico: nCodDiv,

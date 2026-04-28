@@ -186,10 +186,14 @@ export default function PhaseView({ orders, searchTerm, onCardClick, onPhaseChan
   const grouped = useMemo(() => {
     if (activePhase) return null;
     const map: Record<string, KanbanCard[]> = {};
+    const phasesSet = new Set(PHASES);
     for (const phase of PHASES) {
       const items = filtered.filter((o) => o.status === phase);
       if (items.length > 0) map[phase] = items;
     }
+    // Ordens com status desconhecido — não deixa sumir
+    const orphans = filtered.filter((o) => !phasesSet.has(o.status));
+    if (orphans.length > 0) map["Outros"] = orphans;
     return map;
   }, [filtered, activePhase]);
 
