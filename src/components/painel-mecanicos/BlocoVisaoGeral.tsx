@@ -1211,6 +1211,15 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
                           {tipoServico && (
                             <span style={{ fontSize: 14, fontWeight: 700, color: '#111', background: '#F0EFEB', padding: '3px 10px', borderRadius: 6 }}>{tipoServico}</span>
                           )}
+                          {multiDia && (
+                            <span style={{
+                              fontSize: 12, fontWeight: 800, color: '#B45309', background: '#FEF3C7',
+                              padding: '2px 8px', borderRadius: 6,
+                              border: '1.5px solid #FDE68A',
+                            }}>
+                              {multiDia}
+                            </span>
+                          )}
                           {d.osCompartilhada[curOS.Id_Ordem] && (
                             <span style={{
                               fontSize: 12, fontWeight: 800, color: '#7C3AED', background: '#EDE9FE',

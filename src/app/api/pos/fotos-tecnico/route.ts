@@ -36,7 +36,8 @@ export async function GET(req: NextRequest) {
       ["FotoPecaInstalada2", "Peça Instalada 2", "Peças"],
     ];
     for (const [campo, label, cat] of map) {
-      if (data[campo]) fotos.push({ label, url: data[campo], categoria: cat });
+      const val = (data as Record<string, any>)[campo];
+      if (val) fotos.push({ label, url: val, categoria: cat });
     }
 
     const assinaturas: { label: string; url: string }[] = [];

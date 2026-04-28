@@ -21,8 +21,9 @@ const MODULOS = [
   { id: 'mapa', label: 'Mapa Geral', color: '#b91c1c' },
   { id: 'painel-mecanicos', label: 'Painel Mecânicos', color: '#dc2626' },
   { id: 'orcamentos', label: 'Orçamentos', color: '#ef4444' },
-  { id: 'estoque', label: 'Consulta Estoque', color: '#991b1b' },
-  { id: 'visual-estoque', label: 'Visual Estoque', color: '#7f1d1d' },
+  { id: 'estoque', label: 'Visual Estoque', color: '#991b1b' },
+  { id: 'visual-estoque', label: 'Consulta Omie', color: '#7f1d1d' },
+  { id: 'dashboard-agro', label: 'Dashboard Agro', color: '#16a34a' },
 ]
 
 const CATEGORIAS = ['Pós Vendas', 'Peças', 'Comercial', 'Financeiro']

@@ -362,6 +362,7 @@ export default function BlocoAgenda({ tecnicos, ordens, semanaOffset = 0 }: { te
                     const horaFim = osOriginal?.Hora_Fim_Exec || ''
                     const multiDia = osOriginal?.Previsao_Faturamento && osOriginal?.Previsao_Execucao && osOriginal.Previsao_Faturamento > osOriginal.Previsao_Execucao
                     const diasTotal = multiDia ? Math.round((new Date(osOriginal.Previsao_Faturamento + 'T00:00:00').getTime() - new Date(osOriginal.Previsao_Execucao + 'T00:00:00').getTime()) / 86400000) + 1 : 1
+                    const diaAtualAgenda = multiDia && osOriginal?.Previsao_Execucao ? Math.max(1, Math.min(diasTotal, Math.round((new Date(row.data + 'T00:00:00').getTime() - new Date(osOriginal.Previsao_Execucao + 'T00:00:00').getTime()) / 86400000) + 1)) : 0
                     const temGPS = !!(row.gps_saida_oficina || row.gps_chegada_cliente || row.gps_saida_cliente || row.gps_retorno_oficina)
 
                     return (
@@ -397,9 +398,9 @@ export default function BlocoAgenda({ tecnicos, ordens, semanaOffset = 0 }: { te
                             <span style={{ fontWeight: 800, color: '#1E3A5F' }}>{horaInicio}→{horaFim}</span>
                           ) : null}
                           {h > 0 && <span style={{ fontWeight: 700 }}>{h}h</span>}
-                          {diasTotal > 2 && (
-                            <span style={{ fontWeight: 800, color: '#991B1B', background: '#FEE2E2', padding: '1px 6px', borderRadius: 3, fontSize: 11 }}>
-                              {diasTotal}d
+                          {diaAtualAgenda > 0 && (
+                            <span style={{ fontWeight: 800, color: '#B45309', background: '#FEF3C7', padding: '1px 6px', borderRadius: 3, fontSize: 11, border: '1px solid #FDE68A' }}>
+                              Dia {diaAtualAgenda}/{diasTotal}
                             </span>
                           )}
                         </div>

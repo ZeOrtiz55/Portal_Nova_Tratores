@@ -9,7 +9,7 @@ import {
   Settings, ClipboardList, Wrench, FileText,
   DollarSign, Activity, Clock, ChevronRight, Search,
   BarChart3, Users, Package, ClipboardCheck, AlertTriangle,
-  CheckCircle2, Map, RefreshCw, Database, X, Check, Calculator, Eye, Camera
+  CheckCircle2, Map, RefreshCw, Database, X, Check, Calculator, Eye, Camera, Wheat
 } from 'lucide-react'
 
 interface SystemCard {
@@ -138,7 +138,7 @@ const systems: SystemCard[] = [
   },
   {
     id: 'consulta-estoque',
-    name: 'Consulta Estoque',
+    name: 'Visual Estoque',
     description: 'Estoque Omie, CMC, curva ABC, dashboard de vendas e comissões',
     icon: <BarChart3 size={28} />,
     color: '#dc2626',
@@ -149,13 +149,24 @@ const systems: SystemCard[] = [
   },
   {
     id: 'visual-estoque',
-    name: 'Visual Estoque',
+    name: 'Consulta Omie',
     description: 'Showroom virtual de estoque com visualização de peças e produtos',
     icon: <Eye size={28} />,
     color: '#dc2626',
     gradient: 'linear-gradient(135deg, #b91c1c, #7f1d1d)',
     href: 'https://produtos.novatratores.com',
     tag: 'SHOWROOM',
+    external: true
+  },
+  {
+    id: 'dashboard-agro',
+    name: 'Dashboard Agro',
+    description: 'Dashboard de acompanhamento do segmento agrícola',
+    icon: <Wheat size={28} />,
+    color: '#16a34a',
+    gradient: 'linear-gradient(135deg, #22c55e, #15803d)',
+    href: 'https://dashboard-agro-sp-production.up.railway.app/',
+    tag: 'AGRO',
     external: true
   }
 ]

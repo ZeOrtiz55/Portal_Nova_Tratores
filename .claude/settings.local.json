@@ -524,7 +524,21 @@
       "Bash(find /c/projetos -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" -o -name \"*.js\" -o -name \"*.jsx\" -o -name \"*.json\" \\\\\\) ! -path \"*/node_modules/*\" ! -path \"*/.next/*\" 2>/dev/null | head -50)",
       "Bash(find /c/projetos/mecanicos -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" -o -name \"*.js\" \\\\\\) ! -path \"*/node_modules/*\" ! -path \"*/.next/*\" 2>/dev/null | head -30)",
       "Bash(grep -r \"AppSheet\\\\|app\\\\.appsheet\\\\|appsheet\" /c/projetos --include=\"*.ts\" --include=\"*.tsx\" --include=\"*.js\" --include=\"*.json\" 2>/dev/null | head -20)",
-      "Bash(grep -r \"Tecnicos_Appsheet\" /c/projetos/portal/src --include=\"*.ts\" --include=\"*.tsx\" 2>/dev/null | head -5)"
+      "Bash(grep -r \"Tecnicos_Appsheet\" /c/projetos/portal/src --include=\"*.ts\" --include=\"*.tsx\" 2>/dev/null | head -5)",
+      "Bash(find /c/projetos/portal/src/components -type f -name \"*painel*\" -o -name \"*mecanico*\" 2>/dev/null | head -20)",
+      "Bash(grep -r \"consecutivo\\\\|consecutive\\\\|same.*service\\\\|mesmo.*servico\\\\|dias.*seguidos\" /c/projetos/portal/src --include=\"*.tsx\" --include=\"*.ts\" 2>/dev/null | head -20)",
+      "Bash(find /c/projetos/portal -type f -name \"*schema*\" -o -name \"*migrations*\" 2>/dev/null | head -10)",
+      "Bash(grep -r \"Previsao_Faturamento\\\\|Qtd_HR\\\\|diasExec\\\\|calcDiasExecucao\" /c/projetos/portal/src --include=\"*.tsx\" --include=\"*.ts\" -B 2 -A 2 2>/dev/null | head -50)",
+      "Bash(grep -r \"agenda_visao\\\\|AgendaRow\" /c/projetos/portal/src --include=\"*.tsx\" --include=\"*.ts\" -A 5 2>/dev/null | grep -E \"interface|\\\\.from|select\" | head -30)",
+      "Bash(find /c/projetos/portal/src -type f -name \"*.tsx\" -o -name \"*.ts\" | xargs grep -l \"Encaminhar\\\\|encaminhar\" | head -10)",
+      "Bash(find /c/projetos/portal/src/app/api -type f -name \"*.ts\" | xargs grep -l \"Ordem_Servico_Tecnicos\" 2>/dev/null | head -10)",
+      "Bash(find /c/projetos/portal/src/app/api -type f -name \"*.ts\" | xargs grep -l \"painel\\\\|mecanico\\\\|tecnico\" | head -20)",
+      "Bash(find /c/projetos/portal/src -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) | xargs grep -l \"painel.mecanicos\\\\|painel-mecanicos\" | head -10)",
+      "Bash(find /c/projetos/portal/src -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) | xargs grep -l \"Ordem_Servico_Tecnicos.*insert\\\\|Ordem_Servico_Tecnicos.*upsert\" | head -10)",
+      "Bash(find /c/projetos/portal/src -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) | xargs grep -l \"Ordem_Servico_Tecnicos\\\\|relatorio.*tecnico\\\\|executar\\\\|relatorio\" | grep -v node_modules | head -30)",
+      "Bash(wc -l /c/projetos/portal/src/app/\\\\\\(portal\\\\\\)/fotos-tecnicos/page.tsx)",
+      "Bash(find /c/projetos/portal/src/app -name \"*.tsx\" -o -name \"*.ts\" | xargs grep -l \"relat.*tecni\\\\|tecni.*form\\\\|execu.*form\" 2>/dev/null | head -20)",
+      "Bash(wc -l /c/projetos/portal/src/app/\\\\\\(portal\\\\\\)/agenda-tecnicos/page.tsx)"
     ]
   }
 }

@@ -9,7 +9,7 @@ import {
   LogOut, Settings, ClipboardList, Wrench, FileText,
   DollarSign, Package, Menu, X, User as UserIcon,
   LayoutDashboard, Bell, ChevronRight, Activity, Lock, MessageCircle,
-  CheckCheck, Trash2, ExternalLink, Calendar, Users, Calculator, BarChart3, Eye, Camera
+  CheckCheck, Trash2, ExternalLink, Calendar, Users, Calculator, BarChart3, Eye, Camera, Wheat
 } from 'lucide-react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
@@ -118,7 +118,7 @@ const navItems: NavItem[] = [
   },
   {
     id: 'consulta-estoque',
-    name: 'Consulta Estoque',
+    name: 'Visual Estoque',
     href: 'https://estoque.novatratores.com',
     icon: <BarChart3 size={18} />,
     tag: 'ESTOQUE',
@@ -127,11 +127,20 @@ const navItems: NavItem[] = [
   },
   {
     id: 'visual-estoque',
-    name: 'Visual Estoque',
+    name: 'Consulta Omie',
     href: 'https://produtos.novatratores.com',
     icon: <Eye size={18} />,
     tag: 'SHOWROOM',
     gradient: 'linear-gradient(135deg, #b91c1c, #7f1d1d)',
+    external: true
+  },
+  {
+    id: 'dashboard-agro',
+    name: 'Dashboard Agro',
+    href: 'https://dashboard-agro-sp-production.up.railway.app/',
+    icon: <Wheat size={18} />,
+    tag: 'AGRO',
+    gradient: 'linear-gradient(135deg, #22c55e, #15803d)',
     external: true
   }
 ]
