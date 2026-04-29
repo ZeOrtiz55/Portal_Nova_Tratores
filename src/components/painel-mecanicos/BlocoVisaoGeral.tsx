@@ -1591,7 +1591,6 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
                     const retIdx = evsFiltrados.findIndex((e, j) => j > ei && e.tipo === 'retorno_loja')
                     if (retIdx !== -1) {
                       const diffMin = isoToMin(evsFiltrados[retIdx].horario) - isoToMin(evsFiltrados[ei].horario)
-                      // Só é saída rápida se não passou em nenhum cliente entre saída e retorno
                       const teveCliente = evsFiltrados.slice(ei + 1, retIdx).some(e => e.tipo === 'chegada_cliente')
                       if (diffMin < 20 && !teveCliente) {
                         for (let k = ei; k <= retIdx; k++) saidasRapidas.add(k)
@@ -1600,9 +1599,69 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
                   }
                 }
 
+                // ── Mapear chegadas GPS → ordens da agenda por proximidade ──
+                const CORES_ORDEM = ['#2563EB', '#7C3AED', '#0891B2', '#059669', '#D97706', '#DC2626', '#6366F1', '#0D9488']
+                const chegadasIdx: number[] = []
+                evsFiltrados.forEach((ev, i) => { if (ev.tipo === 'chegada_cliente' && !saidasRapidas.has(i)) chegadasIdx.push(i) })
+
+                // Para cada chegada, encontra a ordem mais próxima (por coordenadas)
+                const chegadaToOrdem: Record<number, { osId: string; cliente: string; cor: string; ordemIdx: number }> = {}
+                const ordensUsadas = new Set<number>()
+                for (const ci2 of chegadasIdx) {
+                  const ev = evsFiltrados[ci2]
+                  let melhorIdx = -1, melhorDist = Infinity
+                  for (let oi = 0; oi < ordsTec.length; oi++) {
+                    if (ordensUsadas.has(oi)) continue
+                    const agItem = items.find(a => a.id_ordem === ordsTec[oi].Id_Ordem)
+                    if (agItem?.coordenadas) {
+                      const dist = distanciaKm(ev.lat, ev.lng, agItem.coordenadas.lat, agItem.coordenadas.lng)
+                      if (dist < melhorDist) { melhorDist = dist; melhorIdx = oi }
+                    }
+                  }
+                  if (melhorIdx >= 0 && melhorDist <= 30) {
+                    ordensUsadas.add(melhorIdx)
+                    chegadaToOrdem[ci2] = {
+                      osId: ordsTec[melhorIdx].Id_Ordem,
+                      cliente: ordsTec[melhorIdx].Os_Cliente?.split(' ').slice(0, 3).join(' ') || '',
+                      cor: CORES_ORDEM[melhorIdx % CORES_ORDEM.length],
+                      ordemIdx: melhorIdx,
+                    }
+                  }
+                }
+
+                // Propagar: saida_cliente herda a ordem da última chegada
+                let ordemAtual: typeof chegadaToOrdem[number] | null = null
+                const eventoOrdem: Record<number, typeof chegadaToOrdem[number]> = {}
+                for (let i = 0; i < evsFiltrados.length; i++) {
+                  if (chegadaToOrdem[i]) { ordemAtual = chegadaToOrdem[i]; eventoOrdem[i] = ordemAtual }
+                  else if (evsFiltrados[i].tipo === 'saida_cliente' && ordemAtual && !saidasRapidas.has(i)) { eventoOrdem[i] = ordemAtual }
+                  else if (evsFiltrados[i].tipo === 'saida_loja' || evsFiltrados[i].tipo === 'retorno_loja') { ordemAtual = null }
+                }
+
+                // Detectar mudanças de bloco
+                let ultimaOrdemId: string | null = null
+
                 return (
                   <div style={{ padding: '20px 32px', borderBottom: '1px solid #DDD' }}>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: '#111', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 14 }}>Jornada GPS</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: '#111', textTransform: 'uppercase', letterSpacing: '.05em' }}>Jornada GPS</div>
+                      {viagem.km_total != null && viagem.km_total > 0 && (
+                        <span style={{ fontSize: 13, fontWeight: 700, color: '#0369A1', background: '#F0F9FF', border: '1px solid #BAE6FD', padding: '3px 10px', borderRadius: 6 }}>
+                          {viagem.km_total} km total
+                        </span>
+                      )}
+                    </div>
+                    {/* Legenda das ordens */}
+                    {ordsTec.length > 1 && (
+                      <div style={{ display: 'flex', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+                        {ordsTec.map((os, oi) => (
+                          <div key={os.Id_Ordem} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: CORES_ORDEM[oi % CORES_ORDEM.length] }}>
+                            <div style={{ width: 10, height: 10, borderRadius: '50%', background: CORES_ORDEM[oi % CORES_ORDEM.length] }} />
+                            {os.Id_Ordem} — {os.Os_Cliente?.split(' ').slice(0, 2).join(' ')}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2, position: 'relative' }}>
                       <div style={{ position: 'absolute', left: 52, top: 10, bottom: 10, width: 2, background: '#EBEBEB' }} />
 
@@ -1638,6 +1697,29 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
                           else if (ev.tipo === 'saida_cliente') si++
                           return null
                         }
+
+                        // ── Separador de bloco por ordem ──
+                        const ordemEvento = eventoOrdem[i]
+                        let separador: React.ReactNode = null
+                        if (ordemEvento && ordemEvento.osId !== ultimaOrdemId) {
+                          ultimaOrdemId = ordemEvento.osId
+                          separador = (
+                            <div style={{
+                              display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0 6px',
+                              borderTop: ultimaOrdemId ? '2px dashed ' + ordemEvento.cor : 'none',
+                              marginTop: 6,
+                            }}>
+                              <div style={{ width: 20, height: 20, borderRadius: 4, background: ordemEvento.cor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <Truck size={12} color="#fff" />
+                              </div>
+                              <span style={{ fontSize: 13, fontWeight: 800, color: ordemEvento.cor, textTransform: 'uppercase', letterSpacing: '.5px' }}>
+                                {ordemEvento.osId} — {ordemEvento.cliente}
+                              </span>
+                            </div>
+                          )
+                        }
+                        // Limpa quando volta pra loja
+                        if (ev.tipo === 'retorno_loja' || ev.tipo === 'saida_loja') { ultimaOrdemId = null }
 
                         const isChegada = ev.tipo === 'chegada_cliente'
                         const isSaida = ev.tipo === 'saida_cliente'
@@ -1682,29 +1764,39 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
                           }
                         }
 
+                        // Cor do dot: usa cor da ordem se vinculado
+                        const dotColor = ordemEvento && (isChegada || isSaida)
+                          ? ordemEvento.cor
+                          : isLoja ? '#111' : isParada ? '#F59E0B' : isSaida ? '#DC2626' : '#16A34A'
+
                         return (
-                          <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '8px 0', position: 'relative', borderBottom: '1px solid #F0F0F0' }}>
-                            <span style={{ fontSize: 17, fontWeight: 800, color: '#111', fontVariantNumeric: 'tabular-nums', minWidth: 48 }}>{fHora(ev.horario)}</span>
-                            <div style={{
-                              width: 12, height: 12, borderRadius: '50%', marginTop: 4, flexShrink: 0, position: 'relative', zIndex: 1,
-                              background: isLoja ? '#111' : isParada ? '#F59E0B' : isSaida ? '#DC2626' : '#16A34A',
-                              border: '2px solid #fff',
-                            }} />
-                            <div style={{ flex: 1 }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                                <span style={{ fontSize: 16, fontWeight: 700, color: isParada ? '#B45309' : isSaida ? '#991B1B' : isChegada ? '#065F46' : '#111' }}>{label}</span>
-                                {permanencia && <span style={{ fontSize: 16, fontWeight: 800, color: '#fff', background: isParada ? '#F59E0B' : '#111', padding: '4px 14px', borderRadius: 6 }}>Parou {permanencia}</span>}
-                              </div>
-                              {/* Endereço + link mapa em todos os eventos */}
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
-                                <span style={{ fontSize: isChegada || isParada ? 14 : 13, color: '#555', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                  <MapPin size={12} style={{ flexShrink: 0, color: '#888' }} /> {addrDisplay}
-                                </span>
-                                <a href={`https://www.google.com/maps?q=${ev.lat},${ev.lng}`} target="_blank" rel="noopener noreferrer"
-                                  style={{ fontSize: 13, color: '#2563EB', display: 'inline-flex', alignItems: 'center', gap: 3, textDecoration: 'none', fontWeight: 600 }}
-                                  onClick={e => e.stopPropagation()}>
-                                  <ExternalLink size={11} style={{ flexShrink: 0 }} /> Ver no mapa
-                                </a>
+                          <div key={i}>
+                            {separador}
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '8px 0', position: 'relative', borderBottom: '1px solid #F0F0F0',
+                              ...(ordemEvento ? { borderLeft: `3px solid ${ordemEvento.cor}`, paddingLeft: 10, marginLeft: -3 } : {}),
+                            }}>
+                              <span style={{ fontSize: 17, fontWeight: 800, color: '#111', fontVariantNumeric: 'tabular-nums', minWidth: 48 }}>{fHora(ev.horario)}</span>
+                              <div style={{
+                                width: 12, height: 12, borderRadius: '50%', marginTop: 4, flexShrink: 0, position: 'relative', zIndex: 1,
+                                background: dotColor,
+                                border: '2px solid #fff',
+                              }} />
+                              <div style={{ flex: 1 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                  <span style={{ fontSize: 16, fontWeight: 700, color: isParada ? '#B45309' : isSaida ? '#991B1B' : isChegada ? '#065F46' : '#111' }}>{label}</span>
+                                  {permanencia && <span style={{ fontSize: 16, fontWeight: 800, color: '#fff', background: isParada ? '#F59E0B' : '#111', padding: '4px 14px', borderRadius: 6 }}>Parou {permanencia}</span>}
+                                </div>
+                                {/* Endereço + link mapa em todos os eventos */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
+                                  <span style={{ fontSize: isChegada || isParada ? 14 : 13, color: '#555', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <MapPin size={12} style={{ flexShrink: 0, color: '#888' }} /> {addrDisplay}
+                                  </span>
+                                  <a href={`https://www.google.com/maps?q=${ev.lat},${ev.lng}`} target="_blank" rel="noopener noreferrer"
+                                    style={{ fontSize: 13, color: '#2563EB', display: 'inline-flex', alignItems: 'center', gap: 3, textDecoration: 'none', fontWeight: 600 }}
+                                    onClick={e => e.stopPropagation()}>
+                                    <ExternalLink size={11} style={{ flexShrink: 0 }} /> Ver no mapa
+                                  </a>
+                                </div>
                               </div>
                             </div>
                           </div>
