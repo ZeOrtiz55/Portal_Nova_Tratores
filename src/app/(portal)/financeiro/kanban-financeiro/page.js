@@ -602,6 +602,7 @@ return (
                         fileUrl={p.comprovante}
                         onUpload={(file) => handleUpdateFileDirect(tarefaSelecionada.id, p.campo_comprovante, file)}
                         disabled={tarefaSelecionada.status === 'concluido'}
+                        onRemove={() => { if(confirm(`Remover comprovante da parcela ${p.num}?`)) handleUpdateField(tarefaSelecionada.id, p.campo_comprovante, null); }}
                       />
                     </div>
                   );
@@ -680,7 +681,7 @@ return (
                   <AttachmentTag icon={<ClipboardList size={18} />} label="NF PECA" fileUrl={tarefaSelecionada.anexo_nf_peca} onUpload={(file) => handleUpdateFileDirect(tarefaSelecionada.id, 'anexo_nf_peca', file)} disabled={tarefaSelecionada.status === 'concluido'} />
                 )}
                 {(isPixOuCartaoVista || tarefaSelecionada.status === 'aguardando_vencimento' || tarefaSelecionada.comprovante_pagamento) && (
-                  <AttachmentTag icon={<CheckCircle size={18} />} label="COMPROVANTE" fileUrl={tarefaSelecionada.comprovante_pagamento} onUpload={(file) => handleUpdateFileDirect(tarefaSelecionada.id, 'comprovante_pagamento', file)} disabled={tarefaSelecionada.status === 'concluido'} />
+                  <AttachmentTag icon={<CheckCircle size={18} />} label="COMPROVANTE" fileUrl={tarefaSelecionada.comprovante_pagamento} onUpload={(file) => handleUpdateFileDirect(tarefaSelecionada.id, 'comprovante_pagamento', file)} disabled={tarefaSelecionada.status === 'concluido'} onRemove={() => { if(confirm('Remover comprovante de pagamento?')) handleUpdateField(tarefaSelecionada.id, 'comprovante_pagamento', null); }} />
                 )}
               </div>
             </div>
@@ -926,7 +927,7 @@ return (
 )
 }
 
-function AttachmentTag({ icon, label, fileUrl, onUpload, disabled = false }) {
+function AttachmentTag({ icon, label, fileUrl, onUpload, disabled = false, onRemove }) {
       const fileInputRef = useRef(null);
       return (
           <div style={{ display: 'flex', alignItems: 'center', background: '#f5f6fa', border: '1px solid #dcdde1', borderRadius: '0px', overflow: 'hidden', minWidth:'280px', marginBottom: '5px' }}>
@@ -941,6 +942,9 @@ function AttachmentTag({ icon, label, fileUrl, onUpload, disabled = false }) {
                           <button title="Substituir" onClick={() => fileInputRef.current.click()} style={miniActionBtn}><RefreshCw size={18} color="#718093" /></button>
                           <input type="file" hidden ref={fileInputRef} onChange={(e) => onUpload(e.target.files[0])} />
                       </>
+                  )}
+                  {fileUrl && onRemove && !disabled && (
+                      <button title="Remover" onClick={onRemove} style={miniActionBtn}><Trash2 size={18} color="#dc2626" /></button>
                   )}
               </div>
           </div>
