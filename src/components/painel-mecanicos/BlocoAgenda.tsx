@@ -147,7 +147,7 @@ export default function BlocoAgenda({ tecnicos, ordens, semanaOffset = 0 }: { te
       setAgendaSemana(rows)
 
       // Auto-popular: ordens que deveriam estar na semana mas não estão
-      const idsExistentes = new Set(rows.map(r => `${r.data}|${r.id_ordem}`))
+      const idsExistentes = new Set(rows.map(r => `${r.data}|${r.id_ordem}|${r.tecnico_nome}`))
       const toSync: Record<string, { nome: string; ordens: any[] }[]> = {}
 
       tecs.forEach(tec => {
@@ -163,7 +163,7 @@ export default function BlocoAgenda({ tecnicos, ordens, semanaOffset = 0 }: { te
               const fim = fimExecucaoReal(os)
               deveMostrar = dia >= inicio && dia <= fim
             }
-            if (deveMostrar && !idsExistentes.has(`${dia}|${os.Id_Ordem}`)) {
+            if (deveMostrar && !idsExistentes.has(`${dia}|${os.Id_Ordem}|${tec.tecnico_nome}`)) {
               if (!toSync[dia]) toSync[dia] = []
               let tecEntry = toSync[dia].find(t => t.nome === tec.tecnico_nome)
               if (!tecEntry) { tecEntry = { nome: tec.tecnico_nome, ordens: [] }; toSync[dia].push(tecEntry) }
@@ -475,15 +475,19 @@ export default function BlocoAgenda({ tecnicos, ordens, semanaOffset = 0 }: { te
                             </span>
                           )}
                           {osOriginal && (() => {
-                            const outroTec = matchNome(tec.tecnico_nome, osOriginal.Os_Tecnico)
-                              ? osOriginal.Os_Tecnico2
-                              : osOriginal.Os_Tecnico
+                            const isPrimario = matchNome(tec.tecnico_nome, osOriginal.Os_Tecnico)
+                            const outroTec = isPrimario ? osOriginal.Os_Tecnico2 : osOriginal.Os_Tecnico
                             if (!outroTec) return null
                             const outroPrimeiro = outroTec.split(' ').slice(0, 2).join(' ')
                             return (
-                              <span style={{ fontWeight: 700, color: '#6D28D9', background: '#EDE9FE', padding: '1px 6px', borderRadius: 3, fontSize: 11, border: '1px solid #DDD6FE', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                                <Link2 size={10} /> Com {outroPrimeiro}
-                              </span>
+                              <>
+                                <span style={{ fontWeight: 800, color: isPrimario ? '#065F46' : '#92400E', background: isPrimario ? '#D1FAE5' : '#FEF3C7', padding: '1px 6px', borderRadius: 3, fontSize: 11, border: `1px solid ${isPrimario ? '#A7F3D0' : '#FDE68A'}` }}>
+                                  {isPrimario ? 'Primário' : 'Auxiliar'}
+                                </span>
+                                <span style={{ fontWeight: 700, color: '#6D28D9', background: '#EDE9FE', padding: '1px 6px', borderRadius: 3, fontSize: 11, border: '1px solid #DDD6FE', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                                  <Link2 size={10} /> Com {outroPrimeiro}
+                                </span>
+                              </>
                             )
                           })()}
                         </div>
