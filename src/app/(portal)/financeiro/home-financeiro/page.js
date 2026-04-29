@@ -760,18 +760,61 @@ function HomeFinanceiroContent() {
                     </div>
                   </div>
                   <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
-                    <AttachmentTag icon={<Barcode size={18}/>} label="BOLETO 1" fileUrl={tarefaSelecionada.anexo_boleto} onUpload={f => handleUpdateFileDirect(tarefaSelecionada, 'anexo_boleto', f)} />
-                    {(tarefaSelecionada.anexo_boleto || tarefaSelecionada.anexo_boleto_2) && (
-                      <AttachmentTag icon={<Barcode size={18}/>} label="BOLETO 2" fileUrl={tarefaSelecionada.anexo_boleto_2} onUpload={f => handleUpdateFileDirect(tarefaSelecionada, 'anexo_boleto_2', f)} />
-                    )}
-                    {(tarefaSelecionada.anexo_boleto_2 || tarefaSelecionada.anexo_boleto_3) && (
-                      <AttachmentTag icon={<Barcode size={18}/>} label="BOLETO 3" fileUrl={tarefaSelecionada.anexo_boleto_3} onUpload={f => handleUpdateFileDirect(tarefaSelecionada, 'anexo_boleto_3', f)} />
-                    )}
-                    {!tarefaSelecionada.anexo_boleto && (
-                      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', padding:'25px', border:'2px dashed #bfdbfe', borderRadius:'12px', color:'#3b82f6', fontSize:'13px', letterSpacing:'1px', textTransform:'uppercase' }}>
-                        Anexe o primeiro boleto acima
-                      </div>
-                    )}
+                    {(() => {
+                      // Unificar boletos: campo principal + legado _2/_3
+                      const urls = [];
+                      if (tarefaSelecionada.anexo_boleto) {
+                        tarefaSelecionada.anexo_boleto.split(',').forEach(u => { const t = u.trim(); if (t) urls.push(t); });
+                      }
+                      if (tarefaSelecionada.anexo_boleto_2) { const t = tarefaSelecionada.anexo_boleto_2.trim(); if (t && !urls.includes(t)) urls.push(t); }
+                      if (tarefaSelecionada.anexo_boleto_3) { const t = tarefaSelecionada.anexo_boleto_3.trim(); if (t && !urls.includes(t)) urls.push(t); }
+                      const MAX_BOLETOS = 10;
+                      return (
+                        <>
+                          {urls.map((url, i) => (
+                            <AttachmentTag key={`bol-${i}`} icon={<Barcode size={18}/>} label={`BOLETO ${i + 1}`} fileUrl={url} onUpload={async f => {
+                              const path = `anexos/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+                              const { error: upErr } = await supabase.storage.from('anexos').upload(path, f);
+                              if (upErr) { alert('Erro no upload: ' + upErr.message); return; }
+                              const { data: linkData } = supabase.storage.from('anexos').getPublicUrl(path);
+                              const novasUrls = [...urls]; novasUrls[i] = linkData.publicUrl;
+                              const table = getCardTable(tarefaSelecionada);
+                              await supabase.from(table).update({ anexo_boleto: novasUrls.join(', ') }).eq('id', tarefaSelecionada.id);
+                              setTarefaSelecionada({ ...tarefaSelecionada, anexo_boleto: novasUrls.join(', ') });
+                              carregarDados();
+                            }} />
+                          ))}
+                          {urls.length < MAX_BOLETOS && (
+                            <AttachmentTag icon={<Barcode size={18}/>} label={urls.length === 0 ? 'BOLETO 1' : `ADICIONAR BOLETO ${urls.length + 1}`} fileUrl={null} onUpload={async f => {
+                              const path = `anexos/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+                              const { error: upErr } = await supabase.storage.from('anexos').upload(path, f);
+                              if (upErr) { alert('Erro no upload: ' + upErr.message); return; }
+                              const { data: linkData } = supabase.storage.from('anexos').getPublicUrl(path);
+                              const novasUrls = [...urls, linkData.publicUrl];
+                              const table = getCardTable(tarefaSelecionada);
+                              const updateData = { anexo_boleto: novasUrls.join(', ') };
+                              if (urls.length === 0 && tarefaSelecionada.status === 'gerar_boleto' && table === 'Chamado_NF') {
+                                updateData.status = 'enviar_cliente';
+                                updateData.tarefa = 'Enviar para o Cliente';
+                                updateData.setor = 'Pós-Vendas';
+                              }
+                              await supabase.from(table).update(updateData).eq('id', tarefaSelecionada.id);
+                              if (updateData.status === 'enviar_cliente') {
+                                notificarMovimento('Chamado_NF', tarefaSelecionada, 'enviar_cliente', `${getCardLabel(tarefaSelecionada)} — Boleto anexado, enviar ao cliente`);
+                                alert("Boleto anexado! Card movido para Enviar ao Cliente.");
+                              }
+                              setTarefaSelecionada({ ...tarefaSelecionada, anexo_boleto: novasUrls.join(', '), ...(updateData.status ? { status: updateData.status } : {}) });
+                              carregarDados();
+                            }} />
+                          )}
+                          {urls.length === 0 && (
+                            <div style={{ display:'flex', alignItems:'center', justifyContent:'center', padding:'25px', border:'2px dashed #bfdbfe', borderRadius:'12px', color:'#3b82f6', fontSize:'13px', letterSpacing:'1px', textTransform:'uppercase' }}>
+                              Anexe o primeiro boleto acima
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
                 )}

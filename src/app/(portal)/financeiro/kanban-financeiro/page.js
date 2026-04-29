@@ -689,18 +689,54 @@ return (
             {!isPixOuCartaoVista && tarefaSelecionada.status !== 'sem_boleto' && (
             <div style={{ background:'rgba(14, 165, 233, 0.03)', border:'1px solid #bfdbfe', padding:'24px', display:'flex', flexDirection:'column', gap:'12px' }}>
               <label style={{...labelModalStyle, margin:0, fontSize:'13px', color:'#3b82f6', display:'flex', alignItems:'center', gap:'8px'}}><Barcode size={16}/> BOLETOS GERADOS</label>
-              <AttachmentTag icon={<Barcode size={18} />} label="BOLETO 1" fileUrl={tarefaSelecionada.anexo_boleto} onUpload={(file) => handleUpdateFileDirect(tarefaSelecionada.id, 'anexo_boleto', file)} disabled={tarefaSelecionada.status === 'concluido'} />
-              {(tarefaSelecionada.anexo_boleto || tarefaSelecionada.anexo_boleto_2) && (
-                <AttachmentTag icon={<Barcode size={18} />} label="BOLETO 2" fileUrl={tarefaSelecionada.anexo_boleto_2} onUpload={(file) => handleUpdateFileDirect(tarefaSelecionada.id, 'anexo_boleto_2', file)} disabled={tarefaSelecionada.status === 'concluido'} />
-              )}
-              {(tarefaSelecionada.anexo_boleto_2 || tarefaSelecionada.anexo_boleto_3) && (
-                <AttachmentTag icon={<Barcode size={18} />} label="BOLETO 3" fileUrl={tarefaSelecionada.anexo_boleto_3} onUpload={(file) => handleUpdateFileDirect(tarefaSelecionada.id, 'anexo_boleto_3', file)} disabled={tarefaSelecionada.status === 'concluido'} />
-              )}
-              {!tarefaSelecionada.anexo_boleto && tarefaSelecionada.status !== 'concluido' && (
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'center', padding:'20px', border:'2px dashed #bfdbfe', color:'#3b82f6', fontSize:'12px', letterSpacing:'1px', textTransform:'uppercase' }}>
-                  Anexe o primeiro boleto acima
-                </div>
-              )}
+              {(() => {
+                const urls = [];
+                if (tarefaSelecionada.anexo_boleto) tarefaSelecionada.anexo_boleto.split(',').forEach(u => { const t = u.trim(); if (t) urls.push(t); });
+                if (tarefaSelecionada.anexo_boleto_2) { const t = tarefaSelecionada.anexo_boleto_2.trim(); if (t && !urls.includes(t)) urls.push(t); }
+                if (tarefaSelecionada.anexo_boleto_3) { const t = tarefaSelecionada.anexo_boleto_3.trim(); if (t && !urls.includes(t)) urls.push(t); }
+                const isDisabled = tarefaSelecionada.status === 'concluido';
+                const MAX_BOLETOS = 10;
+                return (
+                  <>
+                    {urls.map((url, i) => (
+                      <AttachmentTag key={`bol-${i}`} icon={<Barcode size={18}/>} label={`BOLETO ${i + 1}`} fileUrl={url} disabled={isDisabled} onUpload={async f => {
+                        const path = `anexos/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+                        await supabase.storage.from('anexos').upload(path, f);
+                        const { data: linkData } = supabase.storage.from('anexos').getPublicUrl(path);
+                        const novasUrls = [...urls]; novasUrls[i] = linkData.publicUrl;
+                        await supabase.from('Chamado_NF').update({ anexo_boleto: novasUrls.join(', ') }).eq('id', tarefaSelecionada.id);
+                        setTarefaSelecionada({ ...tarefaSelecionada, anexo_boleto: novasUrls.join(', ') });
+                        carregarDados();
+                      }} />
+                    ))}
+                    {urls.length < MAX_BOLETOS && !isDisabled && (
+                      <AttachmentTag icon={<Barcode size={18}/>} label={urls.length === 0 ? 'BOLETO 1' : `ADICIONAR BOLETO ${urls.length + 1}`} fileUrl={null} onUpload={async f => {
+                        const path = `anexos/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+                        await supabase.storage.from('anexos').upload(path, f);
+                        const { data: linkData } = supabase.storage.from('anexos').getPublicUrl(path);
+                        const novasUrls = [...urls, linkData.publicUrl];
+                        const updateData = { anexo_boleto: novasUrls.join(', ') };
+                        if (urls.length === 0 && tarefaSelecionada.status === 'gerar_boleto') {
+                          updateData.status = 'enviar_cliente';
+                          updateData.tarefa = 'Enviar para o Cliente';
+                          updateData.setor = 'Pós-Vendas';
+                        }
+                        await supabase.from('Chamado_NF').update(updateData).eq('id', tarefaSelecionada.id);
+                        if (updateData.status === 'enviar_cliente') {
+                          notificarMovimento(tarefaSelecionada, 'enviar_cliente', `NF #${tarefaSelecionada.id} - ${tarefaSelecionada.nom_cliente || ''} — Boleto anexado, enviar ao cliente`);
+                        }
+                        setTarefaSelecionada({ ...tarefaSelecionada, anexo_boleto: novasUrls.join(', '), ...(updateData.status ? { status: updateData.status } : {}) });
+                        carregarDados();
+                      }} />
+                    )}
+                    {urls.length === 0 && !isDisabled && (
+                      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', padding:'20px', border:'2px dashed #bfdbfe', color:'#3b82f6', fontSize:'12px', letterSpacing:'1px', textTransform:'uppercase' }}>
+                        Anexe o primeiro boleto acima
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
             )}
           </div>

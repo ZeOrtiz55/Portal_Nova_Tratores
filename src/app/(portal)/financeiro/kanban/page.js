@@ -490,11 +490,13 @@ export default function Kanban() {
             </label>
             {tarefaSelecionada.anexo_boleto ? (
               <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-                {[
-                  { label: 'Boleto 1', url: tarefaSelecionada.anexo_boleto },
-                  { label: 'Boleto 2', url: tarefaSelecionada.anexo_boleto_2 },
-                  { label: 'Boleto 3', url: tarefaSelecionada.anexo_boleto_3 },
-                ].filter(b => b.url).map((boleto, i) => (
+                {(() => {
+                  const urls = [];
+                  if (tarefaSelecionada.anexo_boleto) tarefaSelecionada.anexo_boleto.split(',').forEach(u => { const t = u.trim(); if (t) urls.push(t); });
+                  if (tarefaSelecionada.anexo_boleto_2) { const t = tarefaSelecionada.anexo_boleto_2.trim(); if (t && !urls.includes(t)) urls.push(t); }
+                  if (tarefaSelecionada.anexo_boleto_3) { const t = tarefaSelecionada.anexo_boleto_3.trim(); if (t && !urls.includes(t)) urls.push(t); }
+                  return urls.map((url, i) => ({ label: `Boleto ${i + 1}`, url }));
+                })().map((boleto, i) => (
                   <div key={i}
                     onClick={() => window.open(boleto.url, '_blank')}
                     style={{ display:'flex', alignItems:'center', gap:'12px', background:'#ffffff', border:'1px solid #bfdbfe', borderRadius:'12px', padding:'14px', cursor:'pointer', transition:'0.2s' }}

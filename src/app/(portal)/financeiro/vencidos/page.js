@@ -278,11 +278,13 @@ export default function VencidosPage() {
             {selecionado.anexo_boleto && (
               <div style={{ background: '#eff6ff', borderRadius: '12px', padding: '14px', marginBottom: '20px' }}>
                 <div style={{ fontSize: '11px', color: '#3b82f6', textTransform: 'uppercase', marginBottom: '8px', fontWeight: '600' }}>Boletos</div>
-                {[
-                  { label: 'Boleto 1', url: selecionado.anexo_boleto },
-                  { label: 'Boleto 2', url: selecionado.anexo_boleto_2 },
-                  { label: 'Boleto 3', url: selecionado.anexo_boleto_3 },
-                ].filter(b => b.url).map((b, i) => (
+                {(() => {
+                  const urls = [];
+                  if (selecionado.anexo_boleto) selecionado.anexo_boleto.split(',').forEach(u => { const t = u.trim(); if (t) urls.push(t); });
+                  if (selecionado.anexo_boleto_2) { const t = selecionado.anexo_boleto_2.trim(); if (t && !urls.includes(t)) urls.push(t); }
+                  if (selecionado.anexo_boleto_3) { const t = selecionado.anexo_boleto_3.trim(); if (t && !urls.includes(t)) urls.push(t); }
+                  return urls.map((url, i) => ({ label: `Boleto ${i + 1}`, url }));
+                })().map((b, i) => (
                   <a key={i} href={b.url} target="_blank" rel="noopener noreferrer" style={{
                     display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px',
                     color: '#3b82f6', textDecoration: 'none', padding: '6px 0',
