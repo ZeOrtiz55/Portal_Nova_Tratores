@@ -14,7 +14,7 @@ interface AgendaRow { id: number; data: string; tecnico_nome: string; id_ordem: 
 interface Veiculo { id: number; placa: string; descricao: string }
 interface VinculoVeiculo { id: number; tecnico_nome: string; adesao_id: number; placa: string; descricao: string }
 interface EventoGPS { tipo: string; horario: string; lat: number; lng: number; na_loja: boolean; destino_nome?: string; destino_cnpj?: string }
-interface ViagemGPS { adesao_id: number; placa: string; descricao: string; data: string; saida_loja: string | null; chegada_cliente: string | null; saida_cliente: string | null; retorno_loja: string | null; eventos: EventoGPS[]; posicoes_total: number; ultima_posicao: { dt: string; lat: number; lng: number; ignicao: number; velocidade: number } | null }
+interface ViagemGPS { adesao_id: number; placa: string; descricao: string; data: string; saida_loja: string | null; chegada_cliente: string | null; saida_cliente: string | null; retorno_loja: string | null; eventos: EventoGPS[]; posicoes_total: number; km_total?: number; ultima_posicao: { dt: string; lat: number; lng: number; ignicao: number; velocidade: number } | null }
 interface VisitaGPS { saida: string | null; chegada: string | null; saidaCliente: string | null; retorno: string | null; almoco?: boolean; passagemRapida?: boolean; destino_nome?: string; destino_cnpj?: string; lat?: number; lng?: number; naoConfirmada?: boolean; distanciaCliente?: number; semCoordenadas?: boolean }
 interface DesvioRota { visitaIdx: number; visita: VisitaGPS; permanenciaMin: number }
 interface EstimadoCliente { saida: number; chegada: number; fimServico: number; retorno: number | null }
@@ -704,16 +704,13 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
     const { viagem, visitasGPS } = d
     let dirigindoMin = 0
     let clienteMin = 0
-    let km = 0
 
-    // KM e horas dirigindo: calcular a partir dos eventos de viagem
+    // Horas dirigindo: tempo entre saída (loja ou cliente) e próxima chegada
     if (viagem) {
       const eventos = viagem.eventos || []
-      // Horas dirigindo: tempo entre saída (loja ou cliente) e próxima chegada
       for (let i = 0; i < eventos.length; i++) {
         const ev = eventos[i]
         if (ev.tipo === 'saida_loja' || ev.tipo === 'saida_cliente') {
-          // Procura próxima chegada
           const prox = eventos.slice(i + 1).find(e => e.tipo === 'chegada_cliente' || e.tipo === 'retorno_loja')
           if (prox) {
             const diff = (new Date(prox.horario).getTime() - new Date(ev.horario).getTime()) / 60000
@@ -732,11 +729,8 @@ export default function BlocoVisaoGeral({ tecnicos, ordens, caminhos }: { tecnic
       }
     }
 
-    // KM: usar dados da agenda (distâncias calculadas pela rota)
-    const items = d.items || []
-    for (const item of items) {
-      km += (item.distancia_ida_km || 0) + (item.distancia_volta_km || 0)
-    }
+    // KM: direto do GPS do carro vinculado
+    const km = viagem?.km_total || 0
 
     return {
       horasDirigindo: Math.round((dirigindoMin / 60) * 100) / 100,

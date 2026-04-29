@@ -127,7 +127,7 @@ interface Viagem {
   adesao_id: number; placa: string; descricao: string; data: string
   saida_loja: string | null; chegada_cliente: string | null
   saida_cliente: string | null; retorno_loja: string | null
-  eventos: Evento[]; posicoes_total: number
+  eventos: Evento[]; posicoes_total: number; km_total: number
   ultima_posicao: { dt: string; lat: number; lng: number; ignicao: number; velocidade: number } | null
 }
 
@@ -233,13 +233,24 @@ function detectarViagens(posicoes: Posicao[], destinos: Destino[]): Viagem[] {
       prevNaLoja = estaNaLoja
     }
 
+    // Calcular KM total real percorrido (soma das distâncias entre posições consecutivas com movimento)
+    let kmTotal = 0
+    for (let i = 1; i < posJornada.length; i++) {
+      const prev = posJornada[i - 1]
+      const curr = posJornada[i]
+      if (curr.velocidade > 0 || prev.velocidade > 0) {
+        const d = distanciaKm(prev.latitude, prev.longitude, curr.latitude, curr.longitude)
+        if (d < 5) kmTotal += d // ignora saltos GPS > 5km (erro de sinal)
+      }
+    }
+
     viagens.push({
       adesao_id: adesaoId, placa, descricao, data: dia,
       saida_loja: eventos.find(e => e.tipo === 'saida_loja')?.horario || null,
       chegada_cliente: eventos.find(e => e.tipo === 'chegada_cliente')?.horario || null,
       saida_cliente: eventos.filter(e => e.tipo === 'saida_cliente').pop()?.horario || null,
       retorno_loja: eventos.filter(e => e.tipo === 'retorno_loja').pop()?.horario || null,
-      eventos, posicoes_total: posDia.length,
+      eventos, posicoes_total: posDia.length, km_total: Math.round(kmTotal * 10) / 10,
       ultima_posicao: { dt: last.dt_posicao, lat: last.latitude, lng: last.longitude, ignicao: last.ignicao, velocidade: last.velocidade },
     })
   }
