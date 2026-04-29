@@ -51,16 +51,35 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
+      // Buscar coordenadas já salvas para este cliente
+      let coordPre: { lat: number; lng: number } | null = null;
+      let enderecoPre = o.endereco || "";
+      const cnpjO = (o.cnpj || "").replace(/\D/g, "");
+      if (cnpjO || o.cliente) {
+        let qc = supabase.from("clientes_coordenadas").select("coordenadas, endereco");
+        if (cnpjO) {
+          qc = qc.or(`cnpj.eq.${cnpjO},nome_cliente.eq.${o.cliente || ""}`);
+        } else {
+          qc = qc.eq("nome_cliente", o.cliente || "");
+        }
+        const { data: cc } = await qc.order("atualizado_em", { ascending: false }).limit(1);
+        if (cc && cc.length > 0 && cc[0].coordenadas) {
+          coordPre = cc[0].coordenadas as { lat: number; lng: number };
+          enderecoPre = cc[0].endereco || enderecoPre;
+        }
+      }
+
       toInsert.push({
         data: dataStr,
         tecnico_nome: tec.nome,
         id_ordem: o.id,
         cliente: o.cliente || "",
+        cnpj: o.cnpj || "",
         servico: o.servico || "",
-        endereco: o.endereco || "",
+        endereco: enderecoPre,
         cidade: o.cidade || "",
         endereco_opcoes: [],
-        coordenadas: null,
+        coordenadas: coordPre,
         tempo_ida_min: 0,
         distancia_ida_km: 0,
         tempo_volta_min: 0,
@@ -116,14 +135,35 @@ export async function PATCH(req: NextRequest) {
 
   // Calcular rotas (chamado pelo frontend para cada row)
   if (calcular) {
-    // Buscar row atual para pegar cnpj/endereco/cidade
+    // Buscar row atual para pegar cnpj/endereco/cidade/cliente
     const { data: row } = await supabase.from(TBL).select("*").eq("id", id).single();
     if (!row) return NextResponse.json({ erro: "não encontrado" }, { status: 404 });
 
-    const opcoes = await buscarEnderecos(row.cnpj || "", row.endereco || "", row.cidade || "");
+    const cnpj = row.cnpj || "";
+    const cliente = row.cliente || "";
 
-    let coordenadas: { lat: number; lng: number } | null = null;
-    let enderecoUsado = row.endereco || "";
+    // 1. Tentar buscar coordenadas já confirmadas para este cliente
+    let coordSalvas: { lat: number; lng: number } | null = null;
+    let enderecoSalvo = "";
+    if (cnpj || cliente) {
+      const cnpjLimpo = cnpj.replace(/\D/g, "");
+      let q = supabase.from("clientes_coordenadas").select("*");
+      if (cnpjLimpo) {
+        q = q.or(`cnpj.eq.${cnpjLimpo},nome_cliente.eq.${cliente}`);
+      } else {
+        q = q.eq("nome_cliente", cliente);
+      }
+      const { data: cached } = await q.order("atualizado_em", { ascending: false }).limit(1);
+      if (cached && cached.length > 0 && cached[0].coordenadas) {
+        coordSalvas = cached[0].coordenadas as { lat: number; lng: number };
+        enderecoSalvo = cached[0].endereco || "";
+      }
+    }
+
+    const opcoes = await buscarEnderecos(cnpj, row.endereco || "", row.cidade || "");
+
+    let coordenadas = coordSalvas;
+    let enderecoUsado = coordSalvas ? enderecoSalvo : (row.endereco || "");
     let tempoIda = 0, distIda = 0, tempoVolta = 0, distVolta = 0;
 
     // Origem customizada (última localização do técnico) ou oficina
@@ -131,25 +171,37 @@ export async function PATCH(req: NextRequest) {
     const origemLng = campos.origemLng as number | undefined;
     const usarOrigem = origemLat && origemLng;
 
-    for (const opt of opcoes) {
-      coordenadas = await geocodificar(opt.endereco + ", Brasil");
-      if (coordenadas) {
-        enderecoUsado = opt.endereco;
-        // Ida: da origem customizada ou da oficina
-        const rotaIda = usarOrigem
-          ? await calcularRota(origemLat, origemLng, coordenadas.lat, coordenadas.lng)
-          : await rotaDaOficina(coordenadas.lat, coordenadas.lng);
-        if (rotaIda) {
-          tempoIda = rotaIda.tempo_min;
-          distIda = rotaIda.distancia_km;
+    // 2. Se não tem coordenadas salvas, geocodificar
+    if (!coordenadas) {
+      for (const opt of opcoes) {
+        coordenadas = await geocodificar(opt.endereco + ", Brasil");
+        if (coordenadas) {
+          enderecoUsado = opt.endereco;
+          break;
         }
-        // Volta: sempre da oficina
-        const rotaVolta = await rotaDaOficina(coordenadas.lat, coordenadas.lng);
-        if (rotaVolta) {
-          tempoVolta = rotaVolta.tempo_min;
-          distVolta = rotaVolta.distancia_km;
-        }
-        break;
+      }
+    }
+
+    // 3. Calcular rotas se tem coordenadas
+    if (coordenadas) {
+      const rotaIda = usarOrigem
+        ? await calcularRota(origemLat, origemLng, coordenadas.lat, coordenadas.lng)
+        : await rotaDaOficina(coordenadas.lat, coordenadas.lng);
+      if (rotaIda) { tempoIda = rotaIda.tempo_min; distIda = rotaIda.distancia_km; }
+      const rotaVolta = await rotaDaOficina(coordenadas.lat, coordenadas.lng);
+      if (rotaVolta) { tempoVolta = rotaVolta.tempo_min; distVolta = rotaVolta.distancia_km; }
+
+      // 4. Salvar coordenadas confirmadas para este cliente (upsert)
+      if (!coordSalvas) {
+        const cnpjLimpo = cnpj.replace(/\D/g, "") || null;
+        await supabase.from("clientes_coordenadas").upsert({
+          cnpj: cnpjLimpo,
+          nome_cliente: cliente,
+          endereco: enderecoUsado,
+          cidade: row.cidade || "",
+          coordenadas,
+          atualizado_em: new Date().toISOString(),
+        }, { onConflict: "cnpj,nome_cliente,endereco" }).then(() => {});
       }
     }
 
@@ -168,7 +220,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json(updated);
   }
 
-  // Edição manual de endereço — recalcular rota
+  // Edição manual de endereço — recalcular rota e salvar coordenadas do cliente
   if (campos.endereco) {
     const coords = await geocodificar(campos.endereco + ", Brasil");
     if (coords) {
@@ -179,6 +231,19 @@ export async function PATCH(req: NextRequest) {
         campos.distancia_ida_km = rota.distancia_km;
         campos.tempo_volta_min = rota.tempo_min;
         campos.distancia_volta_km = rota.distancia_km;
+      }
+      // Salvar coordenadas confirmadas para este cliente
+      const { data: rowEdit } = await supabase.from(TBL).select("cliente, cnpj, cidade").eq("id", id).single();
+      if (rowEdit?.cliente) {
+        const cnpjLimpo = (rowEdit.cnpj || "").replace(/\D/g, "") || null;
+        await supabase.from("clientes_coordenadas").upsert({
+          cnpj: cnpjLimpo,
+          nome_cliente: rowEdit.cliente,
+          endereco: campos.endereco,
+          cidade: rowEdit.cidade || "",
+          coordenadas: coords,
+          atualizado_em: new Date().toISOString(),
+        }, { onConflict: "cnpj,nome_cliente,endereco" }).then(() => {});
       }
     }
   }
