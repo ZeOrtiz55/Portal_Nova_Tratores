@@ -84,6 +84,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     previsaoFaturamento: safeGet(row, "Previsao_Faturamento") || "",
     diasExecucao: (safeGet(row, "Dias_Execucao") as string) || "",
     dataFimServico: (safeGet(row, "Data_Fim_Servico") as string) || "",
+    horaInicioServico: (safeGet(row, "Hora_Inicio_Servico") as string) || "",
     servicoNumero: safeGet(row, "Servico_Numero") || 0,
     servicoOficina: !!safeGet(row, "Servico_Oficina"),
     horaInicioExec: safeGet(row, "Hora_Inicio_Exec") || "",
@@ -245,17 +246,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     Hora_Fim_Exec: dados.horaFimExec || '',
     Dias_Execucao: dados.diasExecucao || '',
     Data_Fim_Servico: dados.dataFimServico || null,
+    Hora_Inicio_Servico: dados.horaInicioServico || '',
     Servico_Numero: dados.servicoNumero || null,
   };
 
-  let { error } = await supabase.from(TBL_OS).update(baseUpdate).eq("Id_Ordem", idOs);
-
-  // Fallback: se schema cache não reconhece colunas novas, tenta sem elas
-  if (error?.message?.includes("schema cache")) {
-    delete baseUpdate.Data_Fim_Servico;
-    delete baseUpdate.Servico_Numero;
-    ({ error } = await supabase.from(TBL_OS).update(baseUpdate).eq("Id_Ordem", idOs));
-  }
+  const { error } = await supabase.from(TBL_OS).update(baseUpdate).eq("Id_Ordem", idOs);
 
   if (error) {
     console.error("Erro Supabase update:", error);

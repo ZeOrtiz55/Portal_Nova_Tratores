@@ -399,17 +399,11 @@ export async function POST(req: NextRequest) {
     Hora_Fim_Exec: dados.horaFimExec || '',
     Dias_Execucao: dados.diasExecucao || '',
     Data_Fim_Servico: dados.dataFimServico || null,
+    Hora_Inicio_Servico: dados.horaInicioServico || '',
     Servico_Numero: dados.servicoNumero || null,
   };
 
-  let { error } = await supabase.from(TBL_OS).insert(baseInsert);
-
-  // Fallback: se schema cache não reconhece colunas novas, tenta sem elas
-  if (error?.message?.includes("schema cache")) {
-    delete baseInsert.Data_Fim_Servico;
-    delete baseInsert.Servico_Numero;
-    ({ error } = await supabase.from(TBL_OS).insert(baseInsert));
-  }
+  const { error } = await supabase.from(TBL_OS).insert(baseInsert);
 
   if (error) {
     console.error("Erro Supabase insert:", error);

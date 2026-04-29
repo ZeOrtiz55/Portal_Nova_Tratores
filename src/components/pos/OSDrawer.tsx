@@ -86,6 +86,7 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
   const [previsaoExecucao, setPrevisaoExecucao] = useState("");
   const [previsaoFaturamento, setPrevisaoFaturamento] = useState("");
   const [dataFimServico, setDataFimServico] = useState("");
+  const [horaInicioServico, setHoraInicioServico] = useState("");
   const [diasExecucao, setDiasExecucao] = useState<string[]>([]);
   const [servicoNumero, setServicoNumero] = useState(0);
   const [horaInicioExec, setHoraInicioExec] = useState(() => {
@@ -383,6 +384,7 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
       previsaoExecucao,
       previsaoFaturamento,
       dataFimServico,
+      horaInicioServico,
       servicoNumero,
       horaInicioExec,
       horaFimExec,
@@ -480,6 +482,7 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
           setPrevisaoExecucao(d.previsaoExecucao || "");
           setPrevisaoFaturamento(d.previsaoFaturamento || "");
           setDataFimServico(d.dataFimServico || "");
+          setHoraInicioServico(d.horaInicioServico || "");
           setDiasExecucao(d.diasExecucao ? d.diasExecucao.split(',').filter(Boolean) : []);
           setHoraInicioExec(d.horaInicioExec || horaAtualBR());
           setHoraChegada(d.horaChegada || "");
@@ -1047,9 +1050,15 @@ export default function OSDrawer({ visible, mode, osId, clientes, tecnicos, user
                         }} style={{ padding: '6px 8px', border: '1px solid #D1D5DB', borderRadius: 6, fontSize: 13, width: '100%' }} />
                       </div>
                     </div>
-                    <div style={{ marginTop: 8 }}>
-                      <label style={{ fontSize: 11, color: '#6B7280', margin: 0 }}>Previsão de Faturamento</label>
-                      <input type="date" value={previsaoFaturamento} onChange={(e) => setPrevisaoFaturamento(e.target.value)} style={{ padding: '6px 8px', border: '1px solid #D1D5DB', borderRadius: 6, fontSize: 13, width: '100%' }} />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
+                      <div>
+                        <label style={{ fontSize: 11, color: '#6B7280', margin: 0 }}>Hora Início Serviço</label>
+                        <input type="time" value={horaInicioServico} onChange={(e) => setHoraInicioServico(e.target.value)} style={{ padding: '6px 8px', border: '1px solid #D1D5DB', borderRadius: 6, fontSize: 13, width: '100%' }} />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: 11, color: '#6B7280', margin: 0 }}>Previsão de Faturamento</label>
+                        <input type="date" value={previsaoFaturamento} onChange={(e) => setPrevisaoFaturamento(e.target.value)} style={{ padding: '6px 8px', border: '1px solid #D1D5DB', borderRadius: 6, fontSize: 13, width: '100%' }} />
+                      </div>
                     </div>
                     {diasExecucao.length > 0 && (() => {
                       return (
