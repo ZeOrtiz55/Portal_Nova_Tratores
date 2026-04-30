@@ -141,9 +141,9 @@ export default function CardReq({ req, onUpdate, onPrint, dadosCompartilhados, a
   onUpdateRef.current = onUpdate;
   useEffect(() => {
     if (req.status === 'financeiro' && !req.enviado_financeiro_data) {
-      const hoje = new Date().toISOString().split('T')[0];
-      setLocalData((prev: any) => ({ ...prev, enviado_financeiro_data: hoje }));
-      onUpdateRef.current(req.id, { enviado_financeiro_data: hoje });
+      const agora = new Date().toISOString();
+      setLocalData((prev: any) => ({ ...prev, enviado_financeiro_data: agora }));
+      onUpdateRef.current(req.id, { enviado_financeiro_data: agora });
     }
   }, [req.status, req.enviado_financeiro_data, req.id]);
 
@@ -215,7 +215,7 @@ export default function CardReq({ req, onUpdate, onPrint, dadosCompartilhados, a
       const { error: uploadError } = await supabase.storage.from('requisicoes').upload(filePath, file);
       if (uploadError) throw uploadError;
       persist(fieldName, filePath);
-      if (fieldName === 'foto_nf') persist('status', 'completa');
+      // Nota anexada não muda mais status automaticamente
       setUploadOk(fieldName);
       setTimeout(() => setUploadOk(null), 2000);
     } catch (error: any) {
@@ -649,7 +649,7 @@ export default function CardReq({ req, onUpdate, onPrint, dadosCompartilhados, a
                 {req.enviado_financeiro_data && (
                   <div className="flex items-center gap-2 p-2.5 rounded-lg bg-indigo-50 border border-indigo-200 mt-2">
                     <Calendar size={13} className="text-indigo-500" />
-                    <span className="text-[11px] text-indigo-600">Enviado ao financeiro: <strong>{new Date(req.enviado_financeiro_data + 'T12:00:00').toLocaleDateString('pt-BR')}</strong></span>
+                    <span className="text-[11px] text-indigo-600">Enviado ao financeiro: <strong>{new Date(req.enviado_financeiro_data.length > 10 ? req.enviado_financeiro_data : req.enviado_financeiro_data + 'T12:00:00').toLocaleDateString('pt-BR')}</strong></span>
                   </div>
                 )}
               </div>

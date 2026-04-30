@@ -49,7 +49,7 @@ function RequisicoesPageInner() {
       .filter(r => {
         if (!filtroRelBusca) return true;
         const b = filtroRelBusca.toLowerCase();
-        return (r.titulo || '').toLowerCase().includes(b) || String(r.id).includes(b) || (r.cliente || '').toLowerCase().includes(b) || (r.Chassis_Modelo || '').toLowerCase().includes(b);
+        return (r.titulo || '').toLowerCase().includes(b) || String(r.id).includes(b) || (r.cliente || '').toLowerCase().includes(b) || (r.Chassis_Modelo || '').toLowerCase().includes(b) || (r.numero_nota || '').toLowerCase().includes(b);
       })
       .sort((a: any, b: any) => (b.id || 0) - (a.id || 0));
   }, [requisicoes, filtroRelTipo, filtroRelSetor, filtroRelSolicitante, filtroRelBusca]);
@@ -733,7 +733,7 @@ function RequisicoesPageInner() {
               <div className="flex flex-wrap gap-3 mb-6 items-end no-print">
                 <div>
                   <label className="text-xs text-zinc-500 font-medium block mb-1">Buscar</label>
-                  <input type="text" placeholder="ID, título, cliente..." value={filtroRelBusca} onChange={e => setFiltroRelBusca(e.target.value)} className="border border-zinc-200 rounded-lg px-3 py-2 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-red-200" />
+                  <input type="text" placeholder="ID, título, cliente, nº nota..." value={filtroRelBusca} onChange={e => setFiltroRelBusca(e.target.value)} className="border border-zinc-200 rounded-lg px-3 py-2 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-red-200" />
                 </div>
                 <div>
                   <label className="text-xs text-zinc-500 font-medium block mb-1">Tipo</label>

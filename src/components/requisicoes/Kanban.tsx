@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import CardCapaReq from './CardCapaReq';
 import { supabase } from '@/lib/supabase';
-import { Search, Calendar, Building2, X, Layout, UserCircle, Layers, SlidersHorizontal } from 'lucide-react';
+import { Search, Calendar, Building2, X, Layout, UserCircle, Layers, SlidersHorizontal, Receipt } from 'lucide-react';
 
 const LISTA_FORNECEDORES_CADASTRADOS = ["Rodrigo Torneiro (Panda)"];
 
@@ -27,6 +27,7 @@ export default function Kanban({ requisicoes, onUpdate, onPrint, onCardFechado }
   const [filtroMes, setFiltroMes] = useState('');
   const [filtroSolicitante, setFiltroSolicitante] = useState('');
   const [filtroTipo, setFiltroTipo] = useState('');
+  const [filtroNota, setFiltroNota] = useState('');
   const [filtroFornAguardando, setFiltroFornAguardando] = useState('');
   const [filtroTecnicoPedido, setFiltroTecnicoPedido] = useState('');
   const [colunaArrastando, setColunaArrastando] = useState<string | null>(null);
@@ -115,12 +116,13 @@ export default function Kanban({ requisicoes, onUpdate, onPrint, onCardFechado }
       const matchMes = filtroMes ? r.data?.startsWith(filtroMes) : true;
       const matchSolic = filtroSolicitante ? r.solicitante === filtroSolicitante : true;
       const matchTipo = filtroTipo ? r.tipo === filtroTipo : true;
-      return matchID && matchTitulo && matchForn && matchMes && matchSolic && matchTipo;
+      const matchNota = filtroNota ? (r.numero_nota || '').toLowerCase().includes(filtroNota.toLowerCase()) : true;
+      return matchID && matchTitulo && matchForn && matchMes && matchSolic && matchTipo && matchNota;
     });
-  }, [requisicoes, filtroID, filtroTitulo, filtroFornecedor, filtroMes, filtroSolicitante, filtroTipo]);
+  }, [requisicoes, filtroID, filtroTitulo, filtroFornecedor, filtroMes, filtroSolicitante, filtroTipo, filtroNota]);
 
-  const temFiltroAtivo = filtroID || filtroTitulo || filtroFornecedor || filtroMes || filtroSolicitante || filtroTipo;
-  const limparFiltros = () => { setFiltroID(''); setFiltroTitulo(''); setFiltroFornecedor(''); setFiltroMes(''); setFiltroSolicitante(''); setFiltroTipo(''); setFiltroFornAguardando(''); setFiltroTecnicoPedido(''); };
+  const temFiltroAtivo = filtroID || filtroTitulo || filtroFornecedor || filtroMes || filtroSolicitante || filtroTipo || filtroNota;
+  const limparFiltros = () => { setFiltroID(''); setFiltroTitulo(''); setFiltroFornecedor(''); setFiltroMes(''); setFiltroSolicitante(''); setFiltroTipo(''); setFiltroNota(''); setFiltroFornAguardando(''); setFiltroTecnicoPedido(''); };
   const resultCount = filtradas.filter((r: any) => r.status !== 'lixeira').length;
 
   const pillBase = "px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap";
@@ -187,6 +189,12 @@ export default function Kanban({ requisicoes, onUpdate, onPrint, onCardFechado }
             </select>
           </div>
 
+          {/* Nº Nota */}
+          <div className="relative">
+            <Receipt size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none"/>
+            <input type="text" placeholder="Nº Nota" value={filtroNota} onChange={e => setFiltroNota(e.target.value)} className={`${inputInline} pl-8 w-[110px]`} />
+          </div>
+
           {/* Contador + Limpar */}
           {temFiltroAtivo && (
             <>
@@ -204,6 +212,13 @@ export default function Kanban({ requisicoes, onUpdate, onPrint, onCardFechado }
         <div className="flex gap-4 overflow-x-auto pb-8 scrollbar-hide justify-center">
           {colunas.map((col) => {
             let items = filtradas.filter((r: any) => r.status === col.id);
+            if (col.id === 'financeiro') {
+              items = [...items].sort((a: any, b: any) => {
+                const da = a.enviado_financeiro_data || '';
+                const db = b.enviado_financeiro_data || '';
+                return db.localeCompare(da);
+              });
+            }
             if (col.id === 'aguardando' && filtroFornAguardando) {
               items = items.filter((r: any) => r.fornecedor === filtroFornAguardando);
             }
